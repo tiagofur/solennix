@@ -14,15 +14,6 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
-// PublicRequestService owns the business logic for structured quote requests:
-// creation validation, the status state machine, conversion to an Event
-// (reusing the EventFormLink flow), and the anti-spam cap.
-//
-// See PRD docs/PRD/15_MARKETPLACE_V2.md §3 and
-// openspec/changes/add-public-request-flow/design.md.
-//
-// NG1 ratified: the requester is a visitor with a contact email, not a Solennix
-// user. client_token lets them act on their own request without an account.
 // PublicRequestNotifier is optional push fan-out after a visitor submits a
 // request (#1124). Implementations must not block for long; the service fires
 // it asynchronously after a successful Create.
@@ -32,6 +23,7 @@ type PublicRequestNotifier interface {
 
 type PublicRequestService struct {
 	requestRepo    PublicRequestStore
+	linkRepo       PublicRequestLinkStore
 	profileRepo    PublicProfileLookup
 	productRepo    PublicProductLookup
 	userSlugLookup PublicUserSlugLookup
@@ -44,14 +36,26 @@ type PublicRequestService struct {
 // uses. Extracted as interface for testability (mock in unit tests).
 type PublicRequestStore interface {
 	Create(ctx context.Context, req *models.PublicRequest) error
+	CreateTx(ctx context.Context, tx pgx.Tx, req *models.PublicRequest) error
 	GetByID(ctx context.Context, id, organizerUserID uuid.UUID) (*models.PublicRequest, error)
 	GetByIDAndToken(ctx context.Context, id uuid.UUID, clientToken uuid.UUID) (*models.PublicRequest, error)
 	UpdateStatus(ctx context.Context, id, organizerUserID uuid.UUID, newStatus models.RequestStatus, declinedReason *string) error
+	UpdateStatusTx(ctx context.Context, tx pgx.Tx, id, organizerUserID uuid.UUID, newStatus models.RequestStatus, declinedReason *string) error
 	SetEventID(ctx context.Context, id, organizerUserID, eventID uuid.UUID) error
+	SetEventIDTx(ctx context.Context, tx pgx.Tx, id, organizerUserID, eventID uuid.UUID) error
 	MarkRead(ctx context.Context, id, organizerUserID uuid.UUID) error
 	CountPendingByOrganizer(ctx context.Context, organizerUserID uuid.UUID) (int, error)
 	CreateResponse(ctx context.Context, resp *models.PublicResponse) error
+	CreateResponseTx(ctx context.Context, tx pgx.Tx, resp *models.PublicResponse) error
 	ExpireStale(ctx context.Context, inactiveDays int) (int, error)
+}
+
+// PublicRequestLinkStore is the subset of *repository.PublicRequestLinkRepo used
+// by create-from-link flows.
+type PublicRequestLinkStore interface {
+	GetByToken(ctx context.Context, token string) (*models.PublicRequestLink, error)
+	IncrementUseTx(ctx context.Context, tx pgx.Tx, id uuid.UUID) error
+	ExpireStale(ctx context.Context) (int, error)
 }
 
 type PublicProfileLookup interface {
@@ -60,6 +64,7 @@ type PublicProfileLookup interface {
 
 type PublicProductLookup interface {
 	ListPublicProfileServices(ctx context.Context, userID uuid.UUID) ([]models.Product, error)
+	ListActiveForPublicProfileSettings(ctx context.Context, userID uuid.UUID) ([]models.Product, error)
 }
 
 type PublicUserSlugLookup interface {
@@ -68,10 +73,7 @@ type PublicUserSlugLookup interface {
 
 // NewPublicRequestService wires the service with its dependencies.
 // pendingCap defaults to DefaultPendingRequestCap if <= 0.
-//
-// Note: a clientRepo (lookup-by-email) is intentionally NOT injected: conversion
-// always creates a new Client (same as EventFormLink flow, design D5). Dedup by
-// email is a future enhancement — add a PublicClientLookup interface then.
+// linkRepo may be nil only if CreateFromLink is never called.
 func NewPublicRequestService(
 	requestRepo PublicRequestStore,
 	profileRepo PublicProfileLookup,
@@ -93,6 +95,11 @@ func NewPublicRequestService(
 	}
 }
 
+// SetLinkRepo wires public request link persistence (CreateFromLink + expire job).
+func (s *PublicRequestService) SetLinkRepo(repo PublicRequestLinkStore) {
+	s.linkRepo = repo
+}
+
 // SetNotifier wires push notifications for new public requests (#1124).
 // Safe to call with nil (disables notify).
 func (s *PublicRequestService) SetNotifier(n PublicRequestNotifier) {
@@ -103,7 +110,7 @@ func (s *PublicRequestService) SetNotifier(n PublicRequestNotifier) {
 // before a new one is rejected with 429 (anti-spam, PRD §3.4).
 const DefaultPendingRequestCap = 100
 
-// Domain errors. The handler maps these to HTTP statuses (Phase 4).
+// Domain errors. The handler maps these to HTTP statuses.
 var (
 	// ErrPublicProfileDisabled: organizer has no public profile or it's disabled → 404.
 	ErrPublicProfileDisabled = errors.New("public profile not available")
@@ -117,27 +124,56 @@ var (
 	ErrInvalidTransition = errors.New("invalid status transition for this request")
 	// ErrAlreadyConverted: request already linked to an event → 409 (idempotent).
 	ErrAlreadyConverted = errors.New("request already converted to an event")
+	// ErrLinkInvalid: shared link expired, used, revoked, or maxed out → 410.
+	ErrLinkInvalid = errors.New("request link is not usable")
+	// ErrLinkNotFound: token never existed → 404.
+	ErrLinkNotFound = errors.New("request link not found")
+	// ErrValidation: field validation failed → 400 (message via fmt.Errorf wrap).
+	ErrValidation = errors.New("validation failed")
 )
 
-// CreatePublicRequestInput is the validated payload for creating a request.
+// CreatePublicRequestInput is the validated payload for creating a request
+// (profile CTA or shared link).
 type CreatePublicRequestInput struct {
 	OrganizerSlug string
 	ContactEmail  string
 	ContactName   *string
+	ContactPhone  *string
 	EventType     *string
 	EventDate     *string
 	Location      *string
+	City          *string
 	GuestCount    *int
 	Budget        *float64
 	Currency      string
-	ServiceIDs    []uuid.UUID
-	Message       *string
+	// ServiceIDs is the legacy flat list (qty defaults to 1). Prefer Services.
+	ServiceIDs []uuid.UUID
+	// Services carries product_id + qty (unified form body).
+	Services []ServiceSelection
+	Message  *string
 }
 
-// CreatePublicRequest validates the organizer profile + services, enforces the
-// pending cap, persists the request, and returns it with DB-populated fields.
+// selectionsFromInput merges Services and ServiceIDs into ServiceSelection list.
+func selectionsFromInput(in CreatePublicRequestInput) []ServiceSelection {
+	if len(in.Services) > 0 {
+		return in.Services
+	}
+	out := make([]ServiceSelection, 0, len(in.ServiceIDs))
+	for _, id := range in.ServiceIDs {
+		out = append(out, ServiceSelection{ProductID: id, Qty: 1})
+	}
+	return out
+}
+
+// CreatePublicRequest is the profile CTA path (backward-compatible name).
+// Equivalent to CreateFromProfile.
 func (s *PublicRequestService) CreatePublicRequest(ctx context.Context, in CreatePublicRequestInput) (*models.PublicRequest, error) {
-	// Resolve organizer by slug.
+	return s.CreateFromProfile(ctx, in)
+}
+
+// CreateFromProfile validates the organizer profile + services, enforces the
+// pending cap, persists the request as pending/standard, and returns it.
+func (s *PublicRequestService) CreateFromProfile(ctx context.Context, in CreatePublicRequestInput) (*models.PublicRequest, error) {
 	user, err := s.userSlugLookup.GetByPublicSlug(ctx, in.OrganizerSlug)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -146,7 +182,6 @@ func (s *PublicRequestService) CreatePublicRequest(ctx context.Context, in Creat
 		return nil, fmt.Errorf("resolve organizer slug: %w", err)
 	}
 
-	// Verify public profile enabled.
 	profile, err := s.profileRepo.GetByUserID(ctx, user.ID)
 	if err != nil {
 		if errors.Is(err, repository.ErrPublicProfileNotFound) {
@@ -158,20 +193,22 @@ func (s *PublicRequestService) CreatePublicRequest(ctx context.Context, in Creat
 		return nil, ErrPublicProfileDisabled
 	}
 
-	// Validate requested services against the organizer's public catalog and
-	// build the JSONB snapshot (survives later catalog changes).
-	snapshot, err := s.buildServicesSnapshot(ctx, user.ID, in.ServiceIDs)
+	// Profile CTA: email is primary required field (visitor status page).
+	if trimSpace(in.ContactEmail) == "" {
+		return nil, fmt.Errorf("%w: contact_email is required", ErrValidation)
+	}
+
+	catalog, err := s.resolveCatalog(ctx, user.ID, CatalogEntryPublicProfile, true)
+	if err != nil {
+		return nil, err
+	}
+	snapshot, err := BuildServicesSnapshotFromCatalog(catalog, selectionsFromInput(in))
 	if err != nil {
 		return nil, err
 	}
 
-	// Anti-spam cap on pending requests.
-	pending, err := s.requestRepo.CountPendingByOrganizer(ctx, user.ID)
-	if err != nil {
-		return nil, fmt.Errorf("count pending requests: %w", err)
-	}
-	if pending >= s.pendingCap {
-		return nil, ErrPendingCapExceeded
+	if err := s.enforcePendingCap(ctx, user.ID); err != nil {
+		return nil, err
 	}
 
 	currency := in.Currency
@@ -182,74 +219,238 @@ func (s *PublicRequestService) CreatePublicRequest(ctx context.Context, in Creat
 		OrganizerUserID: user.ID,
 		ContactEmail:    in.ContactEmail,
 		ContactName:     in.ContactName,
+		ContactPhone:    in.ContactPhone,
 		EventType:       in.EventType,
 		EventDate:       in.EventDate,
 		Location:        in.Location,
+		City:            in.City,
 		GuestCount:      in.GuestCount,
 		Budget:          in.Budget,
 		Currency:        currency,
 		Services:        snapshot,
 		Message:         in.Message,
 		Status:          models.RequestStatusPending,
+		Source:          models.RequestSourcePublicProfile,
+		SubmitMode:      models.SubmitModeStandard,
 	}
 	if err := s.requestRepo.Create(ctx, req); err != nil {
 		return nil, fmt.Errorf("create public request: %w", err)
 	}
 
-	// Fire-and-forget push so the public visitor is not blocked on FCM/APNs.
-	if s.notifier != nil {
-		organizerID := user.ID
-		// Snapshot fields used by the notifier (req is not mutated after Create).
-		created := *req
-		go func() {
-			nctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-			defer cancel()
-			if err := s.notifier.SendPublicRequestCreated(nctx, organizerID, &created); err != nil {
-				slog.WarnContext(nctx, "public_request: push notify failed",
-					"error", err,
-					"request_id", created.ID,
-					"organizer_user_id", organizerID,
-				)
-			}
-		}()
-	}
-
+	s.notifyAsync(user.ID, req)
 	return req, nil
 }
 
-// buildServicesSnapshot returns the JSONB snapshot for the requested service IDs,
-// validating each belongs to the organizer's public catalog. Empty input is allowed.
-func (s *PublicRequestService) buildServicesSnapshot(ctx context.Context, organizerUserID uuid.UUID, serviceIDs []uuid.UUID) ([]models.PublicRequestServiceSnapshot, error) {
-	if len(serviceIDs) == 0 {
-		return []models.PublicRequestServiceSnapshot{}, nil
+// CreateFromLink resolves a shared link token and creates a request applying
+// the link's submit_mode (standard | auto_quote | auto_event).
+func (s *PublicRequestService) CreateFromLink(ctx context.Context, token string, in CreatePublicRequestInput) (*models.PublicRequest, error) {
+	if s.linkRepo == nil {
+		return nil, fmt.Errorf("link repo not configured")
 	}
-	public, err := s.productRepo.ListPublicProfileServices(ctx, organizerUserID)
+	link, err := s.linkRepo.GetByToken(ctx, token)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrLinkNotFound
+		}
+		return nil, fmt.Errorf("get request link: %w", err)
+	}
+	if !IsRequestLinkUsable(link, time.Now().UTC()) {
+		return nil, ErrLinkInvalid
+	}
+
+	// Contact rule: email or phone.
+	if msg := ValidateContactRule(in.ContactEmail, in.ContactPhone); msg != "" {
+		return nil, fmt.Errorf("%w: %s", ErrValidation, msg)
+	}
+	if link.SubmitMode == models.SubmitModeAutoEvent {
+		if msg := ValidateAutoEventFields(in.ContactName, in.ContactPhone, in.EventDate, in.EventType, in.GuestCount); msg != "" {
+			return nil, fmt.Errorf("%w: %s", ErrValidation, msg)
+		}
+	}
+
+	// Catalog: if profile enabled → public items; else full active catalog.
+	profileEnabled := false
+	profile, err := s.profileRepo.GetByUserID(ctx, link.OrganizerUserID)
+	if err == nil && profile != nil && profile.IsEnabled {
+		profileEnabled = true
+	} else if err != nil && !errors.Is(err, repository.ErrPublicProfileNotFound) && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, fmt.Errorf("lookup public profile: %w", err)
+	}
+
+	catalog, err := s.resolveCatalog(ctx, link.OrganizerUserID, CatalogEntrySharedLink, profileEnabled)
+	if err != nil {
+		return nil, err
+	}
+	snapshot, err := BuildServicesSnapshotFromCatalog(catalog, selectionsFromInput(in))
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.enforcePendingCap(ctx, link.OrganizerUserID); err != nil {
+		return nil, err
+	}
+
+	currency := in.Currency
+	if currency == "" {
+		currency = "MXN"
+	}
+	linkID := link.ID
+	req := &models.PublicRequest{
+		OrganizerUserID: link.OrganizerUserID,
+		ContactEmail:    in.ContactEmail,
+		ContactName:     in.ContactName,
+		ContactPhone:    in.ContactPhone,
+		EventType:       in.EventType,
+		EventDate:       in.EventDate,
+		Location:        in.Location,
+		City:            in.City,
+		GuestCount:      in.GuestCount,
+		Budget:          in.Budget,
+		Currency:        currency,
+		Services:        snapshot,
+		Message:         in.Message,
+		Status:          models.RequestStatusPending,
+		Source:          models.RequestSourceSharedLink,
+		LinkID:          &linkID,
+		SubmitMode:      link.SubmitMode,
+	}
+
+	if s.pool == nil {
+		// Unit-test path without DB: create only (no auto modes / use increment).
+		if err := s.requestRepo.Create(ctx, req); err != nil {
+			return nil, fmt.Errorf("create public request: %w", err)
+		}
+		s.notifyAsync(link.OrganizerUserID, req)
+		return req, nil
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if err := s.requestRepo.CreateTx(ctx, tx, req); err != nil {
+		return nil, fmt.Errorf("create public request: %w", err)
+	}
+
+	switch link.SubmitMode {
+	case models.SubmitModeStandard:
+		// pending already set
+	case models.SubmitModeAutoQuote:
+		if err := s.applyAutoQuoteTx(ctx, tx, req); err != nil {
+			return nil, err
+		}
+	case models.SubmitModeAutoEvent:
+		if _, err := s.convertToEventInTx(ctx, tx, req); err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("%w: unknown submit_mode %q", ErrValidation, link.SubmitMode)
+	}
+
+	if err := s.linkRepo.IncrementUseTx(ctx, tx, link.ID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrLinkInvalid
+		}
+		return nil, fmt.Errorf("increment link use: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit create-from-link: %w", err)
+	}
+
+	s.notifyAsync(link.OrganizerUserID, req)
+	return req, nil
+}
+
+func (s *PublicRequestService) applyAutoQuoteTx(ctx context.Context, tx pgx.Tx, req *models.PublicRequest) error {
+	amount := SumSnapshotQuote(req.Services)
+	resp := &models.PublicResponse{
+		RequestID:       req.ID,
+		OrganizerUserID: req.OrganizerUserID,
+		QuoteAmount:     amount,
+		Currency:        req.Currency,
+		Inclusions:      SnapshotInclusionNames(req.Services),
+	}
+	if err := s.requestRepo.CreateResponseTx(ctx, tx, resp); err != nil {
+		return fmt.Errorf("auto_quote create response: %w", err)
+	}
+	if err := s.requestRepo.UpdateStatusTx(ctx, tx, req.ID, req.OrganizerUserID, models.RequestStatusResponded, nil); err != nil {
+		return fmt.Errorf("auto_quote update status: %w", err)
+	}
+	req.Status = models.RequestStatusResponded
+	return nil
+}
+
+// resolveCatalog implements design D4.
+func (s *PublicRequestService) resolveCatalog(ctx context.Context, organizerUserID uuid.UUID, entry CatalogEntry, profileEnabled bool) ([]models.Product, error) {
+	switch entry {
+	case CatalogEntryPublicProfile:
+		// Caller already required profile enabled.
+		products, err := s.productRepo.ListPublicProfileServices(ctx, organizerUserID)
+		if err != nil {
+			return nil, fmt.Errorf("list public services: %w", err)
+		}
+		return products, nil
+	case CatalogEntrySharedLink:
+		if profileEnabled {
+			products, err := s.productRepo.ListPublicProfileServices(ctx, organizerUserID)
+			if err != nil {
+				return nil, fmt.Errorf("list public services: %w", err)
+			}
+			return products, nil
+		}
+		products, err := s.productRepo.ListActiveForPublicProfileSettings(ctx, organizerUserID)
+		if err != nil {
+			return nil, fmt.Errorf("list active products: %w", err)
+		}
+		return products, nil
+	default:
+		return nil, fmt.Errorf("unknown catalog entry: %s", entry)
+	}
+}
+
+func (s *PublicRequestService) enforcePendingCap(ctx context.Context, organizerUserID uuid.UUID) error {
+	pending, err := s.requestRepo.CountPendingByOrganizer(ctx, organizerUserID)
+	if err != nil {
+		return fmt.Errorf("count pending requests: %w", err)
+	}
+	if pending >= s.pendingCap {
+		return ErrPendingCapExceeded
+	}
+	return nil
+}
+
+func (s *PublicRequestService) notifyAsync(organizerID uuid.UUID, req *models.PublicRequest) {
+	if s.notifier == nil {
+		return
+	}
+	created := *req
+	go func() {
+		nctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		if err := s.notifier.SendPublicRequestCreated(nctx, organizerID, &created); err != nil {
+			slog.WarnContext(nctx, "public_request: push notify failed",
+				"error", err,
+				"request_id", created.ID,
+				"organizer_user_id", organizerID,
+			)
+		}
+	}()
+}
+
+// buildServicesSnapshot is kept for older call sites / tests; uses public catalog only.
+func (s *PublicRequestService) buildServicesSnapshot(ctx context.Context, organizerUserID uuid.UUID, serviceIDs []uuid.UUID) ([]models.PublicRequestServiceSnapshot, error) {
+	sels := make([]ServiceSelection, 0, len(serviceIDs))
+	for _, id := range serviceIDs {
+		sels = append(sels, ServiceSelection{ProductID: id, Qty: 1})
+	}
+	catalog, err := s.productRepo.ListPublicProfileServices(ctx, organizerUserID)
 	if err != nil {
 		return nil, fmt.Errorf("list public services: %w", err)
 	}
-	byID := make(map[uuid.UUID]models.Product, len(public))
-	for _, p := range public {
-		byID[p.ID] = p
-	}
-	out := make([]models.PublicRequestServiceSnapshot, 0, len(serviceIDs))
-	for _, id := range serviceIDs {
-		p, ok := byID[id]
-		if !ok {
-			return nil, ErrInvalidServices
-		}
-		var price *float64
-		if p.BasePrice > 0 {
-			bp := p.BasePrice
-			price = &bp
-		}
-		out = append(out, models.PublicRequestServiceSnapshot{
-			ProductID:  p.ID,
-			Name:       p.Name,
-			Price:      price,
-			IsFeatured: p.IsFeatured,
-		})
-	}
-	return out, nil
+	return BuildServicesSnapshotFromCatalog(catalog, sels)
 }
 
 // validTransitions defines the state machine. Each current status maps to the
@@ -374,8 +575,8 @@ func (s *PublicRequestService) ClientAction(ctx context.Context, requestID uuid.
 // reusing the EventFormLink transactional helpers. Idempotent: if the request
 // already has an event_id, returns ErrAlreadyConverted.
 //
-// Note (design D5): a new Client is always created (same as EventFormLink
-// flow). Dedup-by-email is a future enhancement.
+// Field mapping (design D8): phone, guest_count→num_people, city, snapshot qty,
+// notes include source.
 func (s *PublicRequestService) ConvertToEvent(ctx context.Context, requestID, organizerUserID uuid.UUID) (*uuid.UUID, error) {
 	req, err := s.requestRepo.GetByID(ctx, requestID, organizerUserID)
 	if err != nil {
@@ -388,12 +589,15 @@ func (s *PublicRequestService) ConvertToEvent(ctx context.Context, requestID, or
 		return req.EventID, ErrAlreadyConverted
 	}
 
-	// EventFormLink flow requires the request be at least accepted/forwarded.
-	// We allow conversion from accepted_by_client or responded (organizer may
-	// pre-emptively book). Pending is rejected.
+	// Allow conversion from accepted_by_client or responded (organizer may
+	// pre-emptively book). Pending is rejected for manual convert.
 	if req.Status != models.RequestStatusAcceptedByClient &&
 		req.Status != models.RequestStatusResponded {
 		return nil, ErrInvalidTransition
+	}
+
+	if s.pool == nil {
+		return nil, fmt.Errorf("pool required for convert")
 	}
 
 	tx, err := s.pool.Begin(ctx)
@@ -402,34 +606,60 @@ func (s *PublicRequestService) ConvertToEvent(ctx context.Context, requestID, or
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck
 
-	// Create client from contact info (always new — see design D5 note).
+	eventID, err := s.convertToEventInTx(ctx, tx, req)
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit convert tx: %w", err)
+	}
+	return eventID, nil
+}
+
+// convertToEventInTx creates Client + Event + products and marks request booked.
+// Used by manual ConvertToEvent and auto_event submit_mode.
+func (s *PublicRequestService) convertToEventInTx(ctx context.Context, tx pgx.Tx, req *models.PublicRequest) (*uuid.UUID, error) {
 	clientEmail := req.ContactEmail
+	var emailPtr *string
+	if trimSpace(clientEmail) != "" {
+		emailPtr = &clientEmail
+	}
+	phone := ""
+	if req.ContactPhone != nil {
+		phone = *req.ContactPhone
+	}
 	client := &models.Client{
-		UserID: organizerUserID,
+		UserID: req.OrganizerUserID,
 		Name:   clientNameFromRequest(req),
-		Email:  &clientEmail,
+		Phone:  phone,
+		Email:  emailPtr,
+		City:   req.City,
 	}
 	if err := repository.CreateClientTx(ctx, tx, client); err != nil {
 		return nil, fmt.Errorf("create client: %w", err)
 	}
 
-	// Build event from request fields. Status quoted, total 0 (organizer sets later).
-	notes := "Creado desde solicitud de cotización"
+	notes := ConvertNotes(req.Source, req.Message)
+	numPeople := 0
+	if req.GuestCount != nil {
+		numPeople = *req.GuestCount
+	}
 	event := &models.Event{
-		UserID:      organizerUserID,
+		UserID:      req.OrganizerUserID,
 		ClientID:    client.ID,
 		EventDate:   derefString(req.EventDate),
 		ServiceType: derefString(req.EventType),
+		NumPeople:   numPeople,
 		Status:      "quoted",
 		TotalAmount: 0,
 		Location:    req.Location,
+		City:        req.City,
 		Notes:       &notes,
 	}
 	if err := repository.CreateEventTx(ctx, tx, event); err != nil {
 		return nil, fmt.Errorf("create event: %w", err)
 	}
 
-	// Populate event products from the request services snapshot (base price).
 	if len(req.Services) > 0 {
 		products := make([]models.EventProduct, 0, len(req.Services))
 		for _, svc := range req.Services {
@@ -440,7 +670,7 @@ func (s *PublicRequestService) ConvertToEvent(ctx context.Context, requestID, or
 			products = append(products, models.EventProduct{
 				EventID:   event.ID,
 				ProductID: svc.ProductID,
-				Quantity:  1,
+				Quantity:  float64(svc.SnapshotQty()),
 				UnitPrice: price,
 				Discount:  0,
 			})
@@ -452,28 +682,34 @@ func (s *PublicRequestService) ConvertToEvent(ctx context.Context, requestID, or
 
 	if err := repository.UpdateClientStatsTx(ctx, tx, client.ID); err != nil {
 		slog.WarnContext(ctx, "public_request: update client stats failed", "error", err)
-		// Non-critical, continue.
 	}
 
-	if err := tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("commit convert tx: %w", err)
-	}
-
-	// Link request → event + status booked.
-	if err := s.requestRepo.SetEventID(ctx, requestID, organizerUserID, event.ID); err != nil {
-		slog.ErrorContext(ctx, "public_request: link event failed after commit",
-			"request_id", requestID, "event_id", event.ID, "error", err)
+	if err := s.requestRepo.SetEventIDTx(ctx, tx, req.ID, req.OrganizerUserID, event.ID); err != nil {
 		return nil, fmt.Errorf("link event to request: %w", err)
 	}
+	req.EventID = &event.ID
+	req.Status = models.RequestStatusBooked
 	return &event.ID, nil
 }
 
-// ExpireStale is invoked by the daily job (Phase 5) to mark requests past the
-// inactivity threshold as expired. Bypasses the state machine (terminal target).
+// ExpireStale is invoked by the daily job to mark requests past the inactivity
+// threshold as expired. Bypasses the state machine (terminal target).
 func (s *PublicRequestService) ExpireStale(ctx context.Context) (int, error) {
 	n, err := s.requestRepo.ExpireStale(ctx, DefaultExpiryDays)
 	if err != nil {
 		return 0, fmt.Errorf("expire stale requests: %w", err)
+	}
+	return n, nil
+}
+
+// ExpireStaleLinks marks active links past expires_at as expired (hourly job).
+func (s *PublicRequestService) ExpireStaleLinks(ctx context.Context) (int, error) {
+	if s.linkRepo == nil {
+		return 0, nil
+	}
+	n, err := s.linkRepo.ExpireStale(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("expire stale request links: %w", err)
 	}
 	return n, nil
 }
@@ -501,12 +737,16 @@ func clientNameFromRequest(req *models.PublicRequest) string {
 			return email[:i]
 		}
 	}
-	return email
+	if email != "" {
+		return email
+	}
+	if req.ContactPhone != nil && *req.ContactPhone != "" {
+		return *req.ContactPhone
+	}
+	return "Cliente"
 }
 
 // Compile-time guard: ensure *repository.PublicRequestRepo satisfies the store
 // interface. Catches signature drift at build time.
 var _ PublicRequestStore = (*repository.PublicRequestRepo)(nil)
-
-// time guard to avoid unused import if time ends up unused downstream.
-var _ = time.Now
+var _ PublicRequestLinkStore = (*repository.PublicRequestLinkRepo)(nil)

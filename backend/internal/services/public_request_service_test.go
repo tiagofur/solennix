@@ -35,7 +35,16 @@ type mockRequestStore struct {
 
 func (m *mockRequestStore) Create(_ context.Context, req *models.PublicRequest) error {
 	m.created = req
+	if req.ID == uuid.Nil {
+		req.ID = uuid.New()
+	}
+	if req.ClientToken == uuid.Nil {
+		req.ClientToken = uuid.New()
+	}
 	return m.createErr
+}
+func (m *mockRequestStore) CreateTx(_ context.Context, _ pgx.Tx, req *models.PublicRequest) error {
+	return m.Create(context.Background(), req)
 }
 func (m *mockRequestStore) GetByID(_ context.Context, _, _ uuid.UUID) (*models.PublicRequest, error) {
 	return m.getByID, m.getByIDErr
@@ -47,8 +56,14 @@ func (m *mockRequestStore) UpdateStatus(_ context.Context, _, _ uuid.UUID, s mod
 	m.updateStatus = s
 	return m.updateErr
 }
+func (m *mockRequestStore) UpdateStatusTx(_ context.Context, _ pgx.Tx, id, org uuid.UUID, s models.RequestStatus, reason *string) error {
+	return m.UpdateStatus(context.Background(), id, org, s, reason)
+}
 func (m *mockRequestStore) SetEventID(_ context.Context, _, _, _ uuid.UUID) error {
 	return m.setEventIDErr
+}
+func (m *mockRequestStore) SetEventIDTx(_ context.Context, _ pgx.Tx, id, org, eventID uuid.UUID) error {
+	return m.SetEventID(context.Background(), id, org, eventID)
 }
 func (m *mockRequestStore) MarkRead(_ context.Context, _, _ uuid.UUID) error { return m.markReadErr }
 func (m *mockRequestStore) CountPendingByOrganizer(_ context.Context, _ uuid.UUID) (int, error) {
@@ -56,6 +71,9 @@ func (m *mockRequestStore) CountPendingByOrganizer(_ context.Context, _ uuid.UUI
 }
 func (m *mockRequestStore) CreateResponse(_ context.Context, _ *models.PublicResponse) error {
 	return m.responseErr
+}
+func (m *mockRequestStore) CreateResponseTx(_ context.Context, _ pgx.Tx, resp *models.PublicResponse) error {
+	return m.CreateResponse(context.Background(), resp)
 }
 func (m *mockRequestStore) ExpireStale(_ context.Context, _ int) (int, error) {
 	return m.expiredCount, m.expiredErr
@@ -77,6 +95,29 @@ type mockProductLookup struct {
 
 func (m *mockProductLookup) ListPublicProfileServices(_ context.Context, _ uuid.UUID) ([]models.Product, error) {
 	return m.products, m.err
+}
+func (m *mockProductLookup) ListActiveForPublicProfileSettings(_ context.Context, _ uuid.UUID) ([]models.Product, error) {
+	return m.products, m.err
+}
+
+type mockLinkStore struct {
+	link         *models.PublicRequestLink
+	getErr       error
+	incrementErr error
+	expiredCount int
+	expiredErr   error
+	incremented  int
+}
+
+func (m *mockLinkStore) GetByToken(_ context.Context, _ string) (*models.PublicRequestLink, error) {
+	return m.link, m.getErr
+}
+func (m *mockLinkStore) IncrementUseTx(_ context.Context, _ pgx.Tx, _ uuid.UUID) error {
+	m.incremented++
+	return m.incrementErr
+}
+func (m *mockLinkStore) ExpireStale(_ context.Context) (int, error) {
+	return m.expiredCount, m.expiredErr
 }
 
 type mockUserSlugLookup struct {
@@ -172,9 +213,12 @@ func TestCreatePublicRequest_HappyPath_BuildsSnapshotAndPersists(t *testing.T) {
 	require.NotNil(t, req)
 	assert.Equal(t, uid, store.created.OrganizerUserID)
 	assert.Equal(t, models.RequestStatusPending, store.created.Status)
+	assert.Equal(t, models.RequestSourcePublicProfile, store.created.Source)
+	assert.Equal(t, models.SubmitModeStandard, store.created.SubmitMode)
 	require.Len(t, store.created.Services, 1)
 	assert.Equal(t, "Banquete", store.created.Services[0].Name)
 	assert.Equal(t, &price, store.created.Services[0].Price)
+	assert.Equal(t, 1, store.created.Services[0].Qty)
 	assert.True(t, store.created.Services[0].IsFeatured)
 }
 
@@ -390,4 +434,102 @@ func TestCanTransition_Table(t *testing.T) {
 		got := canTransition(c.from, c.to)
 		assert.Equalf(t, c.want, got, "canTransition(%s,%s)", c.from, c.to)
 	}
+}
+
+// --- CreateFromLink ---
+
+func TestCreateFromLink_Expired_ReturnsErrLinkInvalid(t *testing.T) {
+	uid := uuid.New()
+	past := time.Now().UTC().Add(-time.Hour)
+	links := &mockLinkStore{link: &models.PublicRequestLink{
+		ID: uuid.New(), OrganizerUserID: uid,
+		Status: models.PublicRequestLinkActive, ExpiresAt: &past,
+		SubmitMode: models.SubmitModeStandard,
+	}}
+	store := &mockRequestStore{pendingCount: 0}
+	svc := newSvc(t, store,
+		&mockProfileLookup{profile: &models.OrganizerPublicProfile{IsEnabled: true}},
+		&mockProductLookup{},
+		&mockUserSlugLookup{user: &models.User{ID: uid}})
+	svc.SetLinkRepo(links)
+
+	_, err := svc.CreateFromLink(context.Background(), "tok", CreatePublicRequestInput{
+		ContactEmail: "c@x.dev",
+	})
+	assert.ErrorIs(t, err, ErrLinkInvalid)
+}
+
+func TestCreateFromLink_NotFound(t *testing.T) {
+	svc := newSvc(t, &mockRequestStore{}, &mockProfileLookup{}, &mockProductLookup{}, &mockUserSlugLookup{})
+	svc.SetLinkRepo(&mockLinkStore{getErr: pgx.ErrNoRows})
+	_, err := svc.CreateFromLink(context.Background(), "missing", CreatePublicRequestInput{ContactEmail: "c@x.dev"})
+	assert.ErrorIs(t, err, ErrLinkNotFound)
+}
+
+func TestCreateFromLink_Standard_Pending(t *testing.T) {
+	uid := uuid.New()
+	linkID := uuid.New()
+	links := &mockLinkStore{link: &models.PublicRequestLink{
+		ID: linkID, OrganizerUserID: uid,
+		Status: models.PublicRequestLinkActive, SubmitMode: models.SubmitModeStandard,
+	}}
+	store := &mockRequestStore{pendingCount: 0}
+	svc := newSvc(t, store,
+		&mockProfileLookup{profile: &models.OrganizerPublicProfile{IsEnabled: true}},
+		&mockProductLookup{},
+		&mockUserSlugLookup{user: &models.User{ID: uid}})
+	svc.SetLinkRepo(links)
+
+	name := "Ana"
+	req, err := svc.CreateFromLink(context.Background(), "tok", CreatePublicRequestInput{
+		ContactEmail: "c@x.dev", ContactName: &name,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, models.RequestStatusPending, req.Status)
+	assert.Equal(t, models.RequestSourceSharedLink, req.Source)
+	assert.Equal(t, models.SubmitModeStandard, req.SubmitMode)
+	require.NotNil(t, req.LinkID)
+	assert.Equal(t, linkID, *req.LinkID)
+}
+
+func TestCreateFromLink_AutoEvent_RequiresPhone(t *testing.T) {
+	uid := uuid.New()
+	links := &mockLinkStore{link: &models.PublicRequestLink{
+		ID: uuid.New(), OrganizerUserID: uid,
+		Status: models.PublicRequestLinkActive, SubmitMode: models.SubmitModeAutoEvent,
+	}}
+	svc := newSvc(t, &mockRequestStore{pendingCount: 0},
+		&mockProfileLookup{profile: &models.OrganizerPublicProfile{IsEnabled: true}},
+		&mockProductLookup{},
+		&mockUserSlugLookup{user: &models.User{ID: uid}})
+	svc.SetLinkRepo(links)
+
+	name, date, etype := "Ana", "2026-11-20", "Boda"
+	guests := 10
+	_, err := svc.CreateFromLink(context.Background(), "tok", CreatePublicRequestInput{
+		ContactEmail: "c@x.dev", ContactName: &name, EventDate: &date, EventType: &etype, GuestCount: &guests,
+	})
+	require.Error(t, err)
+	assert.ErrorIs(t, err, ErrValidation)
+	assert.Contains(t, err.Error(), "contact_phone")
+}
+
+func TestCreateFromLink_InvalidServiceAgainstCatalog(t *testing.T) {
+	uid := uuid.New()
+	links := &mockLinkStore{link: &models.PublicRequestLink{
+		ID: uuid.New(), OrganizerUserID: uid,
+		Status: models.PublicRequestLinkActive, SubmitMode: models.SubmitModeStandard,
+	}}
+	valid := uuid.New()
+	svc := newSvc(t, &mockRequestStore{pendingCount: 0},
+		&mockProfileLookup{profile: &models.OrganizerPublicProfile{IsEnabled: true}},
+		&mockProductLookup{products: []models.Product{{ID: valid, Name: "DJ", BasePrice: 1}}},
+		&mockUserSlugLookup{user: &models.User{ID: uid}})
+	svc.SetLinkRepo(links)
+
+	_, err := svc.CreateFromLink(context.Background(), "tok", CreatePublicRequestInput{
+		ContactEmail: "c@x.dev",
+		Services:     []ServiceSelection{{ProductID: uuid.New(), Qty: 1}},
+	})
+	assert.ErrorIs(t, err, ErrInvalidServices)
 }
