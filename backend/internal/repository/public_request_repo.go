@@ -2,8 +2,11 @@ package repository
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -45,6 +48,20 @@ type PublicRequestListFilters struct {
 	Order   string // "desc" (default) | "asc"
 	Limit   int
 	Offset  int
+}
+
+// PublicRequestCursorFilters is keyset pagination for mobile inbox (#1121).
+// Cursor is opaque (EncodeRequestCursor / DecodeRequestCursor). Sort is always
+// created_at + id for stable ordering under concurrent inserts.
+type PublicRequestCursorFilters struct {
+	Status  string
+	FromDay string
+	ToDay   string
+	Order   string // "desc" (default) | "asc"
+	Limit   int
+	// CursorCreatedAt + CursorID are the exclusive seek point (nil = first page).
+	CursorCreatedAt *time.Time
+	CursorID        *uuid.UUID
 }
 
 // Create inserts a public request and returns the stored row (id, tokens,
@@ -172,6 +189,128 @@ func (r *PublicRequestRepo) ListByOrganizer(ctx context.Context, organizerUserID
 		return nil, 0, fmt.Errorf("iterate public requests: %w", err)
 	}
 	return out, total, nil
+}
+
+// requestCursorPayload is the JSON shape inside an opaque cursor token.
+type requestCursorPayload struct {
+	T string `json:"t"` // RFC3339Nano UTC created_at
+	I string `json:"i"` // uuid
+}
+
+// EncodeRequestCursor builds an opaque cursor from the last item of a page.
+func EncodeRequestCursor(createdAt time.Time, id uuid.UUID) string {
+	raw, _ := json.Marshal(requestCursorPayload{
+		T: createdAt.UTC().Format(time.RFC3339Nano),
+		I: id.String(),
+	})
+	return base64.RawURLEncoding.EncodeToString(raw)
+}
+
+// DecodeRequestCursor parses an opaque cursor. Empty string is first page (ok, nils).
+func DecodeRequestCursor(cursor string) (createdAt *time.Time, id *uuid.UUID, err error) {
+	cursor = strings.TrimSpace(cursor)
+	if cursor == "" {
+		return nil, nil, nil
+	}
+	raw, err := base64.RawURLEncoding.DecodeString(cursor)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid cursor encoding")
+	}
+	var p requestCursorPayload
+	if err := json.Unmarshal(raw, &p); err != nil {
+		return nil, nil, fmt.Errorf("invalid cursor payload")
+	}
+	t, err := time.Parse(time.RFC3339Nano, p.T)
+	if err != nil {
+		// Accept RFC3339 without nanos for forward/back compat.
+		t, err = time.Parse(time.RFC3339, p.T)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid cursor timestamp")
+		}
+	}
+	uid, err := uuid.Parse(p.I)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid cursor id")
+	}
+	t = t.UTC()
+	return &t, &uid, nil
+}
+
+// ListByOrganizerCursor returns a keyset page for mobile clients (#1121).
+// Fetches limit+1 rows to compute has_more; nextCursor is set when more exist.
+// Does not return a total count (avoids expensive COUNT on large inboxes).
+func (r *PublicRequestRepo) ListByOrganizerCursor(
+	ctx context.Context,
+	organizerUserID uuid.UUID,
+	f PublicRequestCursorFilters,
+) (items []models.PublicRequest, nextCursor *string, err error) {
+	if f.Limit <= 0 || f.Limit > GetAllSafetyLimit {
+		f.Limit = 20
+	}
+	order := "DESC"
+	cmp := "<" // next page in DESC = older than cursor
+	if f.Order == "asc" {
+		order = "ASC"
+		cmp = ">"
+	}
+
+	where := "WHERE organizer_user_id = $1"
+	args := []any{organizerUserID}
+	n := 2
+	if f.Status != "" {
+		where += fmt.Sprintf(" AND status = $%d", n)
+		args = append(args, f.Status)
+		n++
+	}
+	if f.FromDay != "" {
+		where += fmt.Sprintf(" AND event_date >= $%d", n)
+		args = append(args, f.FromDay)
+		n++
+	}
+	if f.ToDay != "" {
+		where += fmt.Sprintf(" AND event_date <= $%d", n)
+		args = append(args, f.ToDay)
+		n++
+	}
+	if f.CursorCreatedAt != nil && f.CursorID != nil {
+		// Composite keyset: (created_at, id) for stable seek under concurrent inserts.
+		where += fmt.Sprintf(" AND (created_at, id) %s ($%d, $%d)", cmp, n, n+1)
+		args = append(args, *f.CursorCreatedAt, *f.CursorID)
+		n += 2
+	}
+
+	// Fetch one extra row to know if another page exists.
+	listQuery := fmt.Sprintf(
+		`SELECT %s FROM public_requests %s ORDER BY created_at %s, id %s LIMIT $%d`,
+		publicRequestFields, where, order, order, n,
+	)
+	args = append(args, f.Limit+1)
+
+	rows, err := r.pool.Query(ctx, listQuery, args...)
+	if err != nil {
+		return nil, nil, fmt.Errorf("list public requests cursor: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]models.PublicRequest, 0, f.Limit+1)
+	for rows.Next() {
+		var req models.PublicRequest
+		if err := scanPublicRequest(rows, &req, "scan public request cursor"); err != nil {
+			return nil, nil, err
+		}
+		out = append(out, req)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, nil, fmt.Errorf("iterate public requests cursor: %w", err)
+	}
+
+	if len(out) > f.Limit {
+		last := out[f.Limit-1]
+		tok := EncodeRequestCursor(last.CreatedAt, last.ID)
+		nextCursor = &tok
+		out = out[:f.Limit]
+	}
+	return out, nextCursor, nil
 }
 
 // UpdateStatus transitions a request to newStatus and bumps last_status_change

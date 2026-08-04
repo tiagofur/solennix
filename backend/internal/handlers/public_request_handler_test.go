@@ -66,6 +66,21 @@ func (m *mockPublicRequestInboxStore) ListByOrganizer(ctx context.Context, organ
 	}
 	return args.Get(0).([]models.PublicRequest), args.Int(1), args.Error(2)
 }
+func (m *mockPublicRequestInboxStore) ListByOrganizerCursor(ctx context.Context, organizerUserID uuid.UUID, f repository.PublicRequestCursorFilters) ([]models.PublicRequest, *string, error) {
+	args := m.Called(ctx, organizerUserID, f)
+	var next *string
+	if args.Get(1) != nil {
+		next = args.Get(1).(*string)
+	}
+	if args.Get(0) == nil {
+		return nil, next, args.Error(2)
+	}
+	return args.Get(0).([]models.PublicRequest), next, args.Error(2)
+}
+func (m *mockPublicRequestInboxStore) CountUnreadByOrganizer(ctx context.Context, organizerUserID uuid.UUID) (int, error) {
+	args := m.Called(ctx, organizerUserID)
+	return args.Int(0), args.Error(1)
+}
 func (m *mockPublicRequestInboxStore) GetByID(ctx context.Context, id, organizerUserID uuid.UUID) (*models.PublicRequest, error) {
 	args := m.Called(ctx, id, organizerUserID)
 	if args.Get(0) == nil {
@@ -80,10 +95,6 @@ func (m *mockPublicRequestInboxStore) ListResponsesByRequest(ctx context.Context
 	}
 	return args.Get(0).([]models.PublicResponse), args.Error(1)
 }
-func (m *mockPublicRequestInboxStore) CountUnreadByOrganizer(ctx context.Context, organizerUserID uuid.UUID) (int, error) {
-	return m.Called(ctx, organizerUserID).Int(0), m.Called(ctx, organizerUserID).Error(1)
-}
-
 func newReqHandler(svc *mockPublicRequestService, store *mockPublicRequestInboxStore) *PublicRequestHandler {
 	return &PublicRequestHandler{svc: svc, requestRepo: store}
 }
@@ -215,6 +226,42 @@ func TestListRequests_Paginated(t *testing.T) {
 	var resp map[string]any
 	_ = json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.Equal(t, float64(2), resp["total"])
+}
+
+func TestListRequests_CursorMode(t *testing.T) {
+	svc := new(mockPublicRequestService)
+	store := new(mockPublicRequestInboxStore)
+	h := newReqHandler(svc, store)
+
+	uid := uuid.New()
+	items := []models.PublicRequest{{ID: uuid.New()}, {ID: uuid.New()}}
+	next := "opaque-next"
+	store.On("ListByOrganizerCursor", mock.Anything, uid, mock.AnythingOfType("repository.PublicRequestCursorFilters")).
+		Return(items, &next, nil)
+
+	// Empty cursor key forces keyset mode (mobile first page).
+	req := httptest.NewRequest(http.MethodGet, "/api/organizers/me/requests?cursor=&limit=20&status=pending", nil)
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uid))
+	w := httptest.NewRecorder()
+	h.ListRequests(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]any
+	_ = json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Equal(t, true, resp["has_more"])
+	assert.Equal(t, "opaque-next", resp["next_cursor"])
+	assert.Equal(t, float64(20), resp["limit"])
+	assert.Nil(t, resp["total"]) // no total in cursor mode
+}
+
+func TestListRequests_InvalidCursor_400(t *testing.T) {
+	h := newReqHandler(new(mockPublicRequestService), new(mockPublicRequestInboxStore))
+	uid := uuid.New()
+	req := httptest.NewRequest(http.MethodGet, "/api/organizers/me/requests?cursor=not-valid!!!", nil)
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uid))
+	w := httptest.NewRecorder()
+	h.ListRequests(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestCountUnread_ReturnsCount(t *testing.T) {
