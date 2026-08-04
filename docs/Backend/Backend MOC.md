@@ -34,7 +34,7 @@
 - [[Módulo Portal Cliente]] — Links públicos por evento, vista de cliente y agregados de pago
 - [[Módulos Auxiliares]] — Calendario, búsqueda paralela con `pg_trgm`, uploads local/S3, push y Live Activities
 - [[Módulo Admin]] — Stats, gestión de usuarios, upgrades, suscripciones
-- [[Módulo Formularios Compartibles]] — Enlaces temporales/one-shot para leads sin auth
+- [[Módulo Formularios Compartibles]] — Links de Solicitud (`public_request_links`; unificado con PublicRequest)
 
 ## Infraestructura
 

@@ -44,28 +44,6 @@ export function normalizePublicProfileMedia(
   };
 }
 
-export interface SubmitPublicLeadPayload {
-  name: string;
-  contact: string;
-  event_date?: string;
-  event_type?: string;
-  num_guests?: number;
-  message?: string;
-  source?: string;
-}
-
-export interface PublicLeadResponse {
-  id: string;
-  organizer_user_id: string;
-  name: string;
-  contact: string;
-  event_date?: string | null;
-  event_type?: string | null;
-  num_guests?: number | null;
-  message?: string | null;
-  created_at: string;
-}
-
 export const publicProfileService = {
   /**
    * Fetches the plan-aware public profile aggregate by slug.
@@ -99,33 +77,5 @@ export const publicProfileService = {
       profile = json as PublicOrganizerProfile;
     }
     return normalizePublicProfileMedia(profile);
-  },
-
-  /**
-   * Submits a public lead inquiry / quote request for an organizer by slug.
-   * POST /api/public/organizers/{slug}/leads
-   */
-  async submitLead(
-    slug: string,
-    payload: SubmitPublicLeadPayload,
-  ): Promise<PublicLeadResponse> {
-    const res = await fetch(
-      `${API_BASE}/public/organizers/${encodeURIComponent(slug)}/leads`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      },
-    );
-    if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}));
-      const message =
-        errJson && typeof errJson === "object" && "error" in errJson
-          ? (errJson as { error: string }).error
-          : `Failed to submit lead (${res.status})`;
-      throw new Error(message);
-    }
-    const json = await res.json();
-    return (json as { data: PublicLeadResponse }).data || json;
   },
 };

@@ -22,8 +22,16 @@ status: active
 > - **Stripe se usa EXCLUSIVAMENTE** para la suscripción Pro del organizador a Solennix (cobro B2B).
 > - El flujo de `payment_submissions` (Sprint 7.E) es un formulario de reporte de transferencias bancarias externas — Solennix NO procesa ni mueve dinero.
 
-**Fecha:** Junio 2026
-**Version:** 1.10
+**Fecha:** Agosto 2026
+**Version:** 1.11
+
+> [!success] 2026-08 — Unificación Formularios + Solicitudes (inbound)
+> Un solo dominio de pedido de presupuesto en **backend + web + iOS + Android**.
+> - **Canónico:** `PublicRequest` + `public_request_links` (puertas: perfil `/u/:slug` y link `/s/:token`).
+> - **Eliminado:** `EventFormLink`, `PublicLead` y APIs `/event-forms`, `/leads`.
+> - **UI:** hub Solicitudes (Inbox + Links); form compartido; `submit_mode` en links (`auto_event` default).
+> - **Design/tasks:** `openspec/changes/unify-solicitudes-forms/`.
+> - **Estado:** implementación completa (fases 0–7); listo para verify/archive y PRs encadenados.
 
 > [!success] 2026-07-28 — Perfil Profesional Público implementado (Issue #787, chain PR1–PR6)
 > Perfil público opt-in del organizador en `/u/:slug` con aggregate plan-aware y Settings de configuración. **Web + Backend completos; UI móvil fuera de scope v1.**

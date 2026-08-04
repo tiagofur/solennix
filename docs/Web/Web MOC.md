@@ -31,7 +31,7 @@
 - [[Módulo Reseñas]] — Reseñas post-evento, testimonios públicos y respuestas del organizador
 - [[Módulo Calendario]] — Vista mensual, fechas bloqueadas
 - [[Módulo Admin]] — Dashboard admin, gestión de usuarios, suscripciones
-- [[Módulo Formularios Compartibles]] — Formulario publico para clientes + gestion de enlaces
+- [[Módulo Formularios Compartibles]] — Links de Solicitud (unificado; ex formularios compartibles)
 
 ## Infraestructura
 
