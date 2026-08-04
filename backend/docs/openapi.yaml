@@ -1900,193 +1900,6 @@ components:
         message:
           type: string
           description: Human-readable error message
-    EventFormLink:
-      type: object
-      required:
-        - id
-        - user_id
-        - token
-        - status
-        - expires_at
-        - created_at
-        - updated_at
-      properties:
-        id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        token:
-          type: string
-          description: 64-character hex token (256 bits of entropy)
-        label:
-          type: string
-          nullable: true
-          description: Optional human-readable label for the link
-          maxLength: 255
-        status:
-          type: string
-          enum: [active, used, expired]
-        submitted_event_id:
-          type: string
-          format: uuid
-          nullable: true
-        submitted_client_id:
-          type: string
-          format: uuid
-          nullable: true
-        expires_at:
-          type: string
-          format: date-time
-        used_at:
-          type: string
-          format: date-time
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        url:
-          type: string
-          description: Computed shareable URL (not stored in DB)
-    EventFormLinkGenerateRequest:
-      type: object
-      properties:
-        label:
-          type: string
-          nullable: true
-          description: Optional human-readable label
-          maxLength: 255
-        ttl_days:
-          type: integer
-          minimum: 1
-          maximum: 30
-          description: Link validity in days (default 7)
-    PublicProduct:
-      type: object
-      required:
-        - id
-        - name
-        - category
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        category:
-          type: string
-        image_url:
-          type: string
-          nullable: true
-    PublicOrganizer:
-      type: object
-      properties:
-        business_name:
-          type: string
-          nullable: true
-        logo_url:
-          type: string
-          nullable: true
-        cover_url:
-          type: string
-          nullable: true
-          description: Public profile hero cover image URL
-        brand_color:
-          type: string
-          nullable: true
-    EventFormDataResponse:
-      type: object
-      required:
-        - organizer
-        - products
-        - link_id
-        - expires_at
-      properties:
-        organizer:
-          $ref: "#/components/schemas/PublicOrganizer"
-        products:
-          type: array
-          items:
-            $ref: "#/components/schemas/PublicProduct"
-        link_id:
-          type: string
-          format: uuid
-        expires_at:
-          type: string
-          format: date-time
-    EventFormSubmissionProduct:
-      type: object
-      required:
-        - product_id
-        - quantity
-      properties:
-        product_id:
-          type: string
-          format: uuid
-        quantity:
-          type: number
-          format: double
-          minimum: 1
-    EventFormSubmission:
-      type: object
-      required:
-        - client_name
-        - client_phone
-        - event_date
-        - service_type
-        - num_people
-      properties:
-        client_name:
-          type: string
-        client_phone:
-          type: string
-        client_email:
-          type: string
-          format: email
-          nullable: true
-        event_date:
-          type: string
-          description: Date in YYYY-MM-DD format
-        service_type:
-          type: string
-        num_people:
-          type: integer
-          minimum: 1
-        location:
-          type: string
-          nullable: true
-        city:
-          type: string
-          nullable: true
-        notes:
-          type: string
-          nullable: true
-        products:
-          type: array
-          items:
-            $ref: "#/components/schemas/EventFormSubmissionProduct"
-    EventFormSubmitResponse:
-      type: object
-      required:
-        - success
-        - message
-        - event_id
-        - client_id
-      properties:
-        success:
-          type: boolean
-        message:
-          type: string
-        event_id:
-          type: string
-          format: uuid
-        client_id:
-          type: string
-          format: uuid
     EventPublicLink:
       type: object
       required:
@@ -2138,7 +1951,7 @@ components:
           minimum: 1
           maximum: 730
           nullable: true
-          description: Link validity in days (1–730, up to 2 years). Omit or null for no expiry. Higher limit than EventFormLink because client-portal links are long-lived.
+          description: Link validity in days (1–730, up to 2 years). Omit or null for no expiry. Higher limit because client-portal links are long-lived.
     PublicEventDetails:
       type: object
       required:
@@ -2173,6 +1986,42 @@ components:
         status:
           type: string
           enum: [quoted, confirmed, completed, cancelled]
+    # Legacy public form catalog/brand shapes still referenced by web until the
+    # Solicitudes web cutover lands (PR #1178). Endpoints /event-forms are gone;
+    # keep schemas so openapi:types + tsc on main's PublicEventFormPage stay green.
+    PublicProduct:
+      type: object
+      required:
+        - id
+        - name
+        - category
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: string
+        image_url:
+          type: string
+          nullable: true
+    PublicOrganizer:
+      type: object
+      properties:
+        business_name:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          nullable: true
+        cover_url:
+          type: string
+          nullable: true
+          description: Public profile hero cover image URL
+        brand_color:
+          type: string
+          nullable: true
     PublicOrganizerBrand:
       type: object
       properties:
@@ -2753,67 +2602,6 @@ components:
         limited:
           type: boolean
           description: True when Free plan teaser (views only).
-    SubmitPublicLeadRequest:
-      type: object
-      required:
-        - name
-        - contact
-      properties:
-        name:
-          type: string
-          maxLength: 120
-        contact:
-          type: string
-          maxLength: 255
-          description: How the organizer should reach back (email, phone, WhatsApp)
-        event_date:
-          type: string
-          format: date
-          nullable: true
-        event_type:
-          type: string
-          nullable: true
-          maxLength: 80
-        num_guests:
-          type: integer
-          nullable: true
-          minimum: 1
-        message:
-          type: string
-          nullable: true
-        source:
-          type: string
-          default: form
-    PublicLead:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        contact:
-          type: string
-        event_date:
-          type: string
-          format: date
-          nullable: true
-        event_type:
-          type: string
-          nullable: true
-        num_guests:
-          type: integer
-          nullable: true
-        message:
-          type: string
-          nullable: true
-        source:
-          type: string
-        is_read:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
     PublicRequestStatus:
       type: string
       description: Lifecycle state of a public quote request (v2.0, #1115).
@@ -2842,13 +2630,89 @@ components:
           type: number
           format: double
           nullable: true
+          description: Unit price at snapshot time
+        qty:
+          type: integer
+          minimum: 1
+          default: 1
+          description: Quantity selected (defaults to 1 for legacy rows)
         is_featured:
           type: boolean
+    SubmitMode:
+      type: string
+      description: Outcome applied when a visitor submits a request (link mode; profile is always standard).
+      enum: [standard, auto_quote, auto_event]
+    RequestSource:
+      type: string
+      description: How the visitor entered the quote-request flow.
+      enum: [public_profile, shared_link]
+    PublicRequestLinkStatus:
+      type: string
+      enum: [active, used, expired, revoked]
+    PublicRequestLink:
+      type: object
+      description: Shareable link for unified Solicitudes / quote requests.
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizer_user_id:
+          type: string
+          format: uuid
+        token:
+          type: string
+        label:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/PublicRequestLinkStatus"
+        submit_mode:
+          $ref: "#/components/schemas/SubmitMode"
+        max_uses:
+          type: integer
+          nullable: true
+          minimum: 1
+          description: null = unlimited uses
+        use_count:
+          type: integer
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        url:
+          type: string
+          description: Computed absolute URL (/s/{token}); not stored
+    CreatePublicRequestLinkRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          nullable: true
+        ttl_days:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 7
+        max_uses:
+          type: integer
+          nullable: true
+          minimum: 1
+        submit_mode:
+          $ref: "#/components/schemas/SubmitMode"
+          default: auto_event
     CreatePublicRequestRequest:
       type: object
-      description: Unauthenticated visitor payload submitting a structured quote request.
-      required:
-        - contact_email
+      description: >
+        Unauthenticated visitor payload submitting a structured quote request
+        (profile CTA or shared link). Profile path requires contact_email;
+        shared link requires email or phone (auto_event also requires name, phone,
+        event_date, event_type, guest_count >= 1).
       properties:
         contact_email:
           type: string
@@ -2858,6 +2722,10 @@ components:
           type: string
           nullable: true
           maxLength: 160
+        contact_phone:
+          type: string
+          nullable: true
+          maxLength: 40
         event_type:
           type: string
           nullable: true
@@ -2867,6 +2735,9 @@ components:
           format: date
           nullable: true
         location:
+          type: string
+          nullable: true
+        city:
           type: string
           nullable: true
         guest_count:
@@ -2884,10 +2755,24 @@ components:
           maxLength: 3
         service_ids:
           type: array
-          description: IDs of the organizer's public services to quote. Validated against the catalog.
+          description: Legacy flat list of product IDs (qty defaults to 1). Prefer services[].
           items:
             type: string
             format: uuid
+        services:
+          type: array
+          description: Selected catalog line items with quantity (prices set server-side).
+          items:
+            type: object
+            required: [product_id]
+            properties:
+              product_id:
+                type: string
+                format: uuid
+              qty:
+                type: integer
+                minimum: 1
+                default: 1
         message:
           type: string
           nullable: true
@@ -2912,7 +2797,7 @@ components:
                 subsequent actions. Never returned on organizer inbox endpoints.
     PublicRequest:
       type: object
-      description: A structured quote request from a visitor to an organizer's public profile.
+      description: A structured quote request from a visitor (profile CTA or shared link).
       properties:
         id:
           type: string
@@ -2923,6 +2808,9 @@ components:
         contact_name:
           type: string
           nullable: true
+        contact_phone:
+          type: string
+          nullable: true
         event_type:
           type: string
           nullable: true
@@ -2931,6 +2819,9 @@ components:
           format: date
           nullable: true
         location:
+          type: string
+          nullable: true
+        city:
           type: string
           nullable: true
         guest_count:
@@ -2951,6 +2842,14 @@ components:
           nullable: true
         status:
           $ref: "#/components/schemas/PublicRequestStatus"
+        source:
+          $ref: "#/components/schemas/RequestSource"
+        submit_mode:
+          $ref: "#/components/schemas/SubmitMode"
+        link_id:
+          type: string
+          format: uuid
+          nullable: true
         is_read:
           type: boolean
         event_id:
@@ -5782,72 +5681,55 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /api/event-forms:
+  /api/organizers/me/request-links:
     get:
-      operationId: listEventFormLinks
-      summary: List all shareable event form links for the authenticated user
+      operationId: listPublicRequestLinks
+      summary: List shareable Solicitudes links for the authenticated organizer
       responses:
         "200":
-          description: List of event form links
+          description: List of request links
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/EventFormLink"
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublicRequestLink"
         "401":
           description: Unauthorized
-        "500":
-          description: Failed to list links
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
     post:
-      operationId: generateEventFormLink
-      summary: Create a new shareable event form link
-      description: |
-        Generates a cryptographically random token link that a prospective client
-        opens in a browser to fill out event details and select products (without prices).
-        On submission it creates a draft Event + Client for the organizer.
-        Basic plan users are limited to 3 active links.
+      operationId: createPublicRequestLink
+      summary: Create a shareable Solicitudes link
+      description: >
+        Basic/free plans are limited to 3 active links. Default submit_mode is auto_event.
       requestBody:
         required: false
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EventFormLinkGenerateRequest"
+              $ref: "#/components/schemas/CreatePublicRequestLinkRequest"
       responses:
         "201":
-          description: Event form link created
+          description: Link created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EventFormLink"
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PublicRequestLink"
         "400":
-          description: Validation error (e.g. ttl_days out of range or label too long)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+          description: Validation error
         "401":
           description: Unauthorized
         "402":
-          description: Plan limit reached (basic plan allows max 3 active links)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to create link
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-  /api/event-forms/{id}:
+          description: Plan limit reached (basic/free max 3 active links)
+  /api/organizers/me/request-links/{id}:
     delete:
-      operationId: deleteEventFormLink
-      summary: Revoke (delete) a shareable event form link
+      operationId: revokePublicRequestLink
+      summary: Revoke a request link
       parameters:
         - name: id
           in: path
@@ -5857,27 +5739,98 @@ paths:
             format: uuid
       responses:
         "204":
-          description: Link revoked
-        "400":
-          description: Invalid link ID
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          description: Unauthorized
+          description: Revoked
         "404":
           description: Link not found
+  /api/organizers/me/request-links/{id}/revoke:
+    post:
+      operationId: revokePublicRequestLinkPost
+      summary: Revoke a request link (POST alias)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Revoked
+        "404":
+          description: Link not found
+  /api/public/request-links/{token}:
+    get:
+      security: []
+      operationId: getPublicRequestLink
+      summary: Resolve a shareable Solicitudes link (branding + catalog)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Link data
+        "404":
+          description: Token never existed
+        "410":
+          description: Link invalid (expired, used, revoked, max uses)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to delete link
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: link_invalid
+                  message:
+                    type: string
+  /api/public/request-links/{token}/requests:
+    post:
+      security: []
+      operationId: submitPublicRequestViaLink
+      summary: Submit a quote request via shared link
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePublicRequestRequest"
+      responses:
+        "201":
+          description: Request created (status depends on submit_mode)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PublicRequestCreateResponse"
+        "400":
+          description: Validation error
+        "404":
+          description: Link not found
+        "410":
+          description: Link invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: link_invalid
+                  message:
+                    type: string
+        "429":
+          description: Rate limit or organizer inbox full
   /api/events/{id}/public-link:
     get:
       operationId: getEventPublicLink
@@ -5991,115 +5944,6 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Failed to revoke public link
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-  /api/public/event-forms/{token}:
-    get:
-      security: []
-      operationId: getEventFormData
-      summary: Get organizer branding and product catalog for a shareable event form
-      description: |
-        Public endpoint (no auth). Rate-limited to 10 requests/minute.
-        Returns organizer branding and active products (without prices) for the form.
-        Responds 410 Gone when the link has been used or expired.
-      parameters:
-        - name: token
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Form data including organizer branding and product catalog
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EventFormDataResponse"
-        "400":
-          description: Token is required
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Link not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "410":
-          description: Link has been used or has expired
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: link_invalid
-                  message:
-                    type: string
-        "500":
-          description: Failed to load form data
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    post:
-      security: []
-      operationId: submitEventForm
-      summary: Submit a public event form
-      description: |
-        Public endpoint (no auth). Rate-limited to 10 requests/minute.
-        Creates a Client + Event + EventProducts in a single transaction, then marks
-        the link as used. Links can only be submitted once.
-      parameters:
-        - name: token
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/EventFormSubmission"
-      responses:
-        "201":
-          description: Form submitted successfully — draft event and client created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EventFormSubmitResponse"
-        "400":
-          description: Validation error or invalid product ID
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Link not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "410":
-          description: Link has expired or is no longer valid
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: link_invalid
-                  message:
-                    type: string
-        "500":
-          description: Failed to process form submission
           content:
             application/json:
               schema:
@@ -6506,41 +6350,6 @@ paths:
             application/xml:
               schema:
                 type: string
-  /api/public/organizers/{slug}/leads:
-    post:
-      security: []
-      operationId: submitPublicLead
-      deprecated: true
-      summary: "[Deprecated] Submit a free-form inquiry — use POST .../requests instead"
-      description: >
-        Soft-deprecated in v2.0. Prefer structured PublicRequest via
-        POST /api/public/organizers/{slug}/requests. Still accepted for backward
-        compatibility until the Sunset date; responses include Deprecation headers.
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SubmitPublicLeadRequest"
-      responses:
-        "201":
-          description: Inquiry submitted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PublicLead"
-        "400":
-          description: Invalid request body
-        "404":
-          description: Profile not found or disabled
-        "429":
-          description: Rate limit exceeded (5 / minute)
   /api/public/organizers/{slug}/requests:
     post:
       security: []
@@ -6849,7 +6658,7 @@ paths:
       summary: Convert an accepted/responded request into an Event (status=quoted, v2.0)
       description: >
         Idempotent: returns 409 already_converted with the existing event_id if
-        the request was already converted. Reuses the EventFormLink flow.
+        the request was already converted.
       parameters:
         - name: id
           in: path

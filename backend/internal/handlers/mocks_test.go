@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/mock"
 	"github.com/stripe/stripe-go/v81"
 	"github.com/tiagofur/solennix-backend/internal/models"
@@ -1073,66 +1071,6 @@ func (m *MockRefreshTokenRepo) RevokeFamily(ctx context.Context, familyID uuid.U
 func (m *MockRefreshTokenRepo) RevokeAllForUser(ctx context.Context, userID uuid.UUID) error {
 	args := m.Called(ctx, userID)
 	return args.Error(0)
-}
-
-// ---------------------------------------------------------------------------
-// MockEventFormLinkRepo — implements EventFormLinkRepository
-// ---------------------------------------------------------------------------
-
-type MockEventFormLinkRepo struct {
-	mock.Mock
-}
-
-func (m *MockEventFormLinkRepo) Create(ctx context.Context, link *models.EventFormLink) error {
-	args := m.Called(ctx, link)
-	return args.Error(0)
-}
-
-func (m *MockEventFormLinkRepo) GetByToken(ctx context.Context, token string) (*models.EventFormLink, error) {
-	args := m.Called(ctx, token)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.EventFormLink), args.Error(1)
-}
-
-func (m *MockEventFormLinkRepo) GetByTokenUnfiltered(ctx context.Context, token string) (*models.EventFormLink, error) {
-	args := m.Called(ctx, token)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.EventFormLink), args.Error(1)
-}
-
-func (m *MockEventFormLinkRepo) GetByUserID(ctx context.Context, userID uuid.UUID) ([]models.EventFormLink, error) {
-	args := m.Called(ctx, userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]models.EventFormLink), args.Error(1)
-}
-
-func (m *MockEventFormLinkRepo) MarkUsedTx(ctx context.Context, tx pgx.Tx, linkID, eventID, clientID uuid.UUID) error {
-	args := m.Called(ctx, tx, linkID, eventID, clientID)
-	return args.Error(0)
-}
-
-func (m *MockEventFormLinkRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
-	args := m.Called(ctx, id, userID)
-	return args.Error(0)
-}
-
-func (m *MockEventFormLinkRepo) CountActiveByUserID(ctx context.Context, userID uuid.UUID) (int, error) {
-	args := m.Called(ctx, userID)
-	return args.Int(0), args.Error(1)
-}
-
-func (m *MockEventFormLinkRepo) GetPool() *pgxpool.Pool {
-	args := m.Called()
-	if args.Get(0) == nil {
-		return nil
-	}
-	return args.Get(0).(*pgxpool.Pool)
 }
 
 // ---------------------------------------------------------------------------

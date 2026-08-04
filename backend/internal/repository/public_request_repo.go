@@ -33,9 +33,9 @@ func NewPublicRequestRepo(pool *pgxpool.Pool) *PublicRequestRepo {
 // publicRequestFields lists the columns in stable order for SELECT/RETURNING.
 // Keep in sync with scanPublicRequest.
 const publicRequestFields = `
-	id, organizer_user_id, client_token, contact_email, contact_name,
-	event_type, event_date, location, guest_count, budget, currency,
-	services, message, status, is_read, event_id, declined_reason,
+	id, organizer_user_id, client_token, contact_email, contact_name, contact_phone,
+	event_type, event_date, location, city, guest_count, budget, currency,
+	services, message, status, source, link_id, submit_mode, is_read, event_id, declined_reason,
 	last_status_change, created_at, updated_at`
 
 // PublicRequestListFilters controls ListByOrganizer pagination + filtering.
@@ -67,23 +67,60 @@ type PublicRequestCursorFilters struct {
 // Create inserts a public request and returns the stored row (id, tokens,
 // timestamps populated by DB defaults).
 func (r *PublicRequestRepo) Create(ctx context.Context, req *models.PublicRequest) error {
+	return r.createWith(ctx, r.pool, req)
+}
+
+// CreateTx inserts a public request inside an existing transaction.
+func (r *PublicRequestRepo) CreateTx(ctx context.Context, tx pgx.Tx, req *models.PublicRequest) error {
+	return r.createWith(ctx, tx, req)
+}
+
+type queryRower interface {
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+
+func (r *PublicRequestRepo) createWith(ctx context.Context, q queryRower, req *models.PublicRequest) error {
 	servicesJSON, err := json.Marshal(req.Services)
+	if err != nil {
+		return fmt.Errorf("marshal services: %w", err)
+	}
+	if req.Source == "" {
+		req.Source = models.RequestSourcePublicProfile
+	}
+	if req.SubmitMode == "" {
+		req.SubmitMode = models.SubmitModeStandard
+	}
+	if req.Status == "" {
+		req.Status = models.RequestStatusPending
+	}
+	if req.Currency == "" {
+		req.Currency = "MXN"
+	}
+	// Normalize snapshot qty defaults before persist.
+	for i := range req.Services {
+		if req.Services[i].Qty <= 0 {
+			req.Services[i].Qty = 1
+		}
+	}
+	servicesJSON, err = json.Marshal(req.Services)
 	if err != nil {
 		return fmt.Errorf("marshal services: %w", err)
 	}
 	query := `
 		INSERT INTO public_requests
-			(organizer_user_id, contact_email, contact_name, event_type, event_date,
-			 location, guest_count, budget, currency, services, message, status)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+			(organizer_user_id, contact_email, contact_name, contact_phone, event_type, event_date,
+			 location, city, guest_count, budget, currency, services, message, status,
+			 source, link_id, submit_mode)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 		RETURNING ` + publicRequestFields
 	args := []any{
-		req.OrganizerUserID, req.ContactEmail, req.ContactName, req.EventType,
-		req.EventDate, req.Location, req.GuestCount, req.Budget, req.Currency,
-		servicesJSON, req.Message, string(req.Status),
+		req.OrganizerUserID, req.ContactEmail, req.ContactName, req.ContactPhone,
+		req.EventType, req.EventDate, req.Location, req.City, req.GuestCount,
+		req.Budget, req.Currency, servicesJSON, req.Message, string(req.Status),
+		string(req.Source), req.LinkID, string(req.SubmitMode),
 	}
 	return scanPublicRequest(
-		r.pool.QueryRow(ctx, query, args...),
+		q.QueryRow(ctx, query, args...),
 		req,
 		"create public request",
 	)
@@ -415,9 +452,24 @@ const publicResponseFields = `
 // CreateResponse inserts an organizer quote reply. The caller (service) is
 // responsible for transitioning the parent request to "responded".
 func (r *PublicRequestRepo) CreateResponse(ctx context.Context, resp *models.PublicResponse) error {
+	return r.createResponseWith(ctx, r.pool, resp)
+}
+
+// CreateResponseTx inserts a response inside an existing transaction.
+func (r *PublicRequestRepo) CreateResponseTx(ctx context.Context, tx pgx.Tx, resp *models.PublicResponse) error {
+	return r.createResponseWith(ctx, tx, resp)
+}
+
+func (r *PublicRequestRepo) createResponseWith(ctx context.Context, q queryRower, resp *models.PublicResponse) error {
 	inclusionsJSON, err := json.Marshal(resp.Inclusions)
 	if err != nil {
 		return fmt.Errorf("marshal inclusions: %w", err)
+	}
+	if resp.Inclusions == nil {
+		resp.Inclusions = []string{}
+	}
+	if resp.Currency == "" {
+		resp.Currency = "MXN"
 	}
 	query := `
 		INSERT INTO public_responses
@@ -425,12 +477,47 @@ func (r *PublicRequestRepo) CreateResponse(ctx context.Context, resp *models.Pub
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING ` + publicResponseFields
 	return scanPublicResponse(
-		r.pool.QueryRow(ctx, query,
+		q.QueryRow(ctx, query,
 			resp.RequestID, resp.OrganizerUserID, resp.QuoteAmount, resp.Currency,
 			inclusionsJSON, resp.ValidUntil, resp.Message),
 		resp,
 		"create public response",
 	)
+}
+
+// SetEventIDTx links request → event and sets booked inside a transaction.
+func (r *PublicRequestRepo) SetEventIDTx(ctx context.Context, tx pgx.Tx, id, organizerUserID, eventID uuid.UUID) error {
+	tag, err := tx.Exec(ctx, `
+		UPDATE public_requests
+		SET event_id = $3, status = $4, last_status_change = NOW(), updated_at = NOW()
+		WHERE id = $1 AND organizer_user_id = $2`,
+		id, organizerUserID, eventID, string(models.RequestStatusBooked))
+	if err != nil {
+		return fmt.Errorf("set public request event id: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("set public request event id: %w", pgx.ErrNoRows)
+	}
+	return nil
+}
+
+// UpdateStatusTx transitions status inside a transaction.
+func (r *PublicRequestRepo) UpdateStatusTx(ctx context.Context, tx pgx.Tx, id, organizerUserID uuid.UUID, newStatus models.RequestStatus, declinedReason *string) error {
+	tag, err := tx.Exec(ctx, `
+		UPDATE public_requests
+		SET status = $3,
+		    declined_reason = $4,
+		    last_status_change = NOW(),
+		    updated_at = NOW()
+		WHERE id = $1 AND organizer_user_id = $2`,
+		id, organizerUserID, string(newStatus), declinedReason)
+	if err != nil {
+		return fmt.Errorf("update public request status: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("update public request status: %w", pgx.ErrNoRows)
+	}
+	return nil
 }
 
 // ListResponsesByRequest returns the response history for a request, scoped to
@@ -469,17 +556,21 @@ func scanPublicRequest(sc rowScanner, req *models.PublicRequest, wrap string) er
 	var (
 		servicesRaw    []byte
 		statusStr      string
+		sourceStr      string
+		modeStr        string
 		eventDate      *string
 		location       *string
+		city           *string
 		contactName    *string
+		contactPhone   *string
 		eventType      *string
 		message        *string
 		declinedReason *string
 	)
 	err := sc.Scan(
-		&req.ID, &req.OrganizerUserID, &req.ClientToken, &req.ContactEmail, &contactName,
-		&eventType, &eventDate, &location, &req.GuestCount, &req.Budget, &req.Currency,
-		&servicesRaw, &message, &statusStr, &req.IsRead, &req.EventID, &declinedReason,
+		&req.ID, &req.OrganizerUserID, &req.ClientToken, &req.ContactEmail, &contactName, &contactPhone,
+		&eventType, &eventDate, &location, &city, &req.GuestCount, &req.Budget, &req.Currency,
+		&servicesRaw, &message, &statusStr, &sourceStr, &req.LinkID, &modeStr, &req.IsRead, &req.EventID, &declinedReason,
 		&req.LastStatusChange, &req.CreatedAt, &req.UpdatedAt,
 	)
 	if err != nil {
@@ -493,11 +584,26 @@ func scanPublicRequest(sc rowScanner, req *models.PublicRequest, wrap string) er
 	if len(req.Services) == 0 {
 		req.Services = []models.PublicRequestServiceSnapshot{}
 	}
+	for i := range req.Services {
+		if req.Services[i].Qty <= 0 {
+			req.Services[i].Qty = 1
+		}
+	}
 	req.Status = models.RequestStatus(statusStr)
+	req.Source = models.RequestSource(sourceStr)
+	if req.Source == "" {
+		req.Source = models.RequestSourcePublicProfile
+	}
+	req.SubmitMode = models.SubmitMode(modeStr)
+	if req.SubmitMode == "" {
+		req.SubmitMode = models.SubmitModeStandard
+	}
 	req.ContactName = contactName
+	req.ContactPhone = contactPhone
 	req.EventType = eventType
 	req.EventDate = eventDate
 	req.Location = location
+	req.City = city
 	req.Message = message
 	req.DeclinedReason = declinedReason
 	return nil

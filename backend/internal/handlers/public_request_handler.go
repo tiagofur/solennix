@@ -34,6 +34,7 @@ type PublicRequestHandler struct {
 // handler uses. Interface for testability.
 type publicRequestService interface {
 	CreatePublicRequest(ctx context.Context, in services.CreatePublicRequestInput) (*models.PublicRequest, error)
+	CreateFromLink(ctx context.Context, token string, in services.CreatePublicRequestInput) (*models.PublicRequest, error)
 	Respond(ctx context.Context, requestID, organizerUserID uuid.UUID, resp *models.PublicResponse) error
 	RequestInfo(ctx context.Context, requestID, organizerUserID uuid.UUID) error
 	Decline(ctx context.Context, requestID, organizerUserID uuid.UUID, reason *string) error
@@ -69,16 +70,24 @@ func NewPublicRequestHandler(svc *services.PublicRequestService, requestRepo *re
 
 // CreatePublicRequestRequest is the unauthenticated visitor payload.
 type CreatePublicRequestRequest struct {
-	ContactEmail string   `json:"contact_email"`
-	ContactName  *string  `json:"contact_name,omitempty"`
-	EventType    *string  `json:"event_type,omitempty"`
-	EventDate    *string  `json:"event_date,omitempty"`
-	Location     *string  `json:"location,omitempty"`
-	GuestCount   *int     `json:"guest_count,omitempty"`
+	ContactEmail string  `json:"contact_email"`
+	ContactName  *string `json:"contact_name,omitempty"`
+	ContactPhone *string `json:"contact_phone,omitempty"`
+	EventType    *string `json:"event_type,omitempty"`
+	EventDate    *string `json:"event_date,omitempty"`
+	Location     *string `json:"location,omitempty"`
+	City         *string `json:"city,omitempty"`
+	GuestCount   *int    `json:"guest_count,omitempty"`
 	Budget       *float64 `json:"budget,omitempty"`
 	Currency     string   `json:"currency,omitempty"`
-	ServiceIDs   []string `json:"service_ids,omitempty"`
-	Message      *string  `json:"message,omitempty"`
+	// ServiceIDs is the legacy flat list (qty defaults to 1).
+	ServiceIDs []string `json:"service_ids,omitempty"`
+	// Services is the unified form body with optional qty per line item.
+	Services []struct {
+		ProductID string `json:"product_id"`
+		Qty       int    `json:"qty"`
+	} `json:"services,omitempty"`
+	Message *string `json:"message,omitempty"`
 	// Website is a honeypot anti-spam field. Real browsers leave it empty;
 	// bots that autofill hidden fields get a fake 201 without persisting.
 	Website string `json:"website,omitempty"`
@@ -92,15 +101,20 @@ type createPublicRequestResponse struct {
 	ClientToken      string                               `json:"client_token"`
 	ContactEmail     string                               `json:"contact_email"`
 	ContactName      *string                              `json:"contact_name,omitempty"`
+	ContactPhone     *string                              `json:"contact_phone,omitempty"`
 	EventType        *string                              `json:"event_type,omitempty"`
 	EventDate        *string                              `json:"event_date,omitempty"`
 	Location         *string                              `json:"location,omitempty"`
+	City             *string                              `json:"city,omitempty"`
 	GuestCount       *int                                 `json:"guest_count,omitempty"`
 	Budget           *float64                             `json:"budget,omitempty"`
 	Currency         string                               `json:"currency"`
 	Services         []models.PublicRequestServiceSnapshot `json:"services"`
 	Message          *string                              `json:"message,omitempty"`
 	Status           models.RequestStatus                 `json:"status"`
+	Source           models.RequestSource                 `json:"source"`
+	SubmitMode       models.SubmitMode                    `json:"submit_mode"`
+	EventID          *uuid.UUID                           `json:"event_id,omitempty"`
 	IsRead           bool                                 `json:"is_read"`
 	LastStatusChange time.Time                            `json:"last_status_change"`
 	CreatedAt        time.Time                            `json:"created_at"`
@@ -136,33 +150,9 @@ func (h *PublicRequestHandler) CreatePublicRequest(w http.ResponseWriter, r *htt
 		return
 	}
 
-	email := strings.TrimSpace(req.ContactEmail)
-	if email == "" {
-		writeError(w, http.StatusBadRequest, "contact_email is required")
-		return
-	}
-	if len(email) > 320 {
-		writeError(w, http.StatusBadRequest, "contact_email too long")
-		return
-	}
-
-	serviceIDs, ok := parseServiceIDs(w, req.ServiceIDs)
+	in, ok := buildCreateInputFromRequest(w, slug, req)
 	if !ok {
 		return
-	}
-
-	in := services.CreatePublicRequestInput{
-		OrganizerSlug: slug,
-		ContactEmail:  email,
-		ContactName:   trimStrPtr(req.ContactName),
-		EventType:     trimStrPtr(req.EventType),
-		EventDate:     trimStrPtr(req.EventDate),
-		Location:      trimStrPtr(req.Location),
-		GuestCount:    req.GuestCount,
-		Budget:        req.Budget,
-		Currency:      strings.TrimSpace(req.Currency),
-		ServiceIDs:    serviceIDs,
-		Message:       trimStrPtr(req.Message),
 	}
 
 	created, err := h.svc.CreatePublicRequest(r.Context(), in)
@@ -173,25 +163,94 @@ func (h *PublicRequestHandler) CreatePublicRequest(w http.ResponseWriter, r *htt
 	writeJSON(w, http.StatusCreated, map[string]any{"data": toCreatePublicRequestResponse(created)})
 }
 
+// buildCreateInputFromRequest maps the visitor JSON body to the service input.
+// On validation failure it writes the HTTP error and returns ok=false.
+func buildCreateInputFromRequest(w http.ResponseWriter, slug string, req CreatePublicRequestRequest) (services.CreatePublicRequestInput, bool) {
+	email := strings.TrimSpace(req.ContactEmail)
+	// Profile path (slug set) still requires email; link path allows phone-only.
+	if slug != "" {
+		if email == "" {
+			writeError(w, http.StatusBadRequest, "contact_email is required")
+			return services.CreatePublicRequestInput{}, false
+		}
+	}
+	if len(email) > 320 {
+		writeError(w, http.StatusBadRequest, "contact_email too long")
+		return services.CreatePublicRequestInput{}, false
+	}
+
+	serviceIDs, ok := parseServiceIDs(w, req.ServiceIDs)
+	if !ok {
+		return services.CreatePublicRequestInput{}, false
+	}
+
+	var selections []services.ServiceSelection
+	if len(req.Services) > 0 {
+		selections = make([]services.ServiceSelection, 0, len(req.Services))
+		for _, s := range req.Services {
+			id, err := uuid.Parse(strings.TrimSpace(s.ProductID))
+			if err != nil {
+				writeError(w, http.StatusBadRequest, "Invalid product_id: "+s.ProductID)
+				return services.CreatePublicRequestInput{}, false
+			}
+			qty := s.Qty
+			if qty <= 0 {
+				qty = 1
+			}
+			selections = append(selections, services.ServiceSelection{ProductID: id, Qty: qty})
+		}
+	}
+
+	return services.CreatePublicRequestInput{
+		OrganizerSlug: slug,
+		ContactEmail:  email,
+		ContactName:   trimStrPtr(req.ContactName),
+		ContactPhone:  trimStrPtr(req.ContactPhone),
+		EventType:     trimStrPtr(req.EventType),
+		EventDate:     trimStrPtr(req.EventDate),
+		Location:      trimStrPtr(req.Location),
+		City:          trimStrPtr(req.City),
+		GuestCount:    req.GuestCount,
+		Budget:        req.Budget,
+		Currency:      strings.TrimSpace(req.Currency),
+		ServiceIDs:    serviceIDs,
+		Services:      selections,
+		Message:       trimStrPtr(req.Message),
+	}, true
+}
+
 func toCreatePublicRequestResponse(created *models.PublicRequest) createPublicRequestResponse {
-	services := created.Services
-	if services == nil {
-		services = []models.PublicRequestServiceSnapshot{}
+	servicesSnap := created.Services
+	if servicesSnap == nil {
+		servicesSnap = []models.PublicRequestServiceSnapshot{}
+	}
+	source := created.Source
+	if source == "" {
+		source = models.RequestSourcePublicProfile
+	}
+	mode := created.SubmitMode
+	if mode == "" {
+		mode = models.SubmitModeStandard
 	}
 	return createPublicRequestResponse{
 		ID:               created.ID.String(),
 		ClientToken:      created.ClientToken.String(),
 		ContactEmail:     created.ContactEmail,
 		ContactName:      created.ContactName,
+		ContactPhone:     created.ContactPhone,
 		EventType:        created.EventType,
 		EventDate:        created.EventDate,
 		Location:         created.Location,
+		City:             created.City,
 		GuestCount:       created.GuestCount,
 		Budget:           created.Budget,
 		Currency:         created.Currency,
-		Services:         services,
+		Services:         servicesSnap,
 		Message:          created.Message,
 		Status:           created.Status,
+		Source:           source,
+		SubmitMode:       mode,
+		EventID:          created.EventID,
 		IsRead:           created.IsRead,
 		LastStatusChange: created.LastStatusChange,
 		CreatedAt:        created.CreatedAt,
@@ -522,6 +581,19 @@ func writePublicRequestError(w http.ResponseWriter, err error) {
 			"error":   "inbox_full",
 			"message": "This organizer's inbox is full. Please try again later.",
 		})
+	case errors.Is(err, services.ErrValidation):
+		msg := err.Error()
+		if i := strings.Index(msg, ": "); i >= 0 {
+			msg = msg[i+2:]
+		}
+		writeError(w, http.StatusBadRequest, msg)
+	case errors.Is(err, services.ErrLinkInvalid):
+		writeJSON(w, http.StatusGone, map[string]string{
+			"error":   "link_invalid",
+			"message": "Este enlace ya no es válido o ha expirado.",
+		})
+	case errors.Is(err, services.ErrLinkNotFound):
+		writeError(w, http.StatusNotFound, "Link not found")
 	case errors.Is(err, services.ErrRequestNotFound):
 		writeError(w, http.StatusNotFound, "Request not found")
 	case errors.Is(err, services.ErrInvalidTransition):

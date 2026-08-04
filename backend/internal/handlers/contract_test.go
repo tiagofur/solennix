@@ -477,13 +477,13 @@ func TestOpenAPISpec_PublicRoutesContract(t *testing.T) {
 		name     string
 		fragment string
 	}{
-		{name: "public event forms endpoint", fragment: "/api/public/event-forms/{token}:"},
+		{name: "public request links endpoint", fragment: "/api/public/request-links/{token}:"},
+		{name: "public request link submit endpoint", fragment: "/api/public/request-links/{token}/requests:"},
 		{name: "public events portal endpoint", fragment: "/api/public/events/{token}:"},
-		{name: "get public event form data operation", fragment: "operationId: getEventFormData"},
-		{name: "submit public event form operation", fragment: "operationId: submitEventForm"},
+		{name: "get public request link operation", fragment: "operationId: getPublicRequestLink"},
+		{name: "submit public request via link operation", fragment: "operationId: submitPublicRequestViaLink"},
 		{name: "get public event portal operation", fragment: "operationId: getEventPortalData"},
-		{name: "public event form data schema", fragment: "EventFormDataResponse:"},
-		{name: "public event form submit response schema", fragment: "EventFormSubmitResponse:"},
+		{name: "public request link schema", fragment: "PublicRequestLink:"},
 		{name: "public event view schema", fragment: "PublicEventView:"},
 		{name: "link invalid example", fragment: "example: link_invalid"},
 	}
@@ -496,20 +496,14 @@ func TestOpenAPISpec_PublicRoutesContract(t *testing.T) {
 		})
 	}
 
-	t.Run("public event form submit body schema and response payload flow", func(t *testing.T) {
+	t.Run("public request link get and submit operations", func(t *testing.T) {
 		assertContainsInOrder(t, spec,
-			"/api/public/event-forms/{token}:",
-			"operationId: submitEventForm",
-			"requestBody:",
-			"content:",
-			"application/json:",
-			"$ref: \"#/components/schemas/EventFormSubmission\"",
+			"/api/public/request-links/{token}:",
+			"operationId: getPublicRequestLink",
 			"responses:",
-			"\"201\":",
-			"description: Form submitted successfully",
-			"content:",
-			"application/json:",
-			"$ref: \"#/components/schemas/EventFormSubmitResponse\"",
+			"\"200\":",
+			"/api/public/request-links/{token}/requests:",
+			"operationId: submitPublicRequestViaLink",
 		)
 	})
 
