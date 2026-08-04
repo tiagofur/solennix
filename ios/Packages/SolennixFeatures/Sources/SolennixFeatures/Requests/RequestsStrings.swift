@@ -1,4 +1,5 @@
 import Foundation
+import SolennixCore
 
 /// Localized copy for the organizer public-request inbox (#1122).
 /// Defaults are Spanish (app defaultLocalization); wire via FeatureL10n.
