@@ -550,9 +550,36 @@
       "near_me": "Near me",
       "active": "Near me",
       "sort_distance": "Closest",
+      "radius_label": "Search radius",
+      "radius_km": "{{km}} km",
       "error_unsupported": "Your browser does not support location services.",
       "error_denied": "Location permission was denied. Enable it to search nearby.",
       "error_generic": "We couldn't get your location. Try again."
+    },
+    "filters": {
+      "budget_label": "Budget",
+      "budget_any": "Any budget",
+      "budget_under_1k": "Up to $1,000",
+      "budget_1k_5k": "$1,000 – $5,000",
+      "budget_over_5k": "Over $5,000",
+      "service_label": "Service",
+      "service_any": "Any service",
+      "service_options": {
+        "catering": "Catering",
+        "comida": "Food",
+        "decoracion": "Decor",
+        "musica": "Music",
+        "dj": "DJ",
+        "fotografia": "Photography",
+        "video": "Video",
+        "flores": "Flowers",
+        "mobiliario": "Furniture",
+        "meseros": "Waitstaff",
+        "animacion": "Entertainment",
+        "pasteleria": "Pastry"
+      },
+      "available_on_label": "Available on",
+      "chip_date": "Available {{date}}"
     },
     "card": {
       "featured_badge": "Featured",

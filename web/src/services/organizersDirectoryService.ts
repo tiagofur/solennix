@@ -24,6 +24,11 @@ export interface DirectoryFilters {
   lat?: number;
   lng?: number;
   radius_km?: number;
+  /** #1128 advanced */
+  min_budget?: number;
+  max_budget?: number;
+  service_category?: string;
+  available_on?: string; // YYYY-MM-DD
 }
 
 /** Shape returned by the service (normalized, never undefined fields). */
@@ -55,6 +60,11 @@ function buildQueryString(filters: DirectoryFilters): string {
   if (filters.lat != null) params.set("lat", String(filters.lat));
   if (filters.lng != null) params.set("lng", String(filters.lng));
   if (filters.radius_km != null) params.set("radius_km", String(filters.radius_km));
+  if (filters.min_budget != null) params.set("min_budget", String(filters.min_budget));
+  if (filters.max_budget != null) params.set("max_budget", String(filters.max_budget));
+  if (filters.service_category?.trim())
+    params.set("service_category", filters.service_category.trim());
+  if (filters.available_on?.trim()) params.set("available_on", filters.available_on.trim());
   const qs = params.toString();
   return qs ? `?${qs}` : "";
 }

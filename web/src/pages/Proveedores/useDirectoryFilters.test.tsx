@@ -110,4 +110,39 @@ describe("useDirectoryFilters", () => {
     expect(result.current.sort).toBe("rating");
     expect(result.current.filters.sort).toBe("rating");
   });
+
+  it("reads advanced filters from URL (#1128)", () => {
+    const { result } = renderHook(() => useDirectoryFilters(), {
+      wrapper: wrapper([
+        "/proveedores?budget=1k_5k&min_budget=1000&max_budget=5000&service_category=catering&available_on=2026-09-15",
+      ]),
+    });
+    expect(result.current.budgetBucket).toBe("1k_5k");
+    expect(result.current.filters.min_budget).toBe(1000);
+    expect(result.current.filters.max_budget).toBe(5000);
+    expect(result.current.filters.service_category).toBe("catering");
+    expect(result.current.filters.available_on).toBe("2026-09-15");
+  });
+
+  it("setBudgetBucket writes min/max_budget params", () => {
+    const { result } = renderHook(() => useDirectoryFilters(), {
+      wrapper: wrapper(["/proveedores"]),
+    });
+    act(() => result.current.setBudgetBucket("under_1k"));
+    expect(result.current.budgetBucket).toBe("under_1k");
+    expect(result.current.filters.max_budget).toBe(1000);
+    expect(result.current.filters.min_budget).toBeUndefined();
+  });
+
+  it("clearFilter removes a single advanced filter", () => {
+    const { result } = renderHook(() => useDirectoryFilters(), {
+      wrapper: wrapper([
+        "/proveedores?service_category=dj&available_on=2026-09-15&city=CDMX",
+      ]),
+    });
+    act(() => result.current.clearFilter("service_category"));
+    expect(result.current.serviceCategory).toBe("");
+    expect(result.current.availableOn).toBe("2026-09-15");
+    expect(result.current.inputValues.city).toBe("CDMX");
+  });
 });

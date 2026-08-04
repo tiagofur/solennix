@@ -550,9 +550,36 @@
       "near_me": "Cerca de mí",
       "active": "Cerca de mí",
       "sort_distance": "Más cercanos",
+      "radius_label": "Radio de búsqueda",
+      "radius_km": "{{km}} km",
       "error_unsupported": "Tu navegador no soporta ubicación.",
       "error_denied": "Permiso de ubicación denegado. Activalo para buscar cerca.",
       "error_generic": "No pudimos obtener tu ubicación. Probá de nuevo."
+    },
+    "filters": {
+      "budget_label": "Presupuesto",
+      "budget_any": "Cualquier presupuesto",
+      "budget_under_1k": "Hasta $1.000",
+      "budget_1k_5k": "$1.000 – $5.000",
+      "budget_over_5k": "Más de $5.000",
+      "service_label": "Servicio",
+      "service_any": "Cualquier servicio",
+      "service_options": {
+        "catering": "Catering",
+        "comida": "Comida",
+        "decoracion": "Decoración",
+        "musica": "Música",
+        "dj": "DJ",
+        "fotografia": "Fotografía",
+        "video": "Video",
+        "flores": "Flores",
+        "mobiliario": "Mobiliario",
+        "meseros": "Meseros",
+        "animacion": "Animación",
+        "pasteleria": "Pastelería"
+      },
+      "available_on_label": "Disponible el",
+      "chip_date": "Disponible {{date}}"
     },
     "card": {
       "featured_badge": "Destacado",

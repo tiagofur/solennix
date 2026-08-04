@@ -71,6 +71,10 @@ describe("organizersDirectoryService", () => {
         limit: 10,
         sort: "rating",
         order: "asc",
+        min_budget: 1000,
+        max_budget: 5000,
+        service_category: "catering",
+        available_on: "2026-09-15",
       });
       const url = new URL(capturedUrl);
       expect(url.searchParams.get("city")).toBe("Mexico City");
@@ -78,6 +82,10 @@ describe("organizersDirectoryService", () => {
       expect(url.searchParams.get("q")).toBe("catering");
       expect(url.searchParams.get("page")).toBe("2");
       expect(url.searchParams.get("limit")).toBe("10");
+      expect(url.searchParams.get("min_budget")).toBe("1000");
+      expect(url.searchParams.get("max_budget")).toBe("5000");
+      expect(url.searchParams.get("service_category")).toBe("catering");
+      expect(url.searchParams.get("available_on")).toBe("2026-09-15");
       expect(url.searchParams.get("sort")).toBe("rating");
       expect(url.searchParams.get("order")).toBe("asc");
     });

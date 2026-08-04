@@ -10,21 +10,39 @@ import { OrganizerCard } from "./OrganizerCard";
 
 const EVENT_TYPES = ["boda", "corporativo", "xv", "infantil", "baby_shower", "bautizo", "banquete", "social"];
 
+/** Common product categories for service filter (#1128). Free-text ILIKE on backend. */
+const SERVICE_CATEGORIES = [
+  "catering",
+  "comida",
+  "decoracion",
+  "musica",
+  "dj",
+  "fotografia",
+  "video",
+  "flores",
+  "mobiliario",
+  "meseros",
+  "animacion",
+  "pasteleria",
+];
+
+const BUDGET_BUCKETS = ["under_1k", "1k_5k", "over_5k"] as const;
+const RADIUS_OPTIONS = ["25", "50", "100"] as const;
+
 /**
- * Public directory page /proveedores (#1117). Unauthenticated (NG1 ratified).
- * Hero + inline search (city + event type + q) + responsive grid of
- * OrganizerCard + pagination + skeleton/empty/error states.
- *
- * Filters live in the URL (design D3); text inputs are debounced (D4); the
- * grid uses React Query with keepPreviousData to avoid layout shift (D2).
+ * Public directory page /proveedores (#1117 / #1128). Unauthenticated (NG1).
+ * Hero + search + advanced filters (geo, budget, service, availability) + grid.
+ * Filters live in the URL (design D3); text inputs are debounced (D4).
  */
 export const ProveedoresPage: React.FC = () => {
   const { t } = useTranslation("public");
   const {
     inputValues, eventType, sort, page, filters,
+    serviceCategory, availableOn, budgetBucket, radiusKm,
     geoLoading, geoError, isGeoActive,
     setCity, setQ, setEventType, setSort, setPage,
-    useNearMe, clearGeo, clear,
+    setServiceCategory, setAvailableOn, setBudgetBucket, setRadiusKm,
+    useNearMe, clearGeo, clearFilter, clear,
   } = useDirectoryFilters();
   const { data, isLoading, isError, isFetching } = useSearchOrganizers(filters);
 
@@ -109,7 +127,7 @@ export const ProveedoresPage: React.FC = () => {
             </label>
           </div>
 
-          {/* Geo + sort controls (#1128) */}
+          {/* Geo + sort + radius (#1128) */}
           <div className="mt-3 flex flex-wrap items-center gap-3">
             {isGeoActive ? (
               <button
@@ -139,6 +157,22 @@ export const ProveedoresPage: React.FC = () => {
               </button>
             )}
 
+            {isGeoActive && (
+              <select
+                value={radiusKm || "50"}
+                onChange={(e) => setRadiusKm(e.target.value)}
+                className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-text focus:border-primary focus:outline-none"
+                aria-label={t("public:directory.geo.radius_label")}
+                data-testid="radius-select"
+              >
+                {RADIUS_OPTIONS.map((r) => (
+                  <option key={r} value={r}>
+                    {t("public:directory.geo.radius_km", { km: r })}
+                  </option>
+                ))}
+              </select>
+            )}
+
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
@@ -158,6 +192,121 @@ export const ProveedoresPage: React.FC = () => {
               </span>
             )}
           </div>
+
+          {/* Advanced filters: budget, service, availability (#1128) */}
+          <div
+            className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3"
+            data-testid="advanced-filters"
+          >
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-text-secondary">
+                {t("public:directory.filters.budget_label")}
+              </span>
+              <select
+                value={budgetBucket}
+                onChange={(e) =>
+                  setBudgetBucket(e.target.value as typeof budgetBucket)
+                }
+                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+                data-testid="budget-select"
+              >
+                <option value="">{t("public:directory.filters.budget_any")}</option>
+                {BUDGET_BUCKETS.map((b) => (
+                  <option key={b} value={b}>
+                    {t(`public:directory.filters.budget_${b}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-text-secondary">
+                {t("public:directory.filters.service_label")}
+              </span>
+              <select
+                value={serviceCategory}
+                onChange={(e) => setServiceCategory(e.target.value)}
+                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+                data-testid="service-category-select"
+              >
+                <option value="">{t("public:directory.filters.service_any")}</option>
+                {SERVICE_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {t(`public:directory.filters.service_options.${c}`, {
+                      defaultValue: c,
+                    })}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-text-secondary">
+                {t("public:directory.filters.available_on_label")}
+              </span>
+              <input
+                type="date"
+                value={availableOn}
+                onChange={(e) => setAvailableOn(e.target.value)}
+                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+                data-testid="available-on-input"
+              />
+            </label>
+          </div>
+
+          {/* Active filter chips */}
+          {(budgetBucket || serviceCategory || availableOn || isGeoActive || eventType || inputValues.city || inputValues.q) && (
+            <div className="mt-3 flex flex-wrap items-center gap-2" data-testid="active-filter-chips">
+              {isGeoActive && (
+                <FilterChip
+                  label={t("public:directory.geo.active")}
+                  onRemove={() => clearFilter("geo")}
+                />
+              )}
+              {budgetBucket && (
+                <FilterChip
+                  label={t(`public:directory.filters.budget_${budgetBucket}`)}
+                  onRemove={() => clearFilter("budget")}
+                />
+              )}
+              {serviceCategory && (
+                <FilterChip
+                  label={t(`public:directory.filters.service_options.${serviceCategory}`, {
+                    defaultValue: serviceCategory,
+                  })}
+                  onRemove={() => clearFilter("service_category")}
+                />
+              )}
+              {availableOn && (
+                <FilterChip
+                  label={t("public:directory.filters.chip_date", { date: availableOn })}
+                  onRemove={() => clearFilter("available_on")}
+                />
+              )}
+              {eventType && (
+                <FilterChip
+                  label={t(`public:directory.search.event_type_options.${eventType}`, {
+                    defaultValue: eventType,
+                  })}
+                  onRemove={() => clearFilter("event_type")}
+                />
+              )}
+              {inputValues.city && (
+                <FilterChip
+                  label={inputValues.city}
+                  onRemove={() => clearFilter("city")}
+                />
+              )}
+              <button
+                type="button"
+                onClick={clear}
+                className="text-xs font-semibold text-primary hover:underline"
+                data-testid="clear-all-filters"
+              >
+                {t("public:directory.empty.clear_cta")}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -241,4 +390,18 @@ const DirectoryCardSkeleton: React.FC = () => (
       <div className="h-3 w-1/2 animate-shimmer rounded bg-border/40" />
     </div>
   </div>
+);
+
+const FilterChip: React.FC<{ label: string; onRemove: () => void }> = ({
+  label,
+  onRemove,
+}) => (
+  <button
+    type="button"
+    onClick={onRemove}
+    className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
+  >
+    {label}
+    <X className="h-3 w-3" aria-hidden="true" />
+  </button>
 );
