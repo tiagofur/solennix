@@ -105,6 +105,9 @@ object Endpoints {
     const val MY_PUBLIC_PROFILE_FAQ = "users/me/public-profile/faq"
     fun myPublicProfileFaqItem(id: String) = "users/me/public-profile/faq/$id"
 
+    /** Public visitor profile (unauthenticated) — #1126. */
+    fun publicOrganizer(slug: String) = "public/organizers/$slug"
+
     // Subscriptions
     const val SUBSCRIPTION_STATUS = "subscriptions/status"
 

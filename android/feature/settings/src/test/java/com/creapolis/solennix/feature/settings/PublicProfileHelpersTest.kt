@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.settings
 
+import com.creapolis.solennix.core.model.PublicOrganizerProfile
 import com.creapolis.solennix.core.model.SolennixUrls
 import com.creapolis.solennix.feature.settings.viewmodel.PublicProfileSettingsViewModel
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -15,6 +16,30 @@ class PublicProfileHelpersTest {
         assertEquals("https://solennix.com/u/mi-negocio", url)
         assertFalse(url.contains("api."))
         assertEquals("https://solennix.com", SolennixUrls.WEB_BASE_URL)
+    }
+
+    @Test
+    fun `public organizer display name respects showBusinessName`() {
+        val withBusiness = PublicOrganizerProfile(
+            slug = "mi-negocio",
+            businessName = "Mi Negocio",
+            showBusinessName = true,
+            headline = "Headline"
+        )
+        assertEquals("Mi Negocio", withBusiness.displayName)
+
+        val headlineOnly = PublicOrganizerProfile(
+            slug = "mi-negocio",
+            businessName = "Mi Negocio",
+            showBusinessName = false,
+            headline = "Headline"
+        )
+        assertEquals("Headline", headlineOnly.displayName)
+
+        assertEquals(
+            "https://solennix.com/u/mi-negocio",
+            withBusiness.publicUrl
+        )
     }
 
     @Test

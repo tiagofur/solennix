@@ -92,6 +92,7 @@ import com.creapolis.solennix.feature.search.ui.SearchScreen
 import com.creapolis.solennix.feature.settings.ui.AboutScreen
 import com.creapolis.solennix.feature.settings.ui.AccountDeletionScreen
 import com.creapolis.solennix.feature.settings.ui.BusinessSettingsScreen
+import com.creapolis.solennix.feature.settings.ui.PublicProfilePreviewScreen
 import com.creapolis.solennix.feature.settings.ui.PublicProfileSettingsScreen
 import com.creapolis.solennix.feature.settings.ui.ChangePasswordScreen
 import com.creapolis.solennix.feature.settings.ui.ContractDefaultsScreen
@@ -441,6 +442,18 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             }
             composable("public_profile_settings") {
                 PublicProfileSettingsScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() },
+                    onPreviewProfile = { slug ->
+                        navController.navigate("public_profile_preview/$slug")
+                    }
+                )
+            }
+            composable(
+                route = "public_profile_preview/{slug}",
+                arguments = listOf(navArgument("slug") { type = NavType.StringType })
+            ) {
+                PublicProfilePreviewScreen(
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() }
                 )

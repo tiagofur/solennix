@@ -35,6 +35,18 @@ struct PublicProfileSlugSection: View {
                 PublicProfileShareBlock(shareURL: shareURL, viewModel: viewModel)
                     .solennixRow()
             }
+
+            let trimmedSlug = viewModel.slug.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedSlug.isEmpty, viewModel.slugError == nil {
+                NavigationLink(value: Route.publicProfilePreview(slug: trimmedSlug)) {
+                    Label(
+                        FeatureL10n.text("settings.public_profile.preview", "Ver perfil público"),
+                        systemImage: "eye"
+                    )
+                    .font(.subheadline.weight(.medium))
+                }
+                .solennixRow()
+            }
         } header: {
             Text(FeatureL10n.text("settings.public_profile.slug", "Dirección pública (slug)"))
         } footer: {

@@ -76,6 +76,8 @@ public enum Route: Hashable, Codable {
     case changePassword
     case businessSettings
     case publicProfileSettings
+    /// Provider preview of public profile (`GET /public/organizers/{slug}`) — #1126.
+    case publicProfilePreview(slug: String)
     case contractDefaults
     case pricing
     case subscription
