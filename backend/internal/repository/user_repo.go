@@ -814,10 +814,23 @@ func (r *UserRepo) UpsertUserPlatforms(ctx context.Context, records []models.Use
 			interaction_count = user_platforms.interaction_count + EXCLUDED.interaction_count,
 			last_used_at = NOW()`
 
+	// Presence row for admin DAU series (UTC calendar day).
+	dayQuery := `
+		INSERT INTO user_activity_days (user_id, activity_date, platform)
+		VALUES ($1, (NOW() AT TIME ZONE 'UTC')::date, $2)
+		ON CONFLICT (user_id, activity_date, platform) DO NOTHING`
+
 	for _, rec := range records {
 		_, err := tx.Exec(ctx, query, rec.UserID, rec.Platform, rec.InteractionCount)
 		if err != nil {
 			return fmt.Errorf("failed to upsert platform record: %w", err)
+		}
+		plat := rec.Platform
+		if plat == "" {
+			plat = "unknown"
+		}
+		if _, err := tx.Exec(ctx, dayQuery, rec.UserID, plat); err != nil {
+			return fmt.Errorf("failed to upsert activity day: %w", err)
 		}
 	}
 

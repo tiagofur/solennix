@@ -44,6 +44,13 @@ const mockStats = {
   new_users_week: 23,
   new_users_month: 53,
   active_subscriptions: 31,
+  dau: 12,
+  wau: 40,
+  mau: 88,
+  dau_by_day: [{ date: '2026-08-01', count: 5 }, { date: '2026-08-02', count: 8 }],
+  visitor_views_last_30d: 120,
+  visitor_unique_last_30d: 45,
+  visitor_views_by_day: [{ date: '2026-08-01', count: 10 }, { date: '2026-08-02', count: 20 }],
 };
 
 const mockSubs = {

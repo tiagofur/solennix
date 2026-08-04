@@ -20,6 +20,14 @@ export interface PlatformStats {
   registrations_by_platform?: Record<string, number>;
   active_users_by_platform?: Record<string, number>;
   interactions_by_platform?: Record<string, number>;
+  /** Product analytics slice 1 */
+  dau?: number;
+  wau?: number;
+  mau?: number;
+  dau_by_day?: Array<{ date: string; count: number }>;
+  visitor_views_last_30d?: number;
+  visitor_unique_last_30d?: number;
+  visitor_views_by_day?: Array<{ date: string; count: number }>;
 }
 
 export interface AdminUser {
