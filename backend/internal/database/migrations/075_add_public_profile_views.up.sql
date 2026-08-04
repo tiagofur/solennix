@@ -16,6 +16,7 @@ CREATE INDEX IF NOT EXISTS idx_public_profile_views_organizer_time
 CREATE INDEX IF NOT EXISTS idx_public_profile_views_slug_time
     ON public_profile_views (slug, viewed_at DESC);
 
--- Support unique-visitor style queries per day without full table scan.
-CREATE INDEX IF NOT EXISTS idx_public_profile_views_organizer_day_hash
-    ON public_profile_views (organizer_user_id, (viewed_at::date), visitor_hash);
+-- Composite for unique-visitor style queries (range on viewed_at + hash).
+-- Avoid expression indexes on viewed_at::date — not IMMUTABLE in Postgres.
+CREATE INDEX IF NOT EXISTS idx_public_profile_views_organizer_hash_time
+    ON public_profile_views (organizer_user_id, visitor_hash, viewed_at DESC);
