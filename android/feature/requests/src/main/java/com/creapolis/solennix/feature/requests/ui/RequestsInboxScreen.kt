@@ -36,12 +36,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +54,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.EmptyState
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
@@ -58,6 +63,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.PublicRequest
 import com.creapolis.solennix.feature.requests.R
+import com.creapolis.solennix.feature.requests.viewmodel.RequestLinksViewModel
 import com.creapolis.solennix.feature.requests.viewmodel.RequestsInboxViewModel
 import com.creapolis.solennix.feature.requests.viewmodel.RequestsStatusFilter
 
@@ -66,15 +72,17 @@ import com.creapolis.solennix.feature.requests.viewmodel.RequestsStatusFilter
 fun RequestsInboxScreen(
     viewModel: RequestsInboxViewModel,
     onNavigateBack: () -> Unit,
-    onOpenDetail: (String) -> Unit
+    onOpenDetail: (String) -> Unit,
+    linksViewModel: RequestLinksViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val retryLabel = stringResource(R.string.requests_inbox_error_retry)
+    var selectedTab by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(uiState.error) {
+    LaunchedEffect(uiState.error, selectedTab) {
         val err = uiState.error
-        if (err != null && uiState.items.isEmpty() && !uiState.isLoading) {
+        if (selectedTab == 0 && err != null && uiState.items.isEmpty() && !uiState.isLoading) {
             snackbarHostState.showSnackbar(err, actionLabel = retryLabel)
         }
     }
@@ -96,7 +104,7 @@ fun RequestsInboxScreen(
             SolennixTopAppBar(
                 title = {
                     val base = stringResource(R.string.requests_inbox_title)
-                    val title = if (uiState.unreadCount > 0) {
+                    val title = if (uiState.unreadCount > 0 && selectedTab == 0) {
                         "$base (${uiState.unreadCount})"
                     } else {
                         base
@@ -115,53 +123,76 @@ fun RequestsInboxScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        SolennixPullToRefreshBox(
-            isRefreshing = uiState.isRefreshing,
-            onRefresh = { viewModel.refresh() },
+        Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                FilterRow(
-                    selected = uiState.statusFilter,
-                    onSelect = viewModel::applyFilter
+            TabRow(selectedTabIndex = selectedTab) {
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = { Text(stringResource(R.string.requests_tab_inbox)) }
                 )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = { Text(stringResource(R.string.requests_tab_links)) }
+                )
+            }
 
-                val phase = when {
-                    uiState.isLoading && uiState.items.isEmpty() -> "loading"
-                    uiState.error != null && uiState.items.isEmpty() -> "error"
-                    uiState.items.isEmpty() -> "empty"
-                    else -> "list"
-                }
+            when (selectedTab) {
+                0 -> SolennixPullToRefreshBox(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = { viewModel.refresh() },
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        FilterRow(
+                            selected = uiState.statusFilter,
+                            onSelect = viewModel::applyFilter
+                        )
 
-                AnimatedContent(
-                    targetState = phase,
-                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                    label = "requests_phase"
-                ) { target ->
-                    when (target) {
-                        "loading" -> RequestsSkeleton()
-                        "error" -> EmptyState(
-                            icon = Icons.Default.Inbox,
-                            title = stringResource(R.string.requests_inbox_error_title),
-                            message = uiState.error.orEmpty(),
-                            actionText = stringResource(R.string.requests_inbox_error_retry),
-                            onAction = { viewModel.refresh() }
-                        )
-                        "empty" -> EmptyState(
-                            icon = Icons.Default.Inbox,
-                            title = stringResource(R.string.requests_inbox_empty_title),
-                            message = stringResource(R.string.requests_inbox_empty_message)
-                        )
-                        else -> RequestsList(
-                            requests = uiState.items,
-                            isLoadingMore = uiState.isLoadingMore,
-                            onOpen = onOpenDetail,
-                            onLoadMore = { id -> viewModel.loadMoreIfNeeded(id) }
-                        )
+                        val phase = when {
+                            uiState.isLoading && uiState.items.isEmpty() -> "loading"
+                            uiState.error != null && uiState.items.isEmpty() -> "error"
+                            uiState.items.isEmpty() -> "empty"
+                            else -> "list"
+                        }
+
+                        AnimatedContent(
+                            targetState = phase,
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            label = "requests_phase"
+                        ) { target ->
+                            when (target) {
+                                "loading" -> RequestsSkeleton()
+                                "error" -> EmptyState(
+                                    icon = Icons.Default.Inbox,
+                                    title = stringResource(R.string.requests_inbox_error_title),
+                                    message = uiState.error.orEmpty(),
+                                    actionText = stringResource(R.string.requests_inbox_error_retry),
+                                    onAction = { viewModel.refresh() }
+                                )
+                                "empty" -> EmptyState(
+                                    icon = Icons.Default.Inbox,
+                                    title = stringResource(R.string.requests_inbox_empty_title),
+                                    message = stringResource(R.string.requests_inbox_empty_message)
+                                )
+                                else -> RequestsList(
+                                    requests = uiState.items,
+                                    isLoadingMore = uiState.isLoadingMore,
+                                    onOpen = onOpenDetail,
+                                    onLoadMore = { id -> viewModel.loadMoreIfNeeded(id) }
+                                )
+                            }
+                        }
                     }
                 }
+                else -> RequestLinksPanel(
+                    viewModel = linksViewModel,
+                    snackbarHostState = snackbarHostState
+                )
             }
         }
     }

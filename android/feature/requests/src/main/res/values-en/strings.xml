@@ -54,4 +54,41 @@
     <string name="requests_field_guests">Guests</string>
     <string name="requests_field_budget">Budget</string>
     <string name="requests_field_status">Status</string>
+
+    <string name="requests_tab_inbox">Inbox</string>
+    <string name="requests_tab_links">Links</string>
+    <string name="requests_links_new_link">New link</string>
+    <string name="requests_links_retry">Retry</string>
+    <string name="requests_links_empty_title">No links</string>
+    <string name="requests_links_empty_message">Generate a link so clients can submit an event request.</string>
+    <string name="requests_links_delete_title">Delete link</string>
+    <string name="requests_links_delete_message">Are you sure you want to delete this link? This action cannot be undone.</string>
+    <string name="requests_links_delete_confirm">Delete</string>
+    <string name="requests_links_cancel">Cancel</string>
+    <string name="requests_links_no_label">No label</string>
+    <string name="requests_links_created_on">Created: %1$s</string>
+    <string name="requests_links_expires_on">Expires: %1$s</string>
+    <string name="requests_links_uses">Uses: %1$d / %2$d</string>
+    <string name="requests_links_share">Share link</string>
+    <string name="requests_links_copy">Copy link</string>
+    <string name="requests_links_clip_label">Request link</string>
+    <string name="requests_links_share_subject">Event request</string>
+    <string name="requests_links_share_subject_with_label">Event request - %1$s</string>
+    <string name="requests_links_status_active">Active</string>
+    <string name="requests_links_status_used">Used</string>
+    <string name="requests_links_status_expired">Expired</string>
+    <string name="requests_links_status_revoked">Revoked</string>
+    <string name="requests_links_generate_title">New request link</string>
+    <string name="requests_links_label_field">Label (optional)</string>
+    <string name="requests_links_label_placeholder">e.g. Garcia Wedding</string>
+    <string name="requests_links_ttl_days">Validity days</string>
+    <string name="requests_links_max_uses">Max uses</string>
+    <string name="requests_links_max_uses_hint">Empty = unlimited</string>
+    <string name="requests_links_submit_mode">On submit</string>
+    <string name="requests_links_mode_auto_event">Auto event</string>
+    <string name="requests_links_mode_auto_quote">Auto quote</string>
+    <string name="requests_links_mode_standard">Request only</string>
+    <string name="requests_links_generate">Generate</string>
+
 </resources>
+
