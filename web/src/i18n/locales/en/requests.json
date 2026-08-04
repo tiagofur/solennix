@@ -1,0 +1,72 @@
+{
+  "title": "Quote requests",
+  "subtitle": "Inbound requests from your public profile",
+  "unread_badge": "{{count}} unread",
+  "filter_all": "All",
+  "filter_status": "Status",
+  "empty": "No quote requests yet",
+  "empty_hint": "When visitors send a request from your public page, they appear here.",
+  "loading": "Loading requests…",
+  "error": "We couldn't load your inbox.",
+  "retry": "Retry",
+  "detail_title": "Request detail",
+  "fields": {
+    "contact": "Contact",
+    "email": "Email",
+    "event_type": "Event type",
+    "event_date": "Event date",
+    "location": "Location",
+    "guests": "Guests",
+    "budget": "Budget",
+    "message": "Message",
+    "services": "Services",
+    "status": "Status",
+    "created": "Received"
+  },
+  "status": {
+    "pending": "Pending",
+    "info_requested": "Info requested",
+    "responded": "Responded",
+    "accepted_by_client": "Accepted by client",
+    "declined_provider": "Declined by you",
+    "declined_client": "Declined by client",
+    "booked": "Booked",
+    "expired": "Expired"
+  },
+  "actions": {
+    "mark_read": "Mark as read",
+    "marking_read": "Marking…",
+    "decline": "Decline",
+    "declining": "Declining…",
+    "respond": "Send quote",
+    "responding": "Sending…",
+    "request_info": "Request more info",
+    "requesting_info": "Sending…",
+    "convert": "Convert to event",
+    "converting": "Converting…",
+    "close": "Close"
+  },
+  "respond_form": {
+    "title": "Send a quote",
+    "amount": "Quote amount *",
+    "currency": "Currency",
+    "message": "Message",
+    "inclusions": "Inclusions (comma-separated)",
+    "inclusions_placeholder": "e.g. Setup, cleanup, 4h service",
+    "submit": "Send quote"
+  },
+  "decline_form": {
+    "title": "Decline request",
+    "reason": "Reason (optional)",
+    "reason_placeholder": "Brief reason for the client…",
+    "submit": "Decline"
+  },
+  "toast": {
+    "marked_read": "Marked as read",
+    "declined": "Request declined",
+    "responded": "Quote sent",
+    "info_requested": "More info requested",
+    "converted": "Event created",
+    "error": "Action failed. Try again."
+  }
+}
