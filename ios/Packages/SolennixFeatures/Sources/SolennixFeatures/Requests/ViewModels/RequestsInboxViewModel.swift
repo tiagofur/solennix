@@ -22,6 +22,8 @@ private struct EmptyBody: Encodable {}
 private struct RespondBody: Encodable {
     let quoteAmount: Double
     let currency: String
+    let inclusions: [String]
+    let validUntil: String?
     let message: String?
 }
 
@@ -232,12 +234,36 @@ public final class RequestsInboxViewModel {
 
     // MARK: - Actions
 
+    /// Default quote validity: 7 days from today (YYYY-MM-DD), matching #1125 AC.
+    public static func defaultValidUntil(from date: Date = Date()) -> String {
+        let day = Calendar.current.date(byAdding: .day, value: 7, to: date) ?? date
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: day)
+    }
+
     @MainActor
-    public func respond(id: String, amount: Double, message: String?) async -> Bool {
+    public func respond(
+        id: String,
+        amount: Double,
+        currency: String = "MXN",
+        inclusions: [String] = [],
+        validUntil: String? = nil,
+        message: String?
+    ) async -> Bool {
+        guard !actionInFlight else { return false }
         actionInFlight = true
         defer { actionInFlight = false }
         do {
-            let body = RespondBody(quoteAmount: amount, currency: "MXN", message: message)
+            let body = RespondBody(
+                quoteAmount: amount,
+                currency: currency.isEmpty ? "MXN" : currency,
+                inclusions: inclusions,
+                validUntil: validUntil ?? Self.defaultValidUntil(),
+                message: message
+            )
             let _: DataEnvelope<PublicResponse> = try await apiClient.post(
                 Endpoint.publicRequestRespond(id),
                 body: body
@@ -253,6 +279,7 @@ public final class RequestsInboxViewModel {
 
     @MainActor
     public func requestInfo(id: String) async -> Bool {
+        guard !actionInFlight else { return false }
         actionInFlight = true
         defer { actionInFlight = false }
         do {
@@ -271,6 +298,7 @@ public final class RequestsInboxViewModel {
 
     @MainActor
     public func decline(id: String, reason: String?) async -> Bool {
+        guard !actionInFlight else { return false }
         actionInFlight = true
         defer { actionInFlight = false }
         do {
@@ -290,6 +318,7 @@ public final class RequestsInboxViewModel {
 
     @MainActor
     public func convertToEvent(id: String) async -> String? {
+        guard !actionInFlight else { return nil }
         actionInFlight = true
         defer { actionInFlight = false }
         do {
@@ -301,7 +330,6 @@ public final class RequestsInboxViewModel {
             await refresh()
             return envelope.data.eventId
         } catch {
-            // Some backends return { data: { event_id } } nested differently — retry raw
             errorMessage = mapError(error)
             return nil
         }

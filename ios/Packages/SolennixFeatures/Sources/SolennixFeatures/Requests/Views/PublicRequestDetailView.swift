@@ -23,14 +23,30 @@ public struct PublicRequestDetailView: View {
 
     @Bindable var viewModel: RequestsInboxViewModel
     let requestId: String
+    /// Called after successful convert-to-event with the new event id (#1125).
+    var onConvertedToEvent: ((String) -> Void)?
 
     @State private var showRespond = false
     @State private var showDecline = false
     @State private var quoteAmountText = ""
+    @State private var currencyText = "MXN"
+    @State private var validUntilText = RequestsInboxViewModel.defaultValidUntil()
+    @State private var inclusionsText = ""
     @State private var respondMessage = ""
     @State private var declineReason = ""
+    @State private var convertedEventId: String?
     @State private var successHaptic = 0
     @Environment(ToastManager.self) private var toastManager
+
+    public init(
+        viewModel: RequestsInboxViewModel,
+        requestId: String,
+        onConvertedToEvent: ((String) -> Void)? = nil
+    ) {
+        self.viewModel = viewModel
+        self.requestId = requestId
+        self.onConvertedToEvent = onConvertedToEvent
+    }
 
     public var body: some View {
         Group {
@@ -182,14 +198,22 @@ public struct PublicRequestDetailView: View {
                     if request.status == .acceptedByClient {
                         Button {
                             Task {
-                                if let _ = await viewModel.convertToEvent(id: request.id) {
+                                if let eventId = await viewModel.convertToEvent(id: request.id) {
                                     toast(RequestsStrings.toastConverted)
+                                    convertedEventId = eventId
+                                    onConvertedToEvent?(eventId)
                                 }
                             }
                         } label: {
                             Label(RequestsStrings.actionConvert, systemImage: "calendar.badge.plus")
                         }
                         .disabled(viewModel.actionInFlight)
+                    }
+
+                    if let eventId = convertedEventId ?? request.eventId {
+                        NavigationLink(value: Route.eventDetail(id: eventId)) {
+                            Label(RequestsStrings.viewEvent, systemImage: "calendar")
+                        }
                     }
                 }
             }
@@ -223,6 +247,20 @@ public struct PublicRequestDetailView: View {
                 Section {
                     TextField(RequestsStrings.respondAmount, text: $quoteAmountText)
                         .keyboardType(.decimalPad)
+                    TextField(RequestsStrings.respondCurrency, text: $currencyText)
+                        .textInputAutocapitalization(.characters)
+                    DatePicker(
+                        RequestsStrings.respondValidUntil,
+                        selection: Binding(
+                            get: {
+                                Self.parseDay(validUntilText) ?? Calendar.current.date(byAdding: .day, value: 7, to: Date())!
+                            },
+                            set: { validUntilText = Self.formatDay($0) }
+                        ),
+                        displayedComponents: .date
+                    )
+                    TextField(RequestsStrings.respondInclusions, text: $inclusionsText, axis: .vertical)
+                        .lineLimit(3...8)
                     TextField(RequestsStrings.respondMessage, text: $respondMessage, axis: .vertical)
                         .lineLimit(3...6)
                 }
@@ -240,9 +278,16 @@ public struct PublicRequestDetailView: View {
                                 return
                             }
                             let msg = respondMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+                            let inclusions = inclusionsText
+                                .split(separator: "\n")
+                                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                                .filter { !$0.isEmpty }
                             if await viewModel.respond(
                                 id: requestId,
                                 amount: amount,
+                                currency: currencyText.trimmingCharacters(in: .whitespacesAndNewlines),
+                                inclusions: inclusions,
+                                validUntil: validUntilText,
                                 message: msg.isEmpty ? nil : msg
                             ) {
                                 showRespond = false
@@ -254,8 +299,24 @@ public struct PublicRequestDetailView: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.large, .medium])
     }
+
+    private static func parseDay(_ value: String) -> Date? {
+        dayFormatter.date(from: value)
+    }
+
+    private static func formatDay(_ date: Date) -> String {
+        dayFormatter.string(from: date)
+    }
+
+    private static let dayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
 
     private var declineSheet: some View {
         NavigationStack {

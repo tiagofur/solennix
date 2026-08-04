@@ -63,9 +63,13 @@ enum RequestsStrings {
 
     static var respondTitle: String { FeatureL10n.text("requests.respond.title", "Enviar cotizacion") }
     static var respondAmount: String { FeatureL10n.text("requests.respond.amount", "Monto") }
+    static var respondCurrency: String { FeatureL10n.text("requests.respond.currency", "Moneda") }
+    static var respondValidUntil: String { FeatureL10n.text("requests.respond.valid_until", "Valida hasta") }
+    static var respondInclusions: String { FeatureL10n.text("requests.respond.inclusions", "Incluye (una por linea)") }
     static var respondMessage: String { FeatureL10n.text("requests.respond.message", "Mensaje (opcional)") }
     static var declineTitle: String { FeatureL10n.text("requests.decline.title", "Declinar solicitud") }
     static var declineReason: String { FeatureL10n.text("requests.decline.reason", "Motivo (opcional)") }
+    static var viewEvent: String { FeatureL10n.text("requests.action.view_event", "Ver evento") }
 
     static var toastResponded: String { FeatureL10n.text("requests.toast.responded", "Cotizacion enviada") }
     static var toastDeclined: String { FeatureL10n.text("requests.toast.declined", "Solicitud declinada") }

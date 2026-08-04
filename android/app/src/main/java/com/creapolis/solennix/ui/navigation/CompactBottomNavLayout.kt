@@ -333,7 +333,8 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 RequestDetailScreen(
                     requestId = id,
                     viewModel = hiltViewModel(),
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onOpenEvent = { eventId -> navController.navigate("event_detail/$eventId") }
                 )
             }
 

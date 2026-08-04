@@ -98,6 +98,8 @@ data class OkEnvelope(
 data class RespondPublicRequestBody(
     @SerialName("quote_amount") val quoteAmount: Double,
     val currency: String = "MXN",
+    val inclusions: List<String> = emptyList(),
+    @SerialName("valid_until") val validUntil: String? = null,
     val message: String? = null
 )
 
