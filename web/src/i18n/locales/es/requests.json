@@ -1,6 +1,6 @@
 {
   "title": "Solicitudes de cotización",
-  "subtitle": "Pedidos entrantes desde tu perfil público",
+  "subtitle": "Bandeja y enlaces compartibles para pedidos de presupuesto",
   "unread_badge": "{{count}} sin leer",
   "filter_all": "Todas",
   "filter_status": "Estado",
@@ -68,5 +68,65 @@
     "info_requested": "Se pidió más información",
     "converted": "Evento creado",
     "error": "La acción falló. Probá de nuevo."
+  },
+  "tabs": {
+    "aria": "Secciones de solicitudes",
+    "inbox": "Bandeja",
+    "links": "Enlaces"
+  },
+  "links": {
+    "title": "Enlaces de solicitud",
+    "subtitle": "Compartí un link para que te llenen el formulario de solicitud",
+    "new_link": "Nuevo enlace",
+    "create_first": "Crear primer enlace",
+    "no_links": "Sin enlaces",
+    "no_links_desc": "Generá un enlace compartible. Por defecto crea un evento al enviar (auto_event).",
+    "dialog_title": "Crear enlace de solicitud",
+    "label_field": "Etiqueta (opcional)",
+    "label_placeholder": "Ej: Boda de María y Pedro",
+    "valid_for": "Válido por: {{count}} días",
+    "day_one": "1 día",
+    "day_plural": "{{count}} días",
+    "max_uses_label": "Usos máximos",
+    "max_uses_unlimited": "Vacío = ilimitado",
+    "max_uses_hint": "1 = un solo uso. Dejá vacío para usos ilimitados.",
+    "submit_mode_label": "Al enviar el formulario",
+    "submit_mode": {
+      "standard": "Solo solicitud (bandeja)",
+      "auto_quote": "Cotización automática",
+      "auto_event": "Crear evento automáticamente"
+    },
+    "submit_mode_help": {
+      "standard": "La solicitud llega a tu bandeja para que respondas.",
+      "auto_quote": "Se genera una cotización con los ítems elegidos.",
+      "auto_event": "Se crea cliente + evento cotizado al enviar (como el formulario anterior)."
+    },
+    "cancel": "Cancelar",
+    "create": "Crear",
+    "no_label": "Sin etiqueta",
+    "expires": "Expira: {{date}}",
+    "uses": "Usos: {{used}}/{{max}}",
+    "copy": "Copiar",
+    "share": "Compartir",
+    "revoke": "Revocar",
+    "status": {
+      "active": "Activo",
+      "used": "Usado",
+      "expired": "Expirado",
+      "revoked": "Revocado"
+    },
+    "confirm_revoke": "¿Revocar este enlace? Ya no podrá ser utilizado.",
+    "share_title": "Solicitud de cotización",
+    "share_text_with_label": "Solicitud: {{label}}",
+    "share_text_default": "Completá tu solicitud de cotización",
+    "toast": {
+      "created": "Enlace creado",
+      "error_create": "Error al crear enlace",
+      "copied": "Enlace copiado",
+      "error_copy": "No se pudo copiar",
+      "revoked": "Enlace revocado",
+      "error_revoke": "Error al revocar",
+      "plan_limit": "Límite del plan: máximo {{max}} enlaces activos (tenés {{current}})."
+    }
   }
 }

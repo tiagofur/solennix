@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { render } from "@tests/customRender";
 import { RequestsInboxPage } from "./RequestsInboxPage";
@@ -15,6 +15,14 @@ vi.mock("@/services/organizerRequestsService", () => ({
     decline: vi.fn(),
     requestInfo: vi.fn(),
     convertToEvent: vi.fn(),
+  },
+}));
+
+vi.mock("@/services/requestLinkService", () => ({
+  requestLinkService: {
+    listLinks: vi.fn().mockResolvedValue([]),
+    createLink: vi.fn(),
+    revokeLink: vi.fn(),
   },
 }));
 
@@ -59,6 +67,7 @@ describe("RequestsInboxPage", () => {
     });
     expect(screen.getByTestId("request-row-r1")).toBeInTheDocument();
     expect(screen.getByTestId("requests-status-filter")).toBeInTheDocument();
+    expect(screen.getByTestId("requests-hub-tabs")).toBeInTheDocument();
   });
 
   it("shows empty state when no requests", async () => {
@@ -77,6 +86,32 @@ describe("RequestsInboxPage", () => {
     );
     await waitFor(() => {
       expect(screen.getByText(/aún no hay solicitudes|no quote requests/i)).toBeInTheDocument();
+    });
+  });
+
+  it("switches to Links tab and shows panel", async () => {
+    render(
+      <MemoryRouter initialEntries={["/requests"]}>
+        <RequestsInboxPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("requests-tab-links")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByTestId("requests-tab-links"));
+    await waitFor(() => {
+      expect(screen.getByTestId("request-links-panel")).toBeInTheDocument();
+    });
+  });
+
+  it("opens Links tab from ?tab=links query", async () => {
+    render(
+      <MemoryRouter initialEntries={["/requests?tab=links"]}>
+        <RequestsInboxPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("request-links-panel")).toBeInTheDocument();
     });
   });
 });

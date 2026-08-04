@@ -75,6 +75,9 @@ export const queryKeys = {
   eventFormLinks: {
     all: ['eventFormLinks'] as const,
   },
+  requestLinks: {
+    all: ['requestLinks'] as const,
+  },
   eventPublicLinks: {
     all: ['eventPublicLinks'] as const,
     byEvent: (eventId: string) => ['eventPublicLinks', 'event', eventId] as const,

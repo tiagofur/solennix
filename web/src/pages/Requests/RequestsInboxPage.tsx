@@ -10,10 +10,11 @@ import {
   XCircle,
   HelpCircle,
   CalendarPlus,
+  Link2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -22,6 +23,7 @@ import {
   type PublicRequest,
   type PublicRequestStatus,
 } from "@/services/organizerRequestsService";
+import { RequestLinksPanel } from "./RequestLinksPanel";
 
 const LIST_KEY = ["organizer-requests"];
 const UNREAD_KEY = ["organizer-requests", "unread"];
@@ -38,11 +40,24 @@ const STATUS_FILTERS: Array<PublicRequestStatus | ""> = [
   "expired",
 ];
 
+type HubTab = "inbox" | "links";
+
 export const RequestsInboxPage: React.FC = () => {
   const { t, i18n } = useTranslation(["requests", "common"]);
   const queryClient = useQueryClient();
   const addToast = useToast((s) => s.addToast);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab: HubTab =
+    searchParams.get("tab") === "links" ? "links" : "inbox";
+
+  const setTab = (tab: HubTab) => {
+    if (tab === "links") {
+      setSearchParams({ tab: "links" }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+  };
 
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -217,7 +232,7 @@ export const RequestsInboxPage: React.FC = () => {
     });
   };
 
-  if (listQuery.error) {
+  if (activeTab === "inbox" && listQuery.error) {
     return (
       <div className="p-6 text-center space-y-3">
         <p className="text-text-secondary">{t("requests:error")}</p>
@@ -240,7 +255,7 @@ export const RequestsInboxPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-text">{t("requests:title")}</h1>
           <p className="text-sm text-text-secondary">{t("requests:subtitle")}</p>
         </div>
-        {unread > 0 && (
+        {unread > 0 && activeTab === "inbox" && (
           <span
             className="inline-flex items-center justify-center h-6 min-w-[1.5rem] px-2 rounded-full bg-primary text-white text-xs font-bold"
             data-testid="requests-unread-badge"
@@ -250,6 +265,48 @@ export const RequestsInboxPage: React.FC = () => {
         )}
       </div>
 
+      <div
+        className="flex gap-1 border-b border-border"
+        role="tablist"
+        aria-label={t("requests:tabs.aria")}
+        data-testid="requests-hub-tabs"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "inbox"}
+          onClick={() => setTab("inbox")}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+            activeTab === "inbox"
+              ? "border-primary text-primary"
+              : "border-transparent text-text-secondary hover:text-text"
+          }`}
+          data-testid="requests-tab-inbox"
+        >
+          <Inbox className="h-4 w-4" aria-hidden="true" />
+          {t("requests:tabs.inbox")}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "links"}
+          onClick={() => setTab("links")}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+            activeTab === "links"
+              ? "border-primary text-primary"
+              : "border-transparent text-text-secondary hover:text-text"
+          }`}
+          data-testid="requests-tab-links"
+        >
+          <Link2 className="h-4 w-4" aria-hidden="true" />
+          {t("requests:tabs.links")}
+        </button>
+      </div>
+
+      {activeTab === "links" ? (
+        <RequestLinksPanel />
+      ) : (
+        <>
       <div className="flex flex-wrap items-center gap-3">
         <label className="text-xs font-medium text-text-secondary" htmlFor="req-status-filter">
           {t("requests:filter_status")}
@@ -527,6 +584,8 @@ export const RequestsInboxPage: React.FC = () => {
           </div>
         </div>
       </Modal>
+        </>
+      )}
     </div>
   );
 };
