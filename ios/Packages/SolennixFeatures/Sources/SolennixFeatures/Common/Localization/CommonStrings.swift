@@ -46,6 +46,7 @@ public enum CommonStrings {
     public static var navPaymentInbox: String { FeatureL10n.text("common.nav.payment_inbox", "Pagos") }
     public static var navEventFormLinks: String { FeatureL10n.text("common.nav.event_form_links", "Formularios") }
     public static var navReviews: String { FeatureL10n.text("common.nav.reviews", "Reseñas") }
+    public static var navPublicRequests: String { FeatureL10n.text("common.nav.public_requests", "Solicitudes") }
     public static var navSettings: String { FeatureL10n.text("common.nav.settings", "Ajustes") }
     
     // More Menu Subtitles
@@ -55,6 +56,7 @@ public enum CommonStrings {
     public static var moreMenuEventFormLinksSubtitle: String { FeatureL10n.text("common.more_menu.event_form_links_subtitle", "Formularios para clientes nuevos") }
     public static var moreMenuPersonnelSubtitle: String { FeatureL10n.text("common.more_menu.personnel_subtitle", "Colaboradores y equipo") }
     public static var moreMenuReviewsSubtitle: String { FeatureL10n.text("common.more_menu.reviews_subtitle", "Opiniones de tus clientes") }
+    public static var moreMenuPublicRequestsSubtitle: String { FeatureL10n.text("common.more_menu.public_requests_subtitle", "Cotizaciones de visitantes") }
     public static var moreMenuSettingsSubtitle: String { FeatureL10n.text("common.more_menu.settings_subtitle", "Perfil, negocio, cuenta") }
     
     // Navigation Headers / Placeholders

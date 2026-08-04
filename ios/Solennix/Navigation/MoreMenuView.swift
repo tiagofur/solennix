@@ -102,6 +102,8 @@ struct MoreMenuView: View {
             return SolennixColors.iconTaupe
         case .paymentInbox:
             return SolennixColors.primary        // gold = money, the only gold
+        case .publicRequests:
+            return SolennixColors.iconSage
         case .eventFormLinks:
             return SolennixColors.iconSage
         case .personnel:
