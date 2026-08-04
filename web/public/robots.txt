@@ -14,5 +14,9 @@ Disallow: /inventory
 Disallow: /products
 
 # Sitemaps (static routes + dynamic organizer profiles).
+# Static marketing sitemap on the web origin.
 Sitemap: https://solennix.app/sitemap.xml
+# Dynamic publicable profiles — served by API; also proxied at /sitemap-profiles.xml
+# on the web origin when nginx is configured (see web/nginx.conf).
+Sitemap: https://api.solennix.com/api/public/sitemap-profiles.xml
 Sitemap: https://solennix.app/sitemap-profiles.xml
