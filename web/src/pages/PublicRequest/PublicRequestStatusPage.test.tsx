@@ -44,7 +44,7 @@ describe("PublicRequestStatusPage", () => {
   });
 
   it("calls client action on accept", async () => {
-    let captured: { action?: string; token?: string | null } = {};
+    const captured: { action?: string; token?: string | null } = {};
     server.use(
       http.post(`${API_BASE}/public/requests/req-1/action`, async ({ request }) => {
         captured.token = request.headers.get("X-Request-Token");
