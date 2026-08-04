@@ -1,6 +1,6 @@
 {
   "title": "Quote requests",
-  "subtitle": "Inbound requests from your public profile",
+  "subtitle": "Inbox and shareable links for quote requests",
   "unread_badge": "{{count}} unread",
   "filter_all": "All",
   "filter_status": "Status",
@@ -68,5 +68,65 @@
     "info_requested": "More info requested",
     "converted": "Event created",
     "error": "Action failed. Try again."
+  },
+  "tabs": {
+    "aria": "Request sections",
+    "inbox": "Inbox",
+    "links": "Links"
+  },
+  "links": {
+    "title": "Request links",
+    "subtitle": "Share a link so clients can fill in a quote request form",
+    "new_link": "New link",
+    "create_first": "Create first link",
+    "no_links": "No links yet",
+    "no_links_desc": "Generate a shareable link. Default mode creates an event on submit (auto_event).",
+    "dialog_title": "Create request link",
+    "label_field": "Label (optional)",
+    "label_placeholder": "e.g. Wedding of Maria and Pedro",
+    "valid_for": "Valid for: {{count}} days",
+    "day_one": "1 day",
+    "day_plural": "{{count}} days",
+    "max_uses_label": "Max uses",
+    "max_uses_unlimited": "Empty = unlimited",
+    "max_uses_hint": "1 = single use. Leave empty for unlimited uses.",
+    "submit_mode_label": "On form submit",
+    "submit_mode": {
+      "standard": "Request only (inbox)",
+      "auto_quote": "Auto quote",
+      "auto_event": "Create event automatically"
+    },
+    "submit_mode_help": {
+      "standard": "The request lands in your inbox for you to respond.",
+      "auto_quote": "Generates a quote from selected line items.",
+      "auto_event": "Creates client + quoted event on submit (legacy form parity)."
+    },
+    "cancel": "Cancel",
+    "create": "Create",
+    "no_label": "No label",
+    "expires": "Expires: {{date}}",
+    "uses": "Uses: {{used}}/{{max}}",
+    "copy": "Copy",
+    "share": "Share",
+    "revoke": "Revoke",
+    "status": {
+      "active": "Active",
+      "used": "Used",
+      "expired": "Expired",
+      "revoked": "Revoked"
+    },
+    "confirm_revoke": "Revoke this link? It can no longer be used.",
+    "share_title": "Quote request",
+    "share_text_with_label": "Request: {{label}}",
+    "share_text_default": "Fill in your quote request",
+    "toast": {
+      "created": "Link created",
+      "error_create": "Error creating link",
+      "copied": "Link copied",
+      "error_copy": "Could not copy",
+      "revoked": "Link revoked",
+      "error_revoke": "Error revoking",
+      "plan_limit": "Plan limit: max {{max}} active links (you have {{current}})."
+    }
   }
 }
