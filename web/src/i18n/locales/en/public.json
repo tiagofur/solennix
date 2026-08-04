@@ -424,6 +424,7 @@
     "not_found_title": "Profile not available",
     "not_found_desc": "This public profile does not exist or is not currently published.",
     "back_home": "Back to Solennix",
+    "browse_directory": "Browse providers",
     "contact_cta": "Contact",
     "services_title": "Services",
     "services_all_categories": "All",
@@ -482,6 +483,10 @@
     "quote_success_desc": "Your message was sent directly to {{name}}. They will get in touch with you shortly.",
     "quote_success_status_link": "Save this link to track your request",
     "quote_success_status_hint": "Open it later to accept or decline the quote.",
+    "quote_success_next_heading": "What happens next",
+    "quote_success_next_1": "{{name}} received your request in their inbox.",
+    "quote_success_next_2": "They will contact you at the email you left — no account needed.",
+    "quote_success_next_3": "If they send a quote, use the link below to accept or decline.",
     "close_modal": "Close",
     "actions": {
       "save_contact": "Save contact",
@@ -595,11 +600,20 @@
     },
     "empty": {
       "title": "No results",
-      "message": "We couldn't find providers with those filters.",
+      "message": "We couldn't find providers with those filters. Try another city or clear the filters.",
       "clear_cta": "Clear filters"
     },
     "error_title": "We couldn't load the directory",
     "loading": "Loading providers..."
+  },
+  "pwa": {
+    "region_label": "Add Solennix to your home screen",
+    "title": "Quick access from your home screen",
+    "body": "Add Solennix to your home screen to return to the directory without opening the browser. It does not create an account.",
+    "install_cta": "Add to home screen",
+    "ios_body": "You can add Solennix to your home screen for quick access. It does not create a client account.",
+    "ios_hint": "Tap Share, then «Add to Home Screen».",
+    "dismiss": "Dismiss install notice"
   },
   "request_status": {
     "title": "Your quote request",
