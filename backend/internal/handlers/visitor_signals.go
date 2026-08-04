@@ -60,6 +60,29 @@ func CoarseCountryCode(r *http.Request) string {
 	return ""
 }
 
+// NormalizeFunnelStep maps funnel step names to the allowlist.
+// Returns empty string when unknown (caller decides whether to drop the event).
+func NormalizeFunnelStep(raw string) string {
+	s := strings.ToLower(strings.TrimSpace(raw))
+	switch s {
+	case "register_view", "registered", "email_verified", "first_login":
+		return s
+	default:
+		return ""
+	}
+}
+
+// NormalizeFunnelMethod maps registration method to a small allowlist.
+func NormalizeFunnelMethod(raw string) string {
+	m := strings.ToLower(strings.TrimSpace(raw))
+	switch m {
+	case "email", "google", "apple":
+		return m
+	default:
+		return "unknown"
+	}
+}
+
 // NormalizeMarketingPageKey maps client page keys to a small allowlist.
 func NormalizeMarketingPageKey(raw string) string {
 	k := strings.ToLower(strings.TrimSpace(raw))

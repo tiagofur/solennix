@@ -34,6 +34,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	seoHandler *handlers.SEOHandler,
 	pdfHandler *handlers.PDFHandler,
 	sitePageViewHandler *handlers.SitePageViewHandler,
+	registrationFunnelHandler *handlers.RegistrationFunnelHandler,
 	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string, environment string, trustProxy bool) http.Handler {
 
 	deprecationPolicy := "https://github.com/tiagofur/solennix/wiki/API-Deprecation-Policy"
@@ -225,12 +226,16 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{slug}/requests", publicRequestHandler.CreatePublicRequest)
 	})
 
-	// Crawler artifacts + marketing page-view beacon (analytics slice 2).
+	// Crawler artifacts + marketing page-view beacon (analytics slice 2)
+	// + registration funnel beacon (analytics slice 3).
 	apiRouter.Route("/public", func(r chi.Router) {
 		r.Use(mw.RateLimit(30, 1*time.Minute))
 		r.Get("/sitemap-profiles.xml", seoHandler.SitemapProfiles)
 		if sitePageViewHandler != nil {
 			r.With(mw.RateLimit(20, 1*time.Minute)).Post("/page-views", sitePageViewHandler.Record)
+		}
+		if registrationFunnelHandler != nil {
+			r.With(mw.RateLimit(20, 1*time.Minute)).Post("/registration-funnel", registrationFunnelHandler.Record)
 		}
 	})
 

@@ -188,6 +188,9 @@ func main() {
 	reviewHandler := handlers.NewEventReviewHandler(reviewRepo, userRepo, publicProfileRepo, emailService, cfg.FrontendURL)
 	publicProfileHandler := handlers.NewPublicProfileHandler(userRepo, publicProfileRepo, productRepo, reviewRepo, eventRepo, cfg.FrontendURL)
 	sitePageViewHandler := handlers.NewSitePageViewHandler(repository.NewSitePageViewRepo(pool))
+	registrationFunnelRepo := repository.NewRegistrationFunnelRepo(pool)
+	registrationFunnelHandler := handlers.NewRegistrationFunnelHandler(registrationFunnelRepo)
+	authHandler.SetRegistrationFunnel(registrationFunnelRepo)
 	publicRequestService := services.NewPublicRequestService(publicRequestRepo, publicProfileRepo, productRepo, userRepo, pool, 0)
 	publicRequestService.SetNotifier(notificationService) // #1124 push on new PublicRequest
 	publicRequestService.SetLinkRepo(publicRequestLinkRepo)
@@ -208,7 +211,7 @@ func main() {
 	pdfHandler := handlers.NewPDFHandler(eventRepo, clientRepo, paymentRepo, userRepo, cfg.UploadDir)
 
 	// Create router
-	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, publicProfileHandler, publicProfileConfigHandler, publicProfilePortfolioHandler, publicProfilePackagesHandler, publicProfileServicesHandler, staffHandler, staffTeamHandler, publicRequestHandler, requestLinkHandler, seoHandler, pdfHandler, sitePageViewHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir, cfg.Environment, cfg.TrustProxy)
+	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, publicProfileHandler, publicProfileConfigHandler, publicProfilePortfolioHandler, publicProfilePackagesHandler, publicProfileServicesHandler, staffHandler, staffTeamHandler, publicRequestHandler, requestLinkHandler, seoHandler, pdfHandler, sitePageViewHandler, registrationFunnelHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir, cfg.Environment, cfg.TrustProxy)
 
 	// Background job: expire gifted plans that have passed their expiry date.
 	// Runs once at startup then every hour.

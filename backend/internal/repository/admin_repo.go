@@ -105,6 +105,13 @@ type PlatformStats struct {
 	LandingViewsByDay    []AnalyticsDayCount `json:"landing_views_by_day"`
 	VisitorByDevice      map[string]int      `json:"visitor_by_device"`
 	VisitorByCountry     map[string]int      `json:"visitor_by_country"`
+
+	// Slice 3 — registration funnel (last 30d UTC window).
+	FunnelRegisterViewsLast30d int            `json:"funnel_register_views_last_30d"`
+	FunnelRegisteredLast30d    int            `json:"funnel_registered_last_30d"`
+	FunnelEmailVerifiedLast30d int            `json:"funnel_email_verified_last_30d"`
+	FunnelFirstLoginLast30d    int            `json:"funnel_first_login_last_30d"`
+	FunnelRegisteredByMethod   map[string]int `json:"funnel_registered_by_method"`
 }
 
 // AnalyticsDayCount is one calendar day for admin time-series charts.
@@ -541,6 +548,55 @@ func (r *AdminRepo) GetPlatformStats(ctx context.Context) (*PlatformStats, error
 	cRows.Close()
 	if err := cRows.Err(); err != nil {
 		return nil, fmt.Errorf("failed iterating visitor by country: %w", err)
+	}
+
+	// Registration funnel (slice 3) — step counts last 30d.
+	countFunnelStep := func(step string, dest *int) error {
+		return r.pool.QueryRow(ctx, `
+			SELECT COUNT(*)::int
+			FROM registration_funnel_events
+			WHERE step = $1
+			  AND occurred_at >= $2 AND occurred_at < $3`,
+			step, visitorStart, visitorEnd,
+		).Scan(dest)
+	}
+	if err := countFunnelStep("register_view", &stats.FunnelRegisterViewsLast30d); err != nil {
+		return nil, fmt.Errorf("failed to count funnel register_view: %w", err)
+	}
+	if err := countFunnelStep("registered", &stats.FunnelRegisteredLast30d); err != nil {
+		return nil, fmt.Errorf("failed to count funnel registered: %w", err)
+	}
+	if err := countFunnelStep("email_verified", &stats.FunnelEmailVerifiedLast30d); err != nil {
+		return nil, fmt.Errorf("failed to count funnel email_verified: %w", err)
+	}
+	if err := countFunnelStep("first_login", &stats.FunnelFirstLoginLast30d); err != nil {
+		return nil, fmt.Errorf("failed to count funnel first_login: %w", err)
+	}
+
+	stats.FunnelRegisteredByMethod = make(map[string]int)
+	mRows, err := r.pool.Query(ctx, `
+		SELECT COALESCE(NULLIF(method, ''), 'unknown'), COUNT(*)::int
+		FROM registration_funnel_events
+		WHERE step = 'registered'
+		  AND occurred_at >= $1 AND occurred_at < $2
+		GROUP BY 1`,
+		visitorStart, visitorEnd,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query funnel registered by method: %w", err)
+	}
+	for mRows.Next() {
+		var method string
+		var c int
+		if err := mRows.Scan(&method, &c); err != nil {
+			mRows.Close()
+			return nil, fmt.Errorf("failed to scan funnel registered by method: %w", err)
+		}
+		stats.FunnelRegisteredByMethod[method] = c
+	}
+	mRows.Close()
+	if err := mRows.Err(); err != nil {
+		return nil, fmt.Errorf("failed iterating funnel registered by method: %w", err)
 	}
 
 	return stats, nil
