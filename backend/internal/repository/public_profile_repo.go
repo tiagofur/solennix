@@ -545,17 +545,23 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 	// Featured never hides non-featured; it only reorders.
 	// sort=rating/recent ignore plan boost; sort=distance keeps Business first
 	// then proximity (featured within geo results still lead).
+	//
+	// NOTE: Postgres cannot use SELECT aliases inside expressions in ORDER BY
+	// (COALESCE(avg_rating, 0) fails with "column does not exist"). Repeat the
+	// aggregate expressions that define avg_rating / review_count.
 	const featuredFirst = "(u.plan = 'business') DESC NULLS LAST"
-	const relevanceScore = `(COALESCE(avg_rating, 0) * LN(GREATEST(review_count, 0) + 2)) DESC NULLS LAST`
+	const avgRatingExpr = `CASE WHEN u.plan IN ('pro', 'business', 'premium') THEN AVG(er.rating)::float8 ELSE NULL END`
+	const reviewCountExpr = `CASE WHEN u.plan IN ('pro', 'business', 'premium') THEN COUNT(er.id)::int ELSE 0 END`
+	const relevanceScore = `(COALESCE(` + avgRatingExpr + `, 0) * LN(GREATEST(` + reviewCountExpr + `, 0) + 2)) DESC NULLS LAST`
 	orderClause := fmt.Sprintf(
-		"ORDER BY %s, %s, review_count DESC NULLS LAST, u.updated_at DESC",
-		featuredFirst, relevanceScore,
+		"ORDER BY %s, %s, (%s) DESC NULLS LAST, u.updated_at DESC",
+		featuredFirst, relevanceScore, reviewCountExpr,
 	)
 	switch f.SortBy {
 	case "rating":
-		orderClause = "ORDER BY avg_rating DESC NULLS LAST, review_count DESC NULLS LAST"
+		orderClause = fmt.Sprintf("ORDER BY (%s) DESC NULLS LAST, (%s) DESC NULLS LAST", avgRatingExpr, reviewCountExpr)
 		if f.Order == "asc" {
-			orderClause = "ORDER BY avg_rating ASC NULLS LAST, review_count ASC NULLS LAST"
+			orderClause = fmt.Sprintf("ORDER BY (%s) ASC NULLS LAST, (%s) ASC NULLS LAST", avgRatingExpr, reviewCountExpr)
 		}
 	case "recent":
 		orderClause = "ORDER BY u.updated_at DESC"
