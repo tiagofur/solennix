@@ -36,12 +36,13 @@ func seedPublicableOrganizer(t *testing.T, pool *pgxpool.Pool, email, plan, city
 	about, _ := fields["about"].(string)
 	if _, err := pool.Exec(ctx, `
 		INSERT INTO organizer_public_profiles
-			(user_id, is_enabled, headline, about, city, country, event_types,
+			(user_id, is_enabled, publication_status, headline, about, city, country, event_types,
 			 show_prices, show_services, show_reviews, show_portfolio, show_contact, socials)
-		VALUES ($1, true, $2, NULLIF($3, ''), $4, $5, ARRAY['boda','corporativo']::text[],
+		VALUES ($1, true, 'published', $2, NULLIF($3, ''), $4, $5, ARRAY['boda','corporativo']::text[],
 		        false, true, true, true, true, '{}'::jsonb)
 		ON CONFLICT (user_id) DO UPDATE SET
-			is_enabled = true, headline = $2, about = NULLIF($3, ''), city = $4, country = $5`,
+			is_enabled = true, publication_status = 'published',
+			headline = $2, about = NULLIF($3, ''), city = $4, country = $5`,
 		userID, headline, about, city, country); err != nil {
 		t.Fatalf("seed public profile: %v", err)
 	}

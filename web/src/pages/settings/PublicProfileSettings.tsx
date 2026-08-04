@@ -44,6 +44,7 @@ const fieldClass =
 const DEFAULT_PROFILE: OrganizerPublicProfile = {
   user_id: "",
   is_enabled: false,
+  publication_status: "unpublished",
   show_prices: false,
   show_services: true,
   show_reviews: true,
@@ -574,6 +575,72 @@ export default function PublicProfileSettings() {
           onChange={(v) => setProfile({ ...profile, is_enabled: v })}
           testId="pp-enabled"
         />
+      </div>
+
+      {/* Directory publication status (#1130) */}
+      <div className="space-y-3" data-testid="pp-publication">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
+          {t("publicProfile.directory_status", { defaultValue: "Directory listing" })}
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border space-y-3">
+          <p className="text-sm text-text">
+            <span className="font-semibold">
+              {t(`publicProfile.publication.${profile.publication_status ?? "unpublished"}`, {
+                defaultValue: profile.publication_status ?? "unpublished",
+              })}
+            </span>
+          </p>
+          {profile.publication_status === "rejected" &&
+            profile.publication_rejection_reason && (
+              <p className="text-sm text-error" data-testid="pp-rejection-reason">
+                {profile.publication_rejection_reason}
+              </p>
+            )}
+          <p className="text-xs text-text-secondary">
+            {t("publicProfile.directory_hint", {
+              defaultValue:
+                "Your public page can be on while the directory listing waits for review.",
+            })}
+          </p>
+          {(profile.publication_status === "unpublished" ||
+            profile.publication_status === "rejected" ||
+            !profile.publication_status) && (
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              disabled={!profile.is_enabled || saving}
+              onClick={async () => {
+                try {
+                  setSaving(true);
+                  setError(null);
+                  const updated =
+                    await publicProfileConfigService.submitForDirectoryReview();
+                  setProfile((p) => ({ ...p, ...updated }));
+                } catch (e: unknown) {
+                  const status = (e as { status?: number })?.status;
+                  setError(
+                    status === 400
+                      ? t("publicProfile.submit_not_ready", {
+                          defaultValue:
+                            "Complete cover, bio, city, country and a public service first",
+                        })
+                      : t("publicProfile.submit_error", {
+                          defaultValue: "Could not submit for review",
+                        }),
+                  );
+                } finally {
+                  setSaving(false);
+                }
+              }}
+              data-testid="pp-submit-review"
+            >
+              {t("publicProfile.submit_for_review", {
+                defaultValue: "Submit for directory review",
+              })}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Slug + share */}

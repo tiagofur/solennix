@@ -66,6 +66,8 @@ func (r *PublicProfileRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (
 			show_prices, show_services, show_reviews, show_portfolio, show_contact,
 			socials, about, service_areas, min_guests, max_guests, event_types, response_time, languages,
 			show_packages, show_faq, show_policies, service_radius_km,
+			publication_status, publication_rejection_reason, publication_reviewed_at,
+			publication_reviewed_by, publication_submitted_at, publication_spam_flag,
 			created_at, updated_at
 		FROM organizer_public_profiles WHERE user_id = $1`, userID)
 	p, err := scanProfile(row)
@@ -144,6 +146,8 @@ func (r *PublicProfileRepo) Upsert(ctx context.Context, p *models.OrganizerPubli
 			show_prices, show_services, show_reviews, show_portfolio, show_contact,
 			socials, about, service_areas, min_guests, max_guests, event_types, response_time, languages,
 			show_packages, show_faq, show_policies, service_radius_km,
+			publication_status, publication_rejection_reason, publication_reviewed_at,
+			publication_reviewed_by, publication_submitted_at, publication_spam_flag,
 			created_at, updated_at`,
 		p.UserID, p.IsEnabled, p.Headline, p.ContactType, p.ContactValue,
 		p.City, p.Region, p.Country, p.Latitude, p.Longitude,
@@ -175,9 +179,14 @@ func scanProfile(row rowScanner) (*models.OrganizerPublicProfile, error) {
 		&p.ShowPrices, &p.ShowServices, &p.ShowReviews, &p.ShowPortfolio, &p.ShowContact,
 		&socials, &p.About, &p.ServiceAreas, &p.MinGuests, &p.MaxGuests, &p.EventTypes, &p.ResponseTime, &p.Languages,
 		&p.ShowPackages, &p.ShowFaq, &p.ShowPolicies, &p.ServiceRadiusKm,
+		&p.PublicationStatus, &p.PublicationRejectionReason, &p.PublicationReviewedAt,
+		&p.PublicationReviewedBy, &p.PublicationSubmittedAt, &p.PublicationSpamFlag,
 		&p.CreatedAt, &p.UpdatedAt,
 	); err != nil {
 		return nil, err
+	}
+	if p.PublicationStatus == "" {
+		p.PublicationStatus = models.PublicationUnpublished
 	}
 	if len(socials) > 0 && string(socials) != "null" {
 		if err := json.Unmarshal(socials, &p.Socials); err != nil {
@@ -345,6 +354,7 @@ func (r *PublicProfileRepo) ListEnabledSlugs(ctx context.Context) ([]PublicProfi
 		FROM organizer_public_profiles opp
 		JOIN users u ON u.id = opp.user_id
 		WHERE opp.is_enabled = true
+		  AND opp.publication_status = 'published'
 		  AND u.public_slug IS NOT NULL AND u.public_slug <> ''
 		  AND COALESCE(u.account_status, 'active') = 'active'
 		  AND u.deleted_at IS NULL
@@ -413,8 +423,10 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 
 	// Build WHERE clause + args for the publicability + visitor filters.
 	// Cover is required (PRD §4.4); logo alone is not enough for the directory.
+	// publication_status = published is required for directory (#1130 moderation).
 	where := `
 		WHERE opp.is_enabled = true
+		  AND opp.publication_status = 'published'
 		  AND u.deleted_at IS NULL
 		  AND COALESCE(u.account_status, 'active') = 'active'
 		  AND u.public_slug IS NOT NULL AND u.public_slug <> ''
