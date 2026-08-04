@@ -465,6 +465,12 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
             return .eventList
         case .lowStock:
             return .inventoryList
+        case .publicRequest:
+            // #1124 — deep link to request detail (UI screen completes in #1122)
+            if let requestId = userInfo["request_id"] as? String, !requestId.isEmpty {
+                return .publicRequestDetail(id: requestId)
+            }
+            return nil
         }
     }
 }
@@ -497,6 +503,8 @@ enum PushNotificationType: String, Codable {
     case lowStock = "low_stock"
     case eventConfirmed = "event_confirmed"
     case eventCancelled = "event_cancelled"
+    /// Visitor submitted a structured quote request (#1124).
+    case publicRequest = "public_request"
 }
 
 // MARK: - Push Notification Payload

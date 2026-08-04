@@ -101,6 +101,10 @@ struct RouteDestination: View {
         case .reviews:
             ReviewsView(apiClient: apiClient)
 
+        // Public quote request deep link (#1124). Full inbox UI is #1122.
+        case .publicRequestDetail(let id):
+            PublicRequestDeepLinkPlaceholderView(requestId: id)
+
         // Tools
         case .search(let query):
             SearchView(initialQuery: query)
@@ -131,6 +135,29 @@ struct RouteDestination: View {
         case .deleteAccount:
             AccountDeletionView(apiClient: apiClient, authManager: authManager)
         }
+    }
+}
+
+/// Temporary landing for push deep links until the requests inbox UI ships (#1122).
+private struct PublicRequestDeepLinkPlaceholderView: View {
+    let requestId: String
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "tray.and.arrow.down.fill")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            Text("Nueva solicitud")
+                .font(.title2.bold())
+            Text("La bandeja de solicitudes del proveedor llega en la app móvil pronto. ID: \(requestId)")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .navigationTitle("Solicitud")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

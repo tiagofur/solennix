@@ -40,15 +40,31 @@ class SolennixMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(message)
 
         val deepLinkUri = buildDeepLinkUriFromData(message.data)
-        
+        val isPublicRequest = (message.data["type"] ?: "").equals("public_request", ignoreCase = true)
+        val channelId = if (isPublicRequest) "solennix_solicitudes" else "solennix_notifications"
+        val channelName = if (isPublicRequest) "Solicitudes" else "Notificaciones Generales"
+        val channelDesc = if (isPublicRequest) {
+            "Avisos cuando llega una nueva solicitud de cotización"
+        } else {
+            "Notificaciones de eventos, pagos y sistema"
+        }
+
         message.notification?.let {
-            showNotification(this, it.title ?: "Solennix", it.body ?: "", deepLinkUri)
+            showNotification(
+                this,
+                it.title ?: "Solennix",
+                it.body ?: "",
+                deepLinkUri,
+                channelId,
+                channelName,
+                channelDesc,
+            )
         } ?: run {
             // Handle data-only messages
             val title = message.data["title"] ?: "Solennix"
             val body = message.data["body"] ?: ""
             if (body.isNotEmpty()) {
-                showNotification(this, title, body, deepLinkUri)
+                showNotification(this, title, body, deepLinkUri, channelId, channelName, channelDesc)
             }
         }
     }
@@ -72,17 +88,24 @@ class SolennixMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun showNotification(context: Context, title: String, body: String, deepLinkUri: Uri?) {
+    private fun showNotification(
+        context: Context,
+        title: String,
+        body: String,
+        deepLinkUri: Uri?,
+        channelId: String = "solennix_notifications",
+        channelName: String = "Notificaciones Generales",
+        channelDescription: String = "Notificaciones de eventos, pagos y sistema",
+    ) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "solennix_notifications"
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "Notificaciones Generales",
+                channelName,
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Notificaciones de eventos, pagos y sistema"
+                description = channelDescription
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -153,6 +176,11 @@ class SolennixMessagingService : FirebaseMessagingService() {
             "reset_password", "reset-password" -> {
                 val token = data["token"] ?: return null
                 Uri.parse("solennix://reset-password?token=$token")
+            }
+            // #1124 — public quote request inbox (detail screen lands with #1123)
+            "public_request", "request", "request_detail" -> {
+                val requestId = data["request_id"] ?: id
+                requestId?.let { Uri.parse("solennix://requests/$it") }
             }
             else -> null
         }

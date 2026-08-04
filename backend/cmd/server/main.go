@@ -191,6 +191,7 @@ func main() {
 	publicProfileHandler := handlers.NewPublicProfileHandler(userRepo, publicProfileRepo, productRepo, reviewRepo, eventRepo, cfg.FrontendURL)
 	publicLeadHandler := handlers.NewPublicLeadHandler(publicLeadRepo, userRepo, publicProfileRepo)
 	publicRequestService := services.NewPublicRequestService(publicRequestRepo, publicProfileRepo, productRepo, userRepo, pool, 0)
+	publicRequestService.SetNotifier(notificationService) // #1124 push on new PublicRequest
 	publicRequestHandler := handlers.NewPublicRequestHandler(publicRequestService, publicRequestRepo)
 	seoHandler := handlers.NewSEOHandler(userRepo, publicProfileRepo, cfg.FrontendURL)
 	geocodingService := services.NewGeocodingService("", "")

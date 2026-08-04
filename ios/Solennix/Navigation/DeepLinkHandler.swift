@@ -12,6 +12,8 @@ enum DeepLinkAction: Equatable {
     case showEvent(id: String)
     /// Navigate to an event's detail screen and open the record-payment sheet.
     case showEventPayment(id: String)
+    /// Navigate to a public quote-request detail (#1124).
+    case showPublicRequest(id: String)
 }
 
 // MARK: - Spotlight Action
@@ -37,6 +39,7 @@ enum SpotlightAction: Equatable {
 ///   output). Malformed tokens are rejected client-side (#815).
 /// - `solennix://event/{id}` — Navigate to the event detail screen.
 /// - `solennix://event/{id}/payment` — Navigate to the event detail and open the payment sheet.
+/// - `solennix://requests/{id}` — Navigate to a public quote request (#1124).
 enum DeepLinkHandler {
 
     /// Parse a URL into a deep link action.
@@ -64,6 +67,9 @@ enum DeepLinkHandler {
 
         case "event":
             return parseEventRoute(url)
+
+        case "requests":
+            return parsePublicRequestRoute(url)
 
         default:
             return nil
@@ -105,6 +111,19 @@ enum DeepLinkHandler {
     }
 
     // MARK: - Event Route Parsing
+
+    /// Parses `solennix://requests/{id}` for public quote-request deep links.
+    private static func parsePublicRequestRoute(_ url: URL) -> DeepLinkAction? {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            return nil
+        }
+        let segments = components.path
+            .split(separator: "/")
+            .map(String.init)
+            .filter { !$0.isEmpty }
+        guard let id = segments.first, !id.isEmpty else { return nil }
+        return .showPublicRequest(id: id)
+    }
 
     /// Parses `solennix://event/{id}` and `solennix://event/{id}/payment`.
     ///
