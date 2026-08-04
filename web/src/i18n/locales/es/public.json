@@ -480,6 +480,8 @@
     "submitting_quote": "Enviando...",
     "quote_success_title": "¡Solicitud enviada!",
     "quote_success_desc": "Tu mensaje ha sido enviado directamente a {{name}}. Se pondrán en contacto contigo muy pronto.",
+    "quote_success_status_link": "Guardá este enlace para seguir tu solicitud",
+    "quote_success_status_hint": "Abrilo más tarde para aceptar o rechazar la cotización.",
     "close_modal": "Cerrar",
     "actions": {
       "save_contact": "Guardar contacto",
@@ -538,7 +540,19 @@
       },
       "q_label": "Buscar",
       "q_placeholder": "Nombre, servicio, palabra clave...",
-      "submit": "Buscar"
+      "submit": "Buscar",
+      "sort_label": "Ordenar por",
+      "sort_relevance": "Más relevantes",
+      "sort_rating": "Mejor valorados",
+      "sort_recent": "Más recientes"
+    },
+    "geo": {
+      "near_me": "Cerca de mí",
+      "active": "Cerca de mí",
+      "sort_distance": "Más cercanos",
+      "error_unsupported": "Tu navegador no soporta ubicación.",
+      "error_denied": "Permiso de ubicación denegado. Activalo para buscar cerca.",
+      "error_generic": "No pudimos obtener tu ubicación. Probá de nuevo."
     },
     "card": {
       "featured_badge": "Destacado",
@@ -553,5 +567,30 @@
     },
     "error_title": "No pudimos cargar el directorio",
     "loading": "Cargando proveedores..."
+  },
+  "request_status": {
+    "title": "Tu solicitud de cotización",
+    "loading": "Cargando solicitud…",
+    "missing_token": "Necesitamos tu enlace de acceso para ver esta solicitud. Abrí el enlace que recibiste al enviarla.",
+    "not_found": "Solicitud no encontrada o el enlace ya no es válido.",
+    "error_generic": "Algo salió mal. Probá de nuevo.",
+    "status_label": "Estado",
+    "status": {
+      "pending": "Pendiente",
+      "info_requested": "Más información pedida",
+      "responded": "Cotización recibida",
+      "accepted_by_client": "Aceptada",
+      "declined_provider": "Rechazada por el proveedor",
+      "declined_client": "Rechazada por vos",
+      "booked": "Reservada",
+      "expired": "Expirada"
+    },
+    "accept": "Aceptar cotización",
+    "decline": "Rechazar",
+    "acting": "Enviando…",
+    "action_success_accept": "Aceptaste la cotización. El proveedor te contactará.",
+    "action_success_decline": "Rechazaste la cotización.",
+    "action_error": "No pudimos aplicar esa acción. Probá de nuevo.",
+    "no_actions": "Por ahora no hay más acciones de tu parte."
   }
 }

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Search as SearchIcon, MapPin, Calendar, Loader2, AlertCircle } from "lucide-react";
+import { Search as SearchIcon, MapPin, Calendar, Loader2, AlertCircle, Crosshair, X } from "lucide-react";
 import Empty from "@/components/Empty";
 import { Pagination } from "@/components/Pagination";
 import { upsertMeta, setDocumentTitle } from "@/lib/seo";
@@ -20,8 +20,12 @@ const EVENT_TYPES = ["boda", "corporativo", "xv", "infantil", "baby_shower", "ba
  */
 export const ProveedoresPage: React.FC = () => {
   const { t } = useTranslation("public");
-  const { inputValues, eventType, page, filters, setCity, setQ, setEventType, setPage, clear } =
-    useDirectoryFilters();
+  const {
+    inputValues, eventType, sort, page, filters,
+    geoLoading, geoError, isGeoActive,
+    setCity, setQ, setEventType, setSort, setPage,
+    useNearMe, clearGeo, clear,
+  } = useDirectoryFilters();
   const { data, isLoading, isError, isFetching } = useSearchOrganizers(filters);
 
   const items = data?.data ?? [];
@@ -103,6 +107,56 @@ export const ProveedoresPage: React.FC = () => {
                 />
               </div>
             </label>
+          </div>
+
+          {/* Geo + sort controls (#1128) */}
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {isGeoActive ? (
+              <button
+                type="button"
+                onClick={clearGeo}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 border border-primary/20 px-3 py-1.5 text-xs font-semibold text-primary"
+                data-testid="geo-active-btn"
+              >
+                <Crosshair className="h-3.5 w-3.5" aria-hidden="true" />
+                {t("public:directory.geo.active")}
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={useNearMe}
+                disabled={geoLoading}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-text hover:border-primary/50 transition-colors disabled:opacity-50"
+                data-testid="geo-near-me-btn"
+              >
+                {geoLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Crosshair className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {t("public:directory.geo.near_me")}
+              </button>
+            )}
+
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-text focus:border-primary focus:outline-none"
+              aria-label={t("public:directory.search.sort_label", { defaultValue: "Sort" })}
+              data-testid="sort-select"
+            >
+              <option value="">{t("public:directory.search.sort_relevance")}</option>
+              <option value="distance">{t("public:directory.geo.sort_distance")}</option>
+              <option value="rating">{t("public:directory.search.sort_rating")}</option>
+              <option value="recent">{t("public:directory.search.sort_recent")}</option>
+            </select>
+
+            {geoError && (
+              <span className="text-xs text-error" data-testid="geo-error">
+                {t(`public:directory.geo.${geoError}`)}
+              </span>
+            )}
           </div>
         </div>
       </div>

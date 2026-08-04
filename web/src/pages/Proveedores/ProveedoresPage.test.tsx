@@ -148,4 +148,14 @@ describe("ProveedoresPage", () => {
     renderPage();
     expect(screen.getByRole("status", { busy: true })).toBeInTheDocument();
   });
+
+  it("renders Near me geo button", () => {
+    server.use(
+      http.get(`${API_BASE}/public/organizers`, () =>
+        HttpResponse.json(makeResponse([], 0)),
+      ),
+    );
+    renderPage();
+    expect(screen.getByTestId("geo-near-me-btn")).toBeInTheDocument();
+  });
 });

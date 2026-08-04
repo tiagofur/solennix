@@ -26,6 +26,7 @@ export function useDirectoryFilters() {
   const city = searchParams.get("city") ?? "";
   const eventType = searchParams.get("event_type") ?? "";
   const q = searchParams.get("q") ?? "";
+  const sort = searchParams.get("sort") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1", 10) || 1;
 
   const [inputValues, setInputValues] = useState({
@@ -79,6 +80,11 @@ export function useDirectoryFilters() {
     [updateParam],
   );
 
+  const setSort = useCallback(
+    (value: string) => updateParam("sort", value),
+    [updateParam],
+  );
+
   const setPage = useCallback(
     (value: number) => updateParam("page", value > 1 ? String(value) : ""),
     [updateParam],
@@ -101,26 +107,97 @@ export function useDirectoryFilters() {
     return () => clearTimeout(handle);
   }, [inputValues.q]);
 
+  // Geo: read lat/lng/radius from URL (set by "near me" button).
+  const lat = searchParams.get("lat");
+  const lng = searchParams.get("lng");
+  const radiusKm = searchParams.get("radius_km");
+
   const filters: DirectoryFilters = useMemo(
     () => ({
       city: debouncedCity.trim() || undefined,
       event_type: eventType || undefined,
       q: debouncedQ.trim() || undefined,
+      sort: sort || undefined,
       page,
       limit: PAGE_SIZE,
+      lat: lat ? parseFloat(lat) : undefined,
+      lng: lng ? parseFloat(lng) : undefined,
+      radius_km: radiusKm ? parseFloat(radiusKm) : undefined,
     }),
-    [debouncedCity, debouncedQ, eventType, page],
+    [debouncedCity, debouncedQ, eventType, sort, page, lat, lng, radiusKm],
   );
+
+  // Geo error keys (translated in ProveedoresPage via directory.geo.*).
+  type GeoErrorKey = "error_unsupported" | "error_denied" | "error_generic";
+
+  // "Near me" — requests browser geolocation, sets lat/lng/radius/sort=distance in URL.
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState<GeoErrorKey | null>(null);
+
+  const useNearMe = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoError("error_unsupported");
+      return;
+    }
+    setGeoLoading(true);
+    setGeoError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeoLoading(false);
+        setSearchParams(
+          (prev) => {
+            const next = new URLSearchParams(prev);
+            next.set("lat", pos.coords.latitude.toFixed(4));
+            next.set("lng", pos.coords.longitude.toFixed(4));
+            // Backend default radius matches; pin it in URL for shareability.
+            next.set("radius_km", "50");
+            next.set("sort", "distance");
+            next.delete("page");
+            return next;
+          },
+          { replace: true },
+        );
+      },
+      (err) => {
+        setGeoLoading(false);
+        // GeolocationPositionError.PERMISSION_DENIED === 1
+        setGeoError(err.code === 1 ? "error_denied" : "error_generic");
+      },
+      { enableHighAccuracy: false, timeout: 8000 },
+    );
+  }, [setSearchParams]);
+
+  const clearGeo = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("lat");
+        next.delete("lng");
+        next.delete("radius_km");
+        if (next.get("sort") === "distance") next.delete("sort");
+        return next;
+      },
+      { replace: true },
+    );
+    setGeoError(null);
+  }, [setSearchParams]);
 
   return {
     inputValues,
     eventType,
+    sort,
     page,
     filters,
+    geoLoading,
+    geoError,
+    isGeoActive: Boolean(lat && lng),
     setCity,
     setQ,
     setEventType,
+    setSort,
     setPage,
+    useNearMe,
+    clearGeo,
     clear,
   };
 }

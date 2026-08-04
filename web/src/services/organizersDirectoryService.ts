@@ -21,6 +21,9 @@ export interface DirectoryFilters {
   limit?: number;
   sort?: string;
   order?: string;
+  lat?: number;
+  lng?: number;
+  radius_km?: number;
 }
 
 /** Shape returned by the service (normalized, never undefined fields). */
@@ -49,6 +52,9 @@ function buildQueryString(filters: DirectoryFilters): string {
   if (filters.order) params.set("order", filters.order);
   if (filters.page && filters.page > 0) params.set("page", String(filters.page));
   if (filters.limit && filters.limit > 0) params.set("limit", String(filters.limit));
+  if (filters.lat != null) params.set("lat", String(filters.lat));
+  if (filters.lng != null) params.set("lng", String(filters.lng));
+  if (filters.radius_km != null) params.set("radius_km", String(filters.radius_km));
   const qs = params.toString();
   return qs ? `?${qs}` : "";
 }
