@@ -48,6 +48,8 @@ type PublicProfileConfigHandler struct {
 	slugUpdater configSlugUpdater
 	geocoder    geocoderPort
 	frontendURL string
+	// moderation is optional (#1130); nil → SubmitForDirectoryReview returns 501.
+	moderation listingModerationStore
 	// defaultProfile builds the response shape returned when the organizer has
 	// no profile row yet. Overridable for tests; production uses the package
 	// default which mirrors the DB defaults.
@@ -85,6 +87,7 @@ func NewPublicProfileConfigHandler(
 		slugUpdater:    userRepo, // *UserRepo implements configSlugUpdater
 		geocoder:       geocoder,
 		frontendURL:    strings.TrimSuffix(frontendURL, "/"),
+		moderation:     profileRepo, // *PublicProfileRepo implements listing moderation
 		defaultProfile: defaultPublicProfile,
 	}
 }
@@ -93,11 +96,12 @@ func NewPublicProfileConfigHandler(
 // organizer who has not yet created a profile row.
 func defaultPublicProfile(userID uuid.UUID) *models.OrganizerPublicProfile {
 	return &models.OrganizerPublicProfile{
-		UserID:        userID,
-		IsEnabled:     false,
-		ShowPrices:    false,
-		ShowServices:  true,
-		ShowReviews:   true,
+		UserID:            userID,
+		IsEnabled:         false,
+		PublicationStatus: models.PublicationUnpublished,
+		ShowPrices:        false,
+		ShowServices:      true,
+		ShowReviews:       true,
 		ShowPortfolio: true,
 		ShowContact:   true,
 	}

@@ -263,6 +263,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Delete("/users/me", authHandler.DeleteOwnAccount)
 		r.Get("/users/me/public-profile", publicProfileConfigHandler.GetMyPublicProfile)
 		r.Put("/users/me/public-profile", publicProfileConfigHandler.UpsertMyPublicProfile)
+		r.Post("/users/me/public-profile/submit-for-review", publicProfileConfigHandler.SubmitForDirectoryReview)
 		r.Get("/users/me/public-profile/services", publicProfileServicesHandler.ListMyPublicProfileServices)
 		r.Put("/users/me/public-profile/services", publicProfileServicesHandler.SetMyPublicProfileServices)
 		r.Get("/users/me/public-profile/portfolio", publicProfilePortfolioHandler.ListPortfolioItems)
@@ -511,6 +512,10 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Post("/users/{id}/verify-email", adminHandler.VerifyUserEmail)
 		r.Get("/subscriptions", adminHandler.GetSubscriptions)
 		r.Get("/audit-logs", auditHandler.GetAllAuditLogs)
+		// Listing moderation queue (#1130).
+		r.Get("/listing-moderation", adminHandler.ListListingModeration)
+		r.Post("/listing-moderation/{id}/approve", adminHandler.ApproveListing)
+		r.Post("/listing-moderation/{id}/reject", adminHandler.RejectListing)
 	})
 
 	// Mount API subrouter under versioned prefix (canonical) and legacy prefix (backward compatible)

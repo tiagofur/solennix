@@ -178,6 +178,7 @@ func main() {
 	presignMac.Write([]byte("solennix-presign-v1"))
 	uploadHandler.SetPresignSigningKey(hex.EncodeToString(presignMac.Sum(nil)))
 	adminHandler := handlers.NewAdminHandler(adminRepo)
+	adminHandler.SetListingModeration(publicProfileRepo)
 	auditHandler := handlers.NewAuditHandler(auditRepo)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardRepo)
 	unavailHandler := handlers.NewUnavailableDateHandler(unavailRepo)
