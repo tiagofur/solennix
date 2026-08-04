@@ -71,6 +71,11 @@ const RequestsInboxPage = React.lazy(() =>
     default: m.RequestsInboxPage,
   })),
 );
+const InboundAnalyticsPage = React.lazy(() =>
+  import("@/pages/Inbound/InboundAnalyticsPage").then((m) => ({
+    default: m.InboundAnalyticsPage,
+  })),
+);
 
 const EventFormLinksPage = React.lazy(() => import("@/pages/EventForms/EventFormLinksPage").then((m) => ({ default: m.EventFormLinksPage })));
 const PaymentInboxPage = React.lazy(() => import("@/pages/Payments/PaymentInboxPage").then((m) => ({ default: m.PaymentInboxPage })));
@@ -174,6 +179,7 @@ function App() {
                 <Route path="/event-forms" element={<EventFormLinksPage />} />
                 <Route path="/payments/inbox" element={<PaymentInboxPage />} />
                 <Route path="/requests" element={<RequestsInboxPage />} />
+                <Route path="/inbound" element={<InboundAnalyticsPage />} />
                 <Route path="/reviews" element={<ReviewsPage />} />
                 <Route path="/settings" element={<Settings />} />
 

@@ -1,0 +1,33 @@
+{
+  "title": "Inbound",
+  "subtitle": "Public profile visits and quote requests",
+  "period_days": "{{days}} days",
+  "error": "We couldn't load analytics. Try again.",
+  "kpi": {
+    "views": "Views",
+    "unique": "Unique visitors",
+    "requests": "Requests",
+    "response_rate": "Response rate",
+    "converted": "Converted to event",
+    "conversion_rate": "Conversion",
+    "percent": "{{value}}%",
+    "change_pct": "{{pct}}% vs previous period",
+    "no_baseline": "No baseline"
+  },
+  "chart": {
+    "views_title": "Views per day",
+    "empty": "No visits in this period yet."
+  },
+  "sources": {
+    "title": "Traffic sources",
+    "directory": "Directory /proveedores",
+    "share": "Shared link",
+    "direct": "Direct",
+    "other": "Other"
+  },
+  "upsell": {
+    "title": "Unlock the full funnel with Pro",
+    "body": "Free shows views. Pro+ adds requests, response rate, conversion, and sources.",
+    "cta": "See plans"
+  }
+}

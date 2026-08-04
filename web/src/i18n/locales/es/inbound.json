@@ -1,0 +1,33 @@
+{
+  "title": "Inbound",
+  "subtitle": "Visitas a tu perfil público y solicitudes de cotización",
+  "period_days": "{{days}} días",
+  "error": "No pudimos cargar las métricas. Probá de nuevo.",
+  "kpi": {
+    "views": "Visitas",
+    "unique": "Visitantes únicos",
+    "requests": "Solicitudes",
+    "response_rate": "Tasa de respuesta",
+    "converted": "Convertidas a evento",
+    "conversion_rate": "Conversión",
+    "percent": "{{value}}%",
+    "change_pct": "{{pct}}% vs período anterior",
+    "no_baseline": "Sin comparación"
+  },
+  "chart": {
+    "views_title": "Visitas por día",
+    "empty": "Todavía no hay visitas en este período."
+  },
+  "sources": {
+    "title": "Fuente de tráfico",
+    "directory": "Directorio /proveedores",
+    "share": "Link compartido",
+    "direct": "Directo",
+    "other": "Otro"
+  },
+  "upsell": {
+    "title": "Desbloqueá el funnel completo con Pro",
+    "body": "En Free ves las visitas. En Pro+ ves solicitudes, respuesta, conversión y fuentes.",
+    "cta": "Ver planes"
+  }
+}

@@ -48,6 +48,8 @@ type PublicProfileConfigHandler struct {
 	slugUpdater configSlugUpdater
 	geocoder    geocoderPort
 	frontendURL string
+	// analytics is optional (#1131); nil → GetInboundAnalytics returns 501.
+	analytics inboundAnalyticsStore
 	// moderation is optional (#1130); nil → SubmitForDirectoryReview returns 501.
 	moderation listingModerationStore
 	// defaultProfile builds the response shape returned when the organizer has
@@ -87,6 +89,7 @@ func NewPublicProfileConfigHandler(
 		slugUpdater:    userRepo, // *UserRepo implements configSlugUpdater
 		geocoder:       geocoder,
 		frontendURL:    strings.TrimSuffix(frontendURL, "/"),
+		analytics:      profileRepo, // *PublicProfileRepo implements inbound analytics
 		moderation:     profileRepo, // *PublicProfileRepo implements listing moderation
 		defaultProfile: defaultPublicProfile,
 	}

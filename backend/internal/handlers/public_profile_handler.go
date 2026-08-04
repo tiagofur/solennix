@@ -14,6 +14,8 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
+// ensure context is used for WithoutCancel on view tracking (#1131).
+
 // isPubliclyVisibleAccount reports whether the organizer may appear on public
 // surfaces (profile page, reviews sub-route). Blocked / soft-deleted accounts
 // must not be discoverable even if a public_slug remains set.
@@ -43,6 +45,7 @@ type PublicProfileHandler struct {
 	portfolioRepo publicProfilePortfolioRepo
 	eventRepo     publicProfileEventRepo
 	searchRepo    publicProfileSearchRepo
+	viewRecorder  profileViewRecorder // optional #1131 inbound analytics
 	frontendURL   string
 }
 
@@ -90,6 +93,7 @@ func NewPublicProfileHandler(
 		portfolioRepo: profileRepo, // *PublicProfileRepo implements portfolio list
 		eventRepo:     eventRepo,
 		searchRepo:    profileRepo, // *PublicProfileRepo implements SearchPublicProfiles
+		viewRecorder:  profileRepo, // *PublicProfileRepo implements view recording (#1131)
 		frontendURL:   strings.TrimSuffix(frontendURL, "/"),
 	}
 }
@@ -135,6 +139,8 @@ func (h *PublicProfileHandler) GetPublicProfile(w http.ResponseWriter, r *http.R
 	}
 
 	dto := h.buildProjection(r.Context(), user, profile)
+	// Best-effort inbound page-view tracking (#1131). Never blocks the response.
+	go recordPublicProfileView(context.WithoutCancel(r.Context()), h.viewRecorder, user.ID, slug, r)
 	writeJSON(w, http.StatusOK, map[string]any{"data": dto})
 }
 

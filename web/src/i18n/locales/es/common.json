@@ -99,6 +99,7 @@
     "admin": "Admin",
     "payments_inbox": "Cobros",
     "requests_inbox": "Solicitudes",
+    "inbound": "Inbound",
     "reviews": "Reseñas",
     "skip_to_content": "Saltar al contenido",
     "open_search": "Abrir búsqueda",
