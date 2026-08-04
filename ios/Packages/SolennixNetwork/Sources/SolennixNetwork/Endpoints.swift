@@ -173,6 +173,44 @@ public enum Endpoint {
         "/payment-submissions/\(id)"
     }
 
+    // MARK: - Public quote requests (organizer inbox, v2 #1121/#1122)
+
+    /// GET /organizers/me/requests — list (cursor or page)
+    public static let publicRequests = "/organizers/me/requests"
+
+    /// GET /organizers/me/requests/unread-count
+    public static let publicRequestsUnreadCount = "/organizers/me/requests/unread-count"
+
+    /// GET /organizers/me/requests/{id}
+    public static func publicRequest(_ id: String) -> String {
+        "/organizers/me/requests/\(id)"
+    }
+
+    /// POST /organizers/me/requests/{id}/read
+    public static func publicRequestRead(_ id: String) -> String {
+        "/organizers/me/requests/\(id)/read"
+    }
+
+    /// POST /organizers/me/requests/{id}/responses
+    public static func publicRequestRespond(_ id: String) -> String {
+        "/organizers/me/requests/\(id)/responses"
+    }
+
+    /// POST /organizers/me/requests/{id}/decline
+    public static func publicRequestDecline(_ id: String) -> String {
+        "/organizers/me/requests/\(id)/decline"
+    }
+
+    /// POST /organizers/me/requests/{id}/request-info
+    public static func publicRequestInfo(_ id: String) -> String {
+        "/organizers/me/requests/\(id)/request-info"
+    }
+
+    /// POST /organizers/me/requests/{id}/convert-to-event
+    public static func publicRequestConvert(_ id: String) -> String {
+        "/organizers/me/requests/\(id)/convert-to-event"
+    }
+
     // MARK: - Reviews (organizer inbox)
 
     public static let reviews = "/reviews"

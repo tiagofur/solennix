@@ -67,7 +67,8 @@ public enum Route: Hashable, Codable {
     case reviews
 
     // MARK: Public quote requests (v2 inbound inbox — #1122/#1124)
-    /// Deep link target for a single PublicRequest. Full UI ships with #1122.
+    case publicRequests
+    /// Deep link target for a single PublicRequest.
     case publicRequestDetail(id: String)
 
     // MARK: Settings Sub-Routes

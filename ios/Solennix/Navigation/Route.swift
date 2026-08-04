@@ -131,6 +131,7 @@ public enum SidebarSection: String, Hashable, CaseIterable, Codable {
     case paymentInbox
     case eventFormLinks
     case reviews
+    case publicRequests
     case settings
 
     /// The SF Symbol icon name for this sidebar section.
@@ -145,6 +146,7 @@ public enum SidebarSection: String, Hashable, CaseIterable, Codable {
         case .paymentInbox:    return "wallet.pass.fill"
         case .eventFormLinks:  return "link"
         case .reviews:         return "star.fill"
+        case .publicRequests:  return "tray.and.arrow.down.fill"
         case .settings:        return "gearshape.fill"
         }
     }
@@ -161,6 +163,7 @@ public enum SidebarSection: String, Hashable, CaseIterable, Codable {
         case .paymentInbox:    return CommonStrings.navPaymentInbox
         case .eventFormLinks:  return CommonStrings.navEventFormLinks
         case .reviews:         return CommonStrings.navReviews
+        case .publicRequests:  return CommonStrings.navPublicRequests
         case .settings:        return CommonStrings.navSettings
         }
     }
@@ -171,12 +174,13 @@ public enum SidebarSection: String, Hashable, CaseIterable, Codable {
 extension SidebarSection {
     /// Main sidebar order for iPad/macOS.
     static let mainSections: [SidebarSection] = [
-        .dashboard, .events, .clients, .personnel, .products, .inventory, .paymentInbox, .eventFormLinks, .reviews
+        .dashboard, .events, .clients, .personnel, .products, .inventory,
+        .paymentInbox, .publicRequests, .eventFormLinks, .reviews
     ]
 
     /// Catalog section order for the iPhone "Mas" menu.
     static let moreMenuCatalogSections: [SidebarSection] = [
-        .products, .inventory, .paymentInbox, .personnel, .eventFormLinks, .reviews
+        .products, .inventory, .paymentInbox, .publicRequests, .personnel, .eventFormLinks, .reviews
     ]
 
     /// Canonical route destination used by menu navigation.
@@ -198,6 +202,8 @@ extension SidebarSection {
             return .inventoryList
         case .paymentInbox:
             return .paymentInbox
+        case .publicRequests:
+            return .publicRequests
         case .eventFormLinks:
             return .eventFormLinks
         case .reviews:
@@ -227,6 +233,8 @@ extension SidebarSection {
             return CommonStrings.moreMenuInventorySubtitle
         case .paymentInbox:
             return CommonStrings.moreMenuPaymentInboxSubtitle
+        case .publicRequests:
+            return CommonStrings.moreMenuPublicRequestsSubtitle
         case .eventFormLinks:
             return CommonStrings.moreMenuEventFormLinksSubtitle
         case .personnel:

@@ -36,20 +36,22 @@ final class SidebarSectionTests: XCTestCase {
         // Calendar MUST NOT appear among the sidebar main sections.
         XCTAssertEqual(
             SidebarSection.mainSections,
-            [.dashboard, .events, .clients, .personnel, .products, .inventory, .paymentInbox, .eventFormLinks, .reviews]
+            [
+                .dashboard, .events, .clients, .personnel, .products, .inventory,
+                .paymentInbox, .publicRequests, .eventFormLinks, .reviews,
+            ]
         )
     }
 
-    func testMainSectionsCountIsNine() {
-        // Triangulation for "no calendar": removing it drops the main section
-        // count from ten to nine.
-        XCTAssertEqual(SidebarSection.mainSections.count, 9)
+    func testMainSectionsCountIsTen() {
+        // Includes publicRequests (#1122); calendar remains excluded.
+        XCTAssertEqual(SidebarSection.mainSections.count, 10)
     }
 
     func testMoreMenuCatalogSectionsContainExpectedOrder() {
         XCTAssertEqual(
             SidebarSection.moreMenuCatalogSections,
-            [.products, .inventory, .paymentInbox, .personnel, .eventFormLinks, .reviews]
+            [.products, .inventory, .paymentInbox, .publicRequests, .personnel, .eventFormLinks, .reviews]
         )
     }
 
@@ -65,6 +67,7 @@ final class SidebarSectionTests: XCTestCase {
         XCTAssertEqual(SidebarSection.products.route, .productList)
         XCTAssertEqual(SidebarSection.inventory.route, .inventoryList)
         XCTAssertEqual(SidebarSection.paymentInbox.route, .paymentInbox)
+        XCTAssertEqual(SidebarSection.publicRequests.route, .publicRequests)
         XCTAssertEqual(SidebarSection.eventFormLinks.route, .eventFormLinks)
         XCTAssertEqual(SidebarSection.reviews.route, .reviews)
         XCTAssertEqual(SidebarSection.settings.route, .settings)
