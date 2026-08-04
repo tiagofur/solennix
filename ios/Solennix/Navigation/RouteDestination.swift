@@ -101,7 +101,7 @@ struct RouteDestination: View {
         case .reviews:
             ReviewsView(apiClient: apiClient)
 
-        // Public quote requests inbox (#1122)
+        // Public quote requests inbox (#1122 / #1125)
         case .publicRequests:
             RequestsInboxView(apiClient: apiClient)
         case .publicRequestDetail(let id):
