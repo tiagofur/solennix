@@ -9,7 +9,7 @@
 - [x] 0.2 Same migration: `ALTER public_requests` add `source`, `link_id`, `submit_mode`, `contact_phone`, `city`; document `services[].qty` in comments/OpenAPI only.
 - [x] 0.3 Down migration: drop new columns + `public_request_links` (keep `public_requests` data-safe).
 - [x] 0.4 Models: `PublicRequestLink`, `SubmitMode` (`standard|auto_quote|auto_event`), `RequestSource`; extend `PublicRequest` + `PublicRequestServiceSnapshot` with `Qty`.
-- [ ] 0.5 Hard-remove or stub-404 `PublicLead` handlers once Phase 1 create path is green (prefer Phase 4 if dual-run needed; greenfield → remove with P1 OpenAPI).
+- [x] 0.5 Hard-remove or stub-404 `PublicLead` handlers once Phase 1 create path is green (prefer Phase 4 if dual-run needed; greenfield → remove with P1 OpenAPI).
 
 ## Phase 1: Repository + catalog resolver
 
@@ -39,10 +39,10 @@
 
 ## Phase 4: Kill legacy APIs (backend)
 
-- [ ] 4.1 Remove EventFormLink public+auth routes, handlers usage from router (or return 410 with successor message during one release).
-- [ ] 4.2 Remove PublicLead routes + soft-deprecation leftover.
-- [ ] 4.3 Migration drop `public_leads`; later migration drop `event_form_links` after web/mobile cutover (or same PR if no dual support).
-- [ ] 4.4 `go test ./...` green; OpenAPI contract test green.
+- [x] 4.1 Remove EventFormLink public+auth routes, handlers usage from router (or return 410 with successor message during one release).
+- [x] 4.2 Remove PublicLead routes + soft-deprecation leftover.
+- [x] 4.3 Migration drop `public_leads`; later migration drop `event_form_links` after web/mobile cutover (or same PR if no dual support).
+- [x] 4.4 `go test ./...` green; OpenAPI contract test green.
 
 ## Phase 5: Web (visitor + organizer)
 
