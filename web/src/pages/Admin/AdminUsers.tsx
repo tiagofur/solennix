@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Users, 
@@ -22,12 +22,13 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAdminUsers, useUpgradeUser, useAdminInactiveUsers, useAdminZeroResourceUsers, useDeleteAdminUser, useVerifyUserEmail, useBlockUser } from '@/hooks/queries/useAdminQueries';
+import { useAdminUsers, useAdminUsersPage, useUpgradeUser, useAdminInactiveUsers, useAdminZeroResourceUsers, useDeleteAdminUser, useVerifyUserEmail, useBlockUser } from '@/hooks/queries/useAdminQueries';
 import type { AdminAccountType } from '@/services/adminService';
 import { queryKeys } from '@/hooks/queries/queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { RowActionMenu } from '@/components/RowActionMenu';
+import { Pagination } from '@/components/Pagination';
 import { format, parseISO, isPast, differenceInDays } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import clsx from 'clsx';
@@ -60,6 +61,7 @@ interface AdminUser {
   registration_platform?: string;
   active_platforms?: string[];
   last_active_at?: string;
+  last_login_at?: string;
   created_at: string;
 }
 
@@ -88,11 +90,50 @@ export const AdminUsers: React.FC = () => {
   const [accountType, setAccountType] = useState<AccountTypeFilter>('users');
   const [auditFilter, setAuditFilter] = useState<'none' | 'inactive' | 'zero_resources' | 'eligible_for_deletion'>('none');
   const [inactiveDays] = useState(30);
+  const [listPage, setListPage] = useState(1);
+  const pageSize = 50;
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [planFilter, setPlanFilter] = useState<PlanFilter>('all');
 
-  const { data: standardUsers = [], isLoading: loadingStandard, error: usersError } = useAdminUsers(accountType);
-  const { data: inactiveUsers = [], isLoading: loadingInactive } = useAdminInactiveUsers(inactiveDays);
-  const { data: zeroResourceUsers = [], isLoading: loadingZero } = useAdminZeroResourceUsers();
-  const { data: eligibleUsers = [], isLoading: loadingEligible } = useAdminUsers(accountType, 'eligible_for_deletion');
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => window.clearTimeout(t);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setListPage(1);
+  }, [debouncedSearch, planFilter, accountType]);
+
+  // Paginated main list (SQL page + search/plan). Secondary audit views load only when selected.
+  const {
+    data: standardPage,
+    isLoading: loadingStandard,
+    error: usersError,
+  } = useAdminUsersPage(
+    accountType,
+    listPage,
+    pageSize,
+    undefined,
+    auditFilter === 'none',
+    debouncedSearch,
+    planFilter,
+  );
+  const { data: inactiveUsers = [], isLoading: loadingInactive } = useAdminInactiveUsers(
+    inactiveDays,
+    auditFilter === 'inactive',
+  );
+  const { data: zeroResourceUsers = [], isLoading: loadingZero } = useAdminZeroResourceUsers(
+    auditFilter === 'zero_resources',
+  );
+  const { data: eligibleUsers = [], isLoading: loadingEligible } = useAdminUsers(
+    accountType,
+    'eligible_for_deletion',
+    auditFilter === 'eligible_for_deletion',
+  );
+
+  const standardUsers = standardPage?.data ?? [];
+  const serverTotalPages = standardPage?.total_pages ?? 1;
 
   const users = auditFilter === 'inactive'
     ? inactiveUsers
@@ -102,12 +143,13 @@ export const AdminUsers: React.FC = () => {
         ? eligibleUsers
         : standardUsers;
 
-  const loading = loadingStandard || loadingInactive || loadingZero || loadingEligible;
-  const { data: allAccounts = [] } = useAdminUsers('all');
+  const loading =
+    (auditFilter === 'none' && loadingStandard) ||
+    (auditFilter === 'inactive' && loadingInactive) ||
+    (auditFilter === 'zero_resources' && loadingZero) ||
+    (auditFilter === 'eligible_for_deletion' && loadingEligible);
   const upgradeUser = useUpgradeUser();
   const error = usersError ? t('admin:users.errors.loading') : null;
-  const [searchQuery, setSearchQuery] = useState('');
-  const [planFilter, setPlanFilter] = useState<PlanFilter>('all');
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [gift, setGift] = useState<GiftState | null>(null);
@@ -117,6 +159,12 @@ export const AdminUsers: React.FC = () => {
   const [blockReason, setBlockReason] = useState('');
   const [blockReasonError, setBlockReasonError] = useState('');
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  // Cross-role account list only when needed (type "all" or export menu open).
+  const { data: allAccounts = [] } = useAdminUsers(
+    'all',
+    undefined,
+    accountType === 'all' || exportMenuOpen,
+  );
   const blockUser = useBlockUser();
   const { addToast } = useToast();
 
@@ -298,6 +346,7 @@ export const AdminUsers: React.FC = () => {
       t('admin:users.csv.headers.registration'),
       t('admin:users.csv.headers.registration_platform'),
       t('admin:users.csv.headers.active_platforms'),
+      t('admin:users.csv.headers.last_login'),
       t('admin:users.csv.headers.last_active'),
       t('admin:users.csv.headers.email_verified'),
       t('admin:users.csv.headers.account_status'),
@@ -315,6 +364,7 @@ export const AdminUsers: React.FC = () => {
       format(parseISO(u.created_at), 'dd/MM/yyyy', { locale: dateLocale }),
       u.registration_platform || 'unknown',
       (u.active_platforms || []).join(', '),
+      u.last_login_at ? format(parseISO(u.last_login_at), 'dd/MM/yyyy HH:mm') : '',
       u.last_active_at ? format(parseISO(u.last_active_at), 'dd/MM/yyyy HH:mm') : '',
       u.email_verified_at ? 'Verificado' : 'No verificado',
       u.account_status || 'active',
@@ -429,25 +479,29 @@ export const AdminUsers: React.FC = () => {
     addToast(t('admin:users.csv.success', { count: filteredUsers.length }), 'success');
   };
 
-  // Filter
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      searchQuery === '' ||
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.business_name &&
-        user.business_name.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesPlan = planFilter === 'all' || user.plan === planFilter;
-    return matchesSearch && matchesPlan;
-  });
+  // Main list: search/plan applied server-side when auditFilter is none.
+  // Audit lists are small; keep client filters for those views.
+  const filteredUsers =
+    auditFilter === 'none'
+      ? users
+      : users.filter((user) => {
+          const q = debouncedSearch.toLowerCase();
+          const matchesSearch =
+            q === '' ||
+            user.name.toLowerCase().includes(q) ||
+            user.email.toLowerCase().includes(q) ||
+            (user.business_name && user.business_name.toLowerCase().includes(q));
+          const matchesPlan = planFilter === 'all' || user.plan === planFilter;
+          return matchesSearch && matchesPlan;
+        });
 
   const filteredAllAccounts = allAccounts.filter((user) => {
+    const q = debouncedSearch.toLowerCase();
     const matchesSearch =
-      searchQuery === '' ||
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.business_name &&
-        user.business_name.toLowerCase().includes(searchQuery.toLowerCase()));
+      q === '' ||
+      user.name.toLowerCase().includes(q) ||
+      user.email.toLowerCase().includes(q) ||
+      (user.business_name && user.business_name.toLowerCase().includes(q));
     const matchesPlan = planFilter === 'all' || user.plan === planFilter;
     return matchesSearch && matchesPlan;
   });
@@ -870,7 +924,10 @@ export const AdminUsers: React.FC = () => {
               <button
                 key={card.value}
                 type="button"
-                onClick={() => setAccountType(card.value)}
+                onClick={() => {
+                  setAccountType(card.value);
+                  setListPage(1);
+                }}
                 className={clsx(
                   'text-left p-4 rounded-2xl border transition-all',
                   active
@@ -953,7 +1010,10 @@ export const AdminUsers: React.FC = () => {
               <button
                 key={btn.id}
                 type="button"
-                onClick={() => setAuditFilter(btn.id as any)}
+                onClick={() => {
+                  setAuditFilter(btn.id as typeof auditFilter);
+                  setListPage(1);
+                }}
                 className={clsx(
                   'px-3 py-1.5 rounded-xl text-xs font-bold transition-all border',
                   auditFilter === btn.id
@@ -1062,9 +1122,25 @@ export const AdminUsers: React.FC = () => {
                             {user.business_name && (
                               <div className="text-xs text-text-tertiary truncate mt-1">{user.business_name}</div>
                             )}
-                            <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-text-secondary">
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] text-text-secondary">
                               <span className="bg-surface-alt border border-border px-1 py-0.5 rounded text-text-tertiary">
-                                Reg: <span className="font-semibold text-text uppercase">{user.registration_platform || 'web'}</span>
+                                Reg: <span className="font-semibold text-text uppercase">{user.registration_platform || 'unknown'}</span>
+                              </span>
+                              <span className="bg-surface-alt border border-border px-1 py-0.5 rounded text-text-tertiary" title={t('admin:users.csv.headers.last_login')}>
+                                Login:{' '}
+                                <span className="font-semibold text-text">
+                                  {user.last_login_at
+                                    ? format(parseISO(user.last_login_at), "d MMM ''yy", { locale: dateLocale })
+                                    : '—'}
+                                </span>
+                              </span>
+                              <span className="bg-surface-alt border border-border px-1 py-0.5 rounded text-text-tertiary" title={t('admin:users.csv.headers.last_active')}>
+                                Act:{' '}
+                                <span className="font-semibold text-text">
+                                  {user.last_active_at
+                                    ? format(parseISO(user.last_active_at), "d MMM ''yy", { locale: dateLocale })
+                                    : '—'}
+                                </span>
                               </span>
                               <div className="flex items-center gap-1.5" title="Plataformas con uso registrado">
                                 {(user.active_platforms?.includes('web') || user.platform_activity?.some((p: any) => p.platform === 'web')) && (
@@ -1233,9 +1309,13 @@ export const AdminUsers: React.FC = () => {
         </div>
 
         {!loading && sortedUsers.length > 0 && (
-          <div className="px-6 py-3 bg-surface-alt border-t border-border flex items-center justify-between text-xs text-text-secondary">
+          <div className="px-6 py-3 bg-surface-alt border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-text-secondary">
             <span>
-              {t('admin:users.table.footer.showing', { count: sortedUsers.length, filtered: sortedUsers.length, total: users.length })}
+              {t('admin:users.table.footer.showing', {
+                count: sortedUsers.length,
+                filtered: sortedUsers.length,
+                total: auditFilter === 'none' ? (standardPage?.total ?? users.length) : users.length,
+              })}
             </span>
             <span>
               {t('admin:users.table.footer.sorted_by')}{' '}
@@ -1244,6 +1324,17 @@ export const AdminUsers: React.FC = () => {
               </strong>{' '}
               ({sortDir === 'asc' ? '↑ asc' : '↓ desc'})
             </span>
+          </div>
+        )}
+        {auditFilter === 'none' && serverTotalPages > 1 && (
+          <div className="px-6 py-3 border-t border-border">
+            <Pagination
+              currentPage={listPage}
+              totalPages={serverTotalPages}
+              onPageChange={setListPage}
+              totalItems={standardPage?.total}
+              itemsPerPage={pageSize}
+            />
           </div>
         )}
       </div>

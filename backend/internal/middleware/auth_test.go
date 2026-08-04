@@ -490,6 +490,23 @@ func (m *mockPlatformRepo) UpsertUserPlatforms(ctx context.Context, records []mo
 	return nil
 }
 
+func TestActivityBufferRequeueAfterFailedFlush(t *testing.T) {
+	buf := &ActivityBuffer{data: make(map[uuid.UUID]map[string]int)}
+	userID := uuid.New()
+	buf.Increment(userID, "ios")
+	buf.Increment(userID, "ios")
+
+	// Concurrent traffic after Flush must be preserved when requeueing.
+	flushed := buf.Flush()
+	buf.Increment(userID, "ios") // post-flush
+	buf.Requeue(flushed)
+
+	merged := buf.Flush()
+	if got := merged[userID]["ios"]; got != 3 {
+		t.Fatalf("ios count after requeue+merge = %d, want 3", got)
+	}
+}
+
 func TestActivityWorkerFlush(t *testing.T) {
 	buf := &ActivityBuffer{
 		data: make(map[uuid.UUID]map[string]int),

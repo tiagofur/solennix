@@ -92,7 +92,9 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 			{ID: uuid.New(), Email: "a@b.com", Name: "Alice", Plan: "pro"},
 			{ID: uuid.New(), Email: "c@d.com", Name: "Bob", Plan: "basic"},
 		}
-		repo.On("GetAllUsers", mock.Anything, "users").Return(users, nil)
+		repo.On("GetAllUsersPage", mock.Anything, mock.MatchedBy(func(o repository.AdminUserListOpts) bool {
+			return o.AccountType == "users" && o.Limit == 0
+		})).Return(users, 2, nil)
 
 		req := httptest.NewRequest("GET", "/api/admin/users", nil)
 		w := httptest.NewRecorder()
@@ -112,7 +114,9 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 		repo := new(MockAdminRepo)
 		handler := NewAdminHandler(repo)
 
-		repo.On("GetAllUsers", mock.Anything, "users").Return(nil, nil)
+		repo.On("GetAllUsersPage", mock.Anything, mock.MatchedBy(func(o repository.AdminUserListOpts) bool {
+			return o.AccountType == "users" && o.Limit == 0
+		})).Return(nil, 0, nil)
 
 		req := httptest.NewRequest("GET", "/api/admin/users", nil)
 		w := httptest.NewRecorder()
@@ -129,11 +133,57 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 
+	t.Run("paginated success", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		users := []repository.AdminUser{
+			{ID: uuid.New(), Email: "a@b.com", Name: "Alice", Plan: "pro"},
+		}
+		repo.On("GetAllUsersPage", mock.Anything, mock.MatchedBy(func(o repository.AdminUserListOpts) bool {
+			return o.AccountType == "users" && o.Offset == 0 && o.Limit == 20
+		})).Return(users, 45, nil)
+
+		req := httptest.NewRequest("GET", "/api/admin/users?page=1&limit=20", nil)
+		w := httptest.NewRecorder()
+		handler.ListUsers(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var envelope struct {
+			Data       []repository.AdminUser `json:"data"`
+			Total      int                    `json:"total"`
+			Page       int                    `json:"page"`
+			Limit      int                    `json:"limit"`
+			TotalPages int                    `json:"total_pages"`
+		}
+		assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
+		assert.Len(t, envelope.Data, 1)
+		assert.Equal(t, 45, envelope.Total)
+		assert.Equal(t, 1, envelope.Page)
+		assert.Equal(t, 3, envelope.TotalPages)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("search and plan filters pass to repo", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		repo.On("GetAllUsersPage", mock.Anything, mock.MatchedBy(func(o repository.AdminUserListOpts) bool {
+			return o.Search == "alice" && o.Plan == "pro" && o.Limit == 20
+		})).Return([]repository.AdminUser{}, 0, nil)
+
+		req := httptest.NewRequest("GET", "/api/admin/users?page=1&limit=20&search=alice&plan=pro", nil)
+		w := httptest.NewRecorder()
+		handler.ListUsers(w, req)
+		assert.Equal(t, http.StatusOK, w.Code)
+		repo.AssertExpectations(t)
+	})
+
 	t.Run("repo error", func(t *testing.T) {
 		repo := new(MockAdminRepo)
 		handler := NewAdminHandler(repo)
 
-		repo.On("GetAllUsers", mock.Anything, "users").Return(nil, assert.AnError)
+		repo.On("GetAllUsersPage", mock.Anything, mock.Anything).Return(nil, 0, assert.AnError)
 
 		req := httptest.NewRequest("GET", "/api/admin/users", nil)
 		w := httptest.NewRecorder()
@@ -149,7 +199,9 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 		repo := new(MockAdminRepo)
 		handler := NewAdminHandler(repo)
 
-		repo.On("GetAllUsers", mock.Anything, "invalid").Return(nil, fmt.Errorf("invalid account type"))
+		repo.On("GetAllUsersPage", mock.Anything, mock.MatchedBy(func(o repository.AdminUserListOpts) bool {
+			return o.AccountType == "invalid"
+		})).Return(nil, 0, fmt.Errorf("invalid account type"))
 
 		req := httptest.NewRequest("GET", "/api/admin/users?account_type=invalid", nil)
 		w := httptest.NewRecorder()
@@ -213,7 +265,27 @@ func TestAdminHandler_GetUser(t *testing.T) {
 		assert.Contains(t, w.Body.String(), "Invalid user ID")
 	})
 
-	t.Run("repo error (not found)", func(t *testing.T) {
+	t.Run("user not found", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		userID := uuid.New()
+		repo.On("GetUserByID", mock.Anything, userID).Return(nil, repository.ErrAdminUserNotFound)
+
+		req := httptest.NewRequest("GET", "/api/admin/users/"+userID.String(), nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", userID.String())
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+		w := httptest.NewRecorder()
+
+		handler.GetUser(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		assert.Contains(t, w.Body.String(), "User not found")
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("repo infra error returns 503", func(t *testing.T) {
 		repo := new(MockAdminRepo)
 		handler := NewAdminHandler(repo)
 
@@ -228,8 +300,8 @@ func TestAdminHandler_GetUser(t *testing.T) {
 
 		handler.GetUser(w, req)
 
-		assert.Equal(t, http.StatusNotFound, w.Code)
-		assert.Contains(t, w.Body.String(), "User not found")
+		assert.Equal(t, http.StatusServiceUnavailable, w.Code)
+		assert.Contains(t, w.Body.String(), "temporarily unavailable")
 		repo.AssertExpectations(t)
 	})
 }
@@ -664,7 +736,9 @@ func TestAdminHandler_ListUsers_WithModerationFilter(t *testing.T) {
 		{ID: uuid.New(), Email: "blocked2@example.com", AccountStatus: repository.AccountStatusBlocked, DeletionEligibleAt: &futureEligibleAt},
 	}
 
-	repo.On("GetAllUsers", mock.Anything, "users").Return(users, nil)
+	repo.On("GetAllUsersPage", mock.Anything, mock.MatchedBy(func(o repository.AdminUserListOpts) bool {
+		return o.AccountType == "users"
+	})).Return(users, 3, nil)
 
 	req := httptest.NewRequest("GET", "/api/admin/users?moderation_status=eligible_for_deletion", nil)
 	w := httptest.NewRecorder()

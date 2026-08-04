@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { useAdminUser } from '@/hooks/queries/useAdminQueries';
 import { useAdminAuditLogs } from '@/hooks/queries/useActivityQueries';
 import { Pagination } from '@/components/Pagination';
+import { formatAdminLogAction, formatAdminLogDetails } from '@/lib/adminAuditFormat';
 import { format, parseISO } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import clsx from 'clsx';
@@ -44,35 +45,9 @@ export const AdminUserDetails: React.FC = () => {
     ? user.events_count + user.clients_count + user.products_count
     : 0;
 
-  const formatLogAction = (action: string): string => {
-    const key = `admin:users.details.actions.${action}`;
-    const translated = t(key);
-    return translated !== key ? translated : action;
-  };
-
-  const formatLogDetails = (details: string | null, action: string, resourceType: string): string => {
-    if (!details) {
-      return `${formatLogAction(action)} ${resourceType}`;
-    }
-
-    if (details.trim().startsWith('{')) {
-      try {
-        const parsed = JSON.parse(details);
-        if (parsed.reason) {
-          const reasonKey = `admin:users.details.reasons.${parsed.reason}`;
-          const translatedReason = t(reasonKey);
-          const reasonStr = translatedReason !== reasonKey ? translatedReason : parsed.reason.replace(/_/g, ' ');
-          
-          return `${formatLogAction(action)}: ${reasonStr}`;
-        }
-        return JSON.stringify(parsed);
-      } catch {
-        // Fallback to raw string
-      }
-    }
-
-    return details;
-  };
+  const formatLogAction = (action: string): string => formatAdminLogAction(t, action);
+  const formatLogDetails = (details: string | null, action: string, resourceType: string): string =>
+    formatAdminLogDetails(t, details, action, resourceType);
 
   const getRoleBadge = (role: string) => {
     const styles: Record<string, string> = {
@@ -187,7 +162,7 @@ export const AdminUserDetails: React.FC = () => {
                 <div className="flex items-center gap-1.5 mt-1 text-xs text-text-secondary">
                   <span className="font-semibold">{t('admin:users.details.registered_via', { defaultValue: 'Registro:' })}</span>
                   <span className="bg-surface border border-border px-1.5 py-0.5 rounded text-text font-bold uppercase tracking-wider text-[10px]">
-                    {user.registration_platform || 'web'}
+                    {user.registration_platform || 'unknown'}
                   </span>
                 </div>
               </div>
@@ -196,7 +171,11 @@ export const AdminUserDetails: React.FC = () => {
               <div className="flex items-center gap-2 text-sm text-text-secondary">
                 <span className="font-semibold text-text">{t('admin:users.details.plan_label')}</span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/25">
-                  {user.plan === 'premium' ? t('admin:users.filters.pro') : user.plan === 'pro' ? t('admin:users.filters.pro') : t('admin:users.filters.basic')}
+                  {user.plan === 'business'
+                    ? t('admin:users.filters.business')
+                    : user.plan === 'premium' || user.plan === 'pro'
+                      ? t('admin:users.filters.pro')
+                      : t('admin:users.filters.basic')}
                 </span>
                 {user.plan_expires_at && (
                   <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-warning/10 text-warning border border-warning/20">
@@ -204,8 +183,26 @@ export const AdminUserDetails: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className="text-xs text-text-tertiary">
-                {t('admin:users.details.created_at', { date: format(parseISO(user.created_at), 'd MMM yyyy', { locale: dateLocale }) })}
+              <div className="text-xs text-text-tertiary space-y-0.5">
+                <div>
+                  {t('admin:users.details.created_at', { date: format(parseISO(user.created_at), 'd MMM yyyy', { locale: dateLocale }) })}
+                </div>
+                <div>
+                  {t('admin:users.details.last_login', {
+                    defaultValue: 'Último login: {{date}}',
+                    date: user.last_login_at
+                      ? format(parseISO(user.last_login_at), 'd MMM yyyy, HH:mm', { locale: dateLocale })
+                      : '—',
+                  })}
+                </div>
+                <div>
+                  {t('admin:users.details.last_active', {
+                    defaultValue: 'Última actividad: {{date}}',
+                    date: user.last_active_at
+                      ? format(parseISO(user.last_active_at), 'd MMM yyyy, HH:mm', { locale: dateLocale })
+                      : '—',
+                  })}
+                </div>
               </div>
             </div>
           </div>

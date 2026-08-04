@@ -47,6 +47,8 @@ export interface AdminUser {
   }>;
   active_platforms?: string[];
   last_active_at?: string | null;
+  /** Last successful login (email/OAuth). Distinct from last_active_at (API activity). */
+  last_login_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -59,6 +61,16 @@ export interface SubscriptionOverview {
   stripe_count: number;
   apple_count: number;
   google_count: number;
+  /** Cancellations in the last 30 days (period churn numerator). */
+  canceled_last_30_days?: number;
+}
+
+export interface AdminUsersPage {
+  data: AdminUser[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
 }
 
 export const adminService = {
@@ -71,7 +83,33 @@ export const adminService = {
     if (moderationStatus) {
       params.moderation_status = moderationStatus;
     }
+    // Flat array (legacy) — used for small filtered sets / exports.
     return api.get<AdminUser[]>("/admin/users", params);
+  },
+
+  async getUsersPage(
+    accountType: AdminAccountType = 'users',
+    page = 1,
+    limit = 50,
+    moderationStatus?: string,
+    search?: string,
+    plan?: string,
+  ) {
+    const params: Record<string, string> = {
+      account_type: accountType,
+      page: String(page),
+      limit: String(limit),
+    };
+    if (moderationStatus) {
+      params.moderation_status = moderationStatus;
+    }
+    if (search?.trim()) {
+      params.search = search.trim();
+    }
+    if (plan && plan !== 'all') {
+      params.plan = plan;
+    }
+    return api.get<AdminUsersPage>("/admin/users", params);
   },
 
   async getInactiveUsers(days = 30) {

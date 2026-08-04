@@ -41,7 +41,7 @@ func scanUser(row pgx.Row) (*models.User, error) {
 	return user, nil
 }
 
-const selectUserColumns = `SELECT id, email, password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
+const selectUserColumns = `SELECT id, email, COALESCE(password_hash, '') AS password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
 	default_deposit_percent, default_cancellation_days, default_refund_percent,
 	contract_template,
 	email_payment_receipt, email_event_reminder, email_subscription_updates,

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAdminAuditLogs } from "@/hooks/queries/useAdminQueries";
+import { formatAdminLogAction, formatAdminLogDetails } from "@/lib/adminAuditFormat";
 import { format, parseISO } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 
@@ -104,7 +105,7 @@ export const AdminAuditLogSection: React.FC = () => {
                     {formatUserId(entry.user_id)}
                   </td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm font-semibold text-text">
-                    {entry.action}
+                    {formatAdminLogAction(t, entry.action)}
                   </td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-text-secondary">
                     {entry.resource_type}
@@ -114,8 +115,11 @@ export const AdminAuditLogSection: React.FC = () => {
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-3 text-sm text-text-secondary max-w-md truncate" title={entry.details ?? undefined}>
-                    {entry.details ?? "—"}
+                  <td
+                    className="px-6 py-3 text-sm text-text-secondary max-w-md truncate"
+                    title={formatAdminLogDetails(t, entry.details, entry.action, entry.resource_type)}
+                  >
+                    {formatAdminLogDetails(t, entry.details, entry.action, entry.resource_type) || "—"}
                   </td>
                 </tr>
               ))}

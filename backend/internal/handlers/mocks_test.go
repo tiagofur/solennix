@@ -149,6 +149,18 @@ func (m *MockFullUserRepo) UpdateLastActiveAt(ctx context.Context, id uuid.UUID)
 	return args.Error(0)
 }
 
+func (m *MockFullUserRepo) UpdateLastLoginAt(ctx context.Context, id uuid.UUID) error {
+	// Optional async side-effect of login. Default no-op so tests that don't
+	// assert login bookkeeping don't panic when the goroutine fires after
+	// the handler returns.
+	for _, c := range m.ExpectedCalls {
+		if c.Method == "UpdateLastLoginAt" {
+			return m.Called(ctx, id).Error(0)
+		}
+	}
+	return nil
+}
+
 func (m *MockFullUserRepo) DeleteOwnAccount(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
@@ -783,6 +795,14 @@ func (m *MockAdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]repository.AdminUser), args.Error(1)
+}
+
+func (m *MockAdminRepo) GetAllUsersPage(ctx context.Context, opts repository.AdminUserListOpts) ([]repository.AdminUser, int, error) {
+	args := m.Called(ctx, opts)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]repository.AdminUser), args.Int(1), args.Error(2)
 }
 
 func (m *MockAdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*repository.AdminUser, error) {

@@ -23,7 +23,7 @@
       "new_week": "week",
       "conversion_help": "basic → paid plan",
       "avg_events_help": "platform average",
-      "churn_help": "canceled subs vs total",
+      "churn_help": "canceled last 30 days vs active + those cancelations",
       "platform_summary": "across the platform"
     },
     "charts": {
@@ -204,6 +204,7 @@
         "registration_platform": "Registration Platform",
         "active_platforms": "Active Platforms",
         "last_active": "Last Active",
+        "last_login": "Last Login",
         "email_verified": "Email Verified",
         "account_status": "Account Status",
         "days_inactive": "Days Inactive",
@@ -221,6 +222,8 @@
       "plan_label": "Plan:",
       "gift": "Gift",
       "created_at": "Created at: {{date}}",
+      "last_login": "Last login: {{date}}",
+      "last_active": "Last activity: {{date}}",
       "adoption_metrics": "Adoption Metrics",
       "metric_events": "Events created",
       "metric_clients": "Clients registered",
@@ -240,7 +243,10 @@
         "auth_failed": "Authentication failure",
         "rate_limited": "Rate limit exceeded",
         "block": "Block",
-        "unblock": "Unblock"
+        "unblock": "Unblock",
+        "upgrade": "Plan change",
+        "verify_email": "Verify email",
+        "admin_delete": "Admin deletion"
       },
       "reasons": {
         "email_not_verified": "Email not verified",
@@ -257,7 +263,11 @@
         "refresh_account_blocked": "Account blocked during token refresh",
         "refresh_account_deleted": "Account deleted during token refresh",
         "refresh_token_reuse_detected": "Token reuse detected",
-        "refresh_db_error": "Database error (transient)"
+        "refresh_db_error": "Database error (transient)",
+        "admin_block": "Blocked by administrator",
+        "admin_upgrade": "Plan updated by administrator",
+        "admin_verify_email": "Email verified by administrator",
+        "admin_delete": "Account deleted by administrator"
       }
     }
   },

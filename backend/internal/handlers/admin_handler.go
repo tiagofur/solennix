@@ -43,8 +43,9 @@ func (h *AdminHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, stats)
 }
 
-// ListUsers returns all users with their usage counts.
+// ListUsers returns users with usage counts.
 // GET /api/admin/users
+// Optional ?page=&limit= returns a paginated envelope; without page, returns a flat array (legacy).
 func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	accountType := strings.TrimSpace(r.URL.Query().Get("account_type"))
 	if accountType == "" {
@@ -55,7 +56,35 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 		moderationStatus = repository.AdminModerationStatusAll
 	}
 
-	users, err := h.adminRepo.GetAllUsers(r.Context(), accountType)
+	search := strings.TrimSpace(r.URL.Query().Get("search"))
+	plan := strings.TrimSpace(r.URL.Query().Get("plan"))
+
+	params := parsePaginationParams(r, nil, "created_at")
+	var (
+		users []repository.AdminUser
+		total int
+		err   error
+	)
+	baseOpts := repository.AdminUserListOpts{
+		AccountType: accountType,
+		Search:      search,
+		Plan:        plan,
+	}
+	if params != nil {
+		// When moderation filter needs post-processing, load a larger window then page in memory.
+		// For the common path (moderation_status=all) we page in SQL.
+		if moderationStatus == repository.AdminModerationStatusAll || moderationStatus == "" {
+			opts := baseOpts
+			opts.Offset = (params.Page - 1) * params.Limit
+			opts.Limit = params.Limit
+			users, total, err = h.adminRepo.GetAllUsersPage(r.Context(), opts)
+		} else {
+			// Filtered views are smaller (blocked / eligible); load full role set then filter.
+			users, _, err = h.adminRepo.GetAllUsersPage(r.Context(), baseOpts)
+		}
+	} else {
+		users, _, err = h.adminRepo.GetAllUsersPage(r.Context(), baseOpts)
+	}
 	if err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), "invalid account type") {
 			writeError(w, http.StatusBadRequest, "Invalid account_type. Must be one of: users, team, assistants, admins, all")
@@ -73,6 +102,26 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	filtered, err := filterUsersByModerationStatus(users, moderationStatus)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid moderation_status. Must be one of: all, active, blocked, eligible_for_deletion")
+		return
+	}
+
+	if params != nil {
+		if moderationStatus != repository.AdminModerationStatusAll && moderationStatus != "" {
+			total = len(filtered)
+			start := (params.Page - 1) * params.Limit
+			if start > total {
+				start = total
+			}
+			end := start + params.Limit
+			if end > total {
+				end = total
+			}
+			filtered = filtered[start:end]
+		}
+		if filtered == nil {
+			filtered = []repository.AdminUser{}
+		}
+		writePaginatedJSON(w, http.StatusOK, filtered, total, params)
 		return
 	}
 
@@ -130,8 +179,12 @@ func (h *AdminHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.adminRepo.GetUserByID(r.Context(), id)
 	if err != nil {
+		if errors.Is(err, repository.ErrAdminUserNotFound) {
+			writeError(w, http.StatusNotFound, "User not found")
+			return
+		}
 		slog.Error("admin: failed to get user", "error", err, "id", idStr)
-		writeError(w, http.StatusNotFound, "User not found")
+		writeError(w, http.StatusServiceUnavailable, "Service temporarily unavailable")
 		return
 	}
 
@@ -231,6 +284,14 @@ func (h *AdminHandler) UpgradeUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	middleware.LogSecurityAuditEvent(adminID, "upgrade", "user", map[string]any{
+		"reason":         "admin_upgrade",
+		"target_user_id": id.String(),
+		"from_plan":      user.Plan,
+		"to_plan":        req.Plan,
+		"expires_at":     expiresAt,
+	}, clientIP(r), r.UserAgent())
+
 	// Return updated user
 	updated, err := h.adminRepo.GetUserByID(r.Context(), id)
 	if err != nil {
@@ -284,6 +345,12 @@ func (h *AdminHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	middleware.LogSecurityAuditEvent(adminID, "block", "user", map[string]any{
+		"reason":         "admin_block",
+		"target_user_id": id.String(),
+		"block_reason":   reason,
+	}, clientIP(r), r.UserAgent())
+
 	updated, err := h.adminRepo.GetUserByID(r.Context(), id)
 	if err != nil {
 		writeJSON(w, http.StatusOK, map[string]string{"message": "User blocked successfully"})
@@ -303,6 +370,7 @@ func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	adminID := middleware.GetUserID(r.Context())
 	if err := h.adminRepo.DeleteBlockedUserIfEligible(r.Context(), id); err != nil {
 		switch {
 		case errors.Is(err, repository.ErrAdminUserNotFound):
@@ -319,6 +387,11 @@ func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	middleware.LogSecurityAuditEvent(adminID, "admin_delete", "user", map[string]any{
+		"reason":         "admin_delete",
+		"target_user_id": id.String(),
+	}, clientIP(r), r.UserAgent())
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "User deleted successfully"})
 }
@@ -386,6 +459,11 @@ func (h *AdminHandler) VerifyUserEmail(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Failed to verify email")
 		return
 	}
+
+	middleware.LogSecurityAuditEvent(adminID, "verify_email", "user", map[string]any{
+		"reason":         "admin_verify_email",
+		"target_user_id": id.String(),
+	}, clientIP(r), r.UserAgent())
 
 	// Refetch the updated user stats to return to frontend
 	updated, err := h.adminRepo.GetUserByID(r.Context(), id)

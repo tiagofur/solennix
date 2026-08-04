@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/useToast';
 vi.mock('@/services/adminService', () => ({
   adminService: {
     getUsers: vi.fn(),
+    getUsersPage: vi.fn(),
     getStats: vi.fn(),
     upgradeUser: vi.fn(),
     getSubscriptions: vi.fn(),
@@ -95,6 +96,28 @@ describe('AdminUsers', () => {
       }
       return getMockData();
     });
+    vi.mocked(adminService.getUsersPage).mockImplementation(async (_type, _page, _limit, _mod, search, plan) => {
+      let data = getMockData();
+      if (search?.trim()) {
+        const q = search.trim().toLowerCase();
+        data = data.filter(
+          (u) =>
+            u.name.toLowerCase().includes(q) ||
+            u.email.toLowerCase().includes(q) ||
+            (u.business_name || '').toLowerCase().includes(q),
+        );
+      }
+      if (plan && plan !== 'all') {
+        data = data.filter((u) => u.plan === plan);
+      }
+      return {
+        data,
+        total: data.length,
+        page: 1,
+        limit: 50,
+        total_pages: 1,
+      };
+    });
     vi.mocked(adminService.getInactiveUsers).mockResolvedValue(getMockData().slice(2, 4)); // u3, u4
     vi.mocked(adminService.getUsersWithZeroResources).mockResolvedValue(getMockData().slice(3, 5)); // u4, u4b
     vi.mocked(adminService.deleteUser).mockResolvedValue({ success: true } as any);
@@ -129,14 +152,20 @@ describe('AdminUsers', () => {
   });
 
   it('verifies empty users state', async () => {
-    vi.mocked(adminService.getUsers).mockResolvedValueOnce([]);
+    vi.mocked(adminService.getUsersPage).mockResolvedValueOnce({
+      data: [],
+      total: 0,
+      page: 1,
+      limit: 50,
+      total_pages: 0,
+    });
     render(<MemoryRouter><AdminUsers /></MemoryRouter>);
     await waitFor(() => expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument());
     expect(screen.getByText('No hay usuarios registrados aún.')).toBeInTheDocument();
   });
 
   it('verifies data reload failure', async () => {
-    vi.mocked(adminService.getUsers).mockRejectedValueOnce(new Error('Load Fail'));
+    vi.mocked(adminService.getUsersPage).mockRejectedValueOnce(new Error('Load Fail'));
     render(<MemoryRouter><AdminUsers /></MemoryRouter>);
     await waitFor(() => expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument());
     expect(screen.getByText(/Error al cargar usuarios/i)).toBeInTheDocument();
@@ -179,7 +208,9 @@ describe('AdminUsers', () => {
     // 3. Eligible for deletion filter click
     const eligibleFilterBtn = screen.getByRole('button', { name: 'Elegibles para Eliminación' });
     fireEvent.click(eligibleFilterBtn);
-    expect(adminService.getUsers).toHaveBeenCalledWith('users', 'eligible_for_deletion');
+    await waitFor(() => {
+      expect(adminService.getUsers).toHaveBeenCalledWith('users', 'eligible_for_deletion');
+    });
     // Should display blocked user
     await waitFor(() => {
       expect(screen.getByText('Blocked Pending')).toBeInTheDocument();
@@ -229,15 +260,23 @@ describe('AdminUsers', () => {
     expect(screen.getByText('Expirado')).toBeInTheDocument();
     expect(screen.getByText('My Business')).toBeInTheDocument();
 
-    // 1. Filtering and Sorting
+    // 1. Filtering and Sorting (search is debounced 300ms + server-side)
     const searchInput = screen.getByPlaceholderText(/Buscar por nombre/i);
     fireEvent.change(searchInput, { target: { value: 'UnreachableXYZ123' } });
-    expect(screen.getByText('No se encontraron usuarios con esos filtros.')).toBeInTheDocument();
+    await waitFor(
+      () => expect(screen.getByText('No se encontraron usuarios con esos filtros.')).toBeInTheDocument(),
+      { timeout: 2000 },
+    );
 
     fireEvent.change(searchInput, { target: { value: 'Expiring Today' } });
-    expect(screen.getByText('Expiring Today')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Expiring Today')).toBeInTheDocument(), {
+      timeout: 2000,
+    });
 
     fireEvent.change(searchInput, { target: { value: '' } });
+    await waitFor(() => expect(screen.getByText('Premium User')).toBeInTheDocument(), {
+      timeout: 2000,
+    });
 
     const proFilterBtn = screen.getAllByRole('button', { name: /Pro/i })[0];
     fireEvent.click(proFilterBtn);

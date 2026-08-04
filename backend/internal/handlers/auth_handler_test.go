@@ -2262,12 +2262,54 @@ func TestAuthHandler_RefreshToken_UserLookupFailed_Returns503(t *testing.T) {
 
 	h := &AuthHandler{authService: authService, userRepo: mockRepo}
 
+	logger := &authSecurityAuditLogger{}
+	originalLogger := middleware.GetSecurityAuditLogger()
+	middleware.SetSecurityAuditLogger(logger)
+	defer middleware.SetSecurityAuditLogger(originalLogger)
+
 	body := `{"refresh_token":"` + pair.RefreshToken + `"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(body))
 	rr := httptest.NewRecorder()
 	h.RefreshToken(rr, req)
 
 	assert.Equal(t, http.StatusServiceUnavailable, rr.Code)
+
+	// Infra failures must not flood security audit as auth_failed (admin noise).
+	time.Sleep(50 * time.Millisecond)
+	if logs := logger.snapshot(); len(logs) != 0 {
+		t.Fatalf("expected no security audit on refresh DB error, got: %+v", logs)
+	}
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_RefreshToken_ContextDeadline_NoAuditNoResponseBody(t *testing.T) {
+	userID := uuid.New()
+	authService := services.NewAuthService("test-secret", 1)
+	pair, err := authService.GenerateTokenPair(userID, "active@test.dev")
+	assert.NoError(t, err)
+
+	mockRepo := new(MockFullUserRepo)
+	mockRepo.On("GetByID", mock.Anything, userID).Return(nil, context.DeadlineExceeded)
+
+	h := &AuthHandler{authService: authService, userRepo: mockRepo}
+	logger := &authSecurityAuditLogger{}
+	originalLogger := middleware.GetSecurityAuditLogger()
+	middleware.SetSecurityAuditLogger(logger)
+	defer middleware.SetSecurityAuditLogger(originalLogger)
+
+	body := `{"refresh_token":"` + pair.RefreshToken + `"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.RefreshToken(rr, req)
+
+	// Canceled/deadline: no error body written (client already gone).
+	assert.Equal(t, http.StatusOK, rr.Code) // default recorder when handler returns early
+	assert.Empty(t, rr.Body.String())
+	time.Sleep(50 * time.Millisecond)
+	if logs := logger.snapshot(); len(logs) != 0 {
+		t.Fatalf("expected no security audit on deadline exceeded, got: %+v", logs)
+	}
 	mockRepo.AssertExpectations(t)
 }
 

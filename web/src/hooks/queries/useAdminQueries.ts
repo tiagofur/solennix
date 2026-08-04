@@ -15,10 +15,38 @@ export function useAdminStats() {
   });
 }
 
-export function useAdminUsers(accountType: AdminAccountType = 'users', moderationStatus?: string) {
+export function useAdminUsers(accountType: AdminAccountType = 'users', moderationStatus?: string, enabled = true) {
   return useQuery({
     queryKey: [...queryKeys.admin.users, accountType, moderationStatus || ''] as const,
     queryFn: () => adminService.getUsers(accountType, moderationStatus),
+    enabled,
+  });
+}
+
+/** Paginated user list for the admin users table (server-side search/plan). */
+export function useAdminUsersPage(
+  accountType: AdminAccountType = 'users',
+  page = 1,
+  limit = 50,
+  moderationStatus?: string,
+  enabled = true,
+  search = '',
+  plan = 'all',
+) {
+  return useQuery({
+    queryKey: [
+      ...queryKeys.admin.users,
+      'page',
+      accountType,
+      page,
+      limit,
+      moderationStatus || '',
+      search,
+      plan,
+    ] as const,
+    queryFn: () =>
+      adminService.getUsersPage(accountType, page, limit, moderationStatus, search, plan),
+    enabled,
   });
 }
 
@@ -30,17 +58,19 @@ export function useAdminUser(id: string) {
   });
 }
 
-export function useAdminInactiveUsers(days = 30) {
+export function useAdminInactiveUsers(days = 30, enabled = true) {
   return useQuery({
     queryKey: [...queryKeys.admin.users, 'inactive', days] as const,
     queryFn: () => adminService.getInactiveUsers(days),
+    enabled,
   });
 }
 
-export function useAdminZeroResourceUsers() {
+export function useAdminZeroResourceUsers(enabled = true) {
   return useQuery({
     queryKey: [...queryKeys.admin.users, 'zero-resources'] as const,
     queryFn: () => adminService.getUsersWithZeroResources(),
+    enabled,
   });
 }
 
