@@ -31,6 +31,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	staffTeamHandler *handlers.StaffTeamHandler,
 	publicLeadHandler *handlers.PublicLeadHandler,
 	publicRequestHandler *handlers.PublicRequestHandler,
+	requestLinkHandler *handlers.RequestLinkHandler,
 	seoHandler *handlers.SEOHandler,
 	pdfHandler *handlers.PDFHandler,
 	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string, environment string, trustProxy bool) http.Handler {
@@ -185,11 +186,21 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	})
 
 	// Public event form routes (no auth — validated by token)
+	// Kept until PR2 cutover; new path is /public/request-links.
 	apiRouter.Route("/public/event-forms", func(r chi.Router) {
 		r.Use(mw.RateLimit(10, 1*time.Minute))
 		r.Get("/{token}", eventFormHandler.GetFormData)
 		r.Post("/{token}", eventFormHandler.SubmitForm)
 	})
+
+	// Public request links (unified Solicitudes shareable forms).
+	if requestLinkHandler != nil {
+		apiRouter.Route("/public/request-links", func(r chi.Router) {
+			r.Use(mw.RateLimit(10, 1*time.Minute))
+			r.Get("/{token}", requestLinkHandler.GetLinkData)
+			r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{token}/requests", requestLinkHandler.SubmitLinkRequest)
+		})
+	}
 
 	// Public client-portal route (PRD/12 feature A). Tokens are
 	// cryptographically random; same rate limit as event-forms to keep the
@@ -441,6 +452,16 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Post("/{id}/request-info", publicRequestHandler.RequestInfo)
 			r.Post("/{id}/convert-to-event", publicRequestHandler.ConvertToEvent)
 		})
+
+		// Shareable request links (replaces event-forms for new clients).
+		if requestLinkHandler != nil {
+			r.Route("/organizers/me/request-links", func(r chi.Router) {
+				r.Get("/", requestLinkHandler.ListLinks)
+				r.Post("/", requestLinkHandler.GenerateLink)
+				r.Delete("/{id}", requestLinkHandler.RevokeLink)
+				r.Post("/{id}/revoke", requestLinkHandler.RevokeLink)
+			})
+		}
 
 		// Backward-compatible alias for older organizer clients still calling the prefixed path.
 		r.Route("/organizer/payment-submissions", func(r chi.Router) {

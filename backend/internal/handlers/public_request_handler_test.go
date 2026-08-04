@@ -31,6 +31,13 @@ func (m *mockPublicRequestService) CreatePublicRequest(ctx context.Context, in s
 	}
 	return args.Get(0).(*models.PublicRequest), args.Error(1)
 }
+func (m *mockPublicRequestService) CreateFromLink(ctx context.Context, token string, in services.CreatePublicRequestInput) (*models.PublicRequest, error) {
+	args := m.Called(ctx, token, in)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.PublicRequest), args.Error(1)
+}
 func (m *mockPublicRequestService) Respond(ctx context.Context, requestID, organizerUserID uuid.UUID, resp *models.PublicResponse) error {
 	return m.Called(ctx, requestID, organizerUserID, resp).Error(0)
 }

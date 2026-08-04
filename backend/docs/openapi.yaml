@@ -2842,13 +2842,89 @@ components:
           type: number
           format: double
           nullable: true
+          description: Unit price at snapshot time
+        qty:
+          type: integer
+          minimum: 1
+          default: 1
+          description: Quantity selected (defaults to 1 for legacy rows)
         is_featured:
           type: boolean
+    SubmitMode:
+      type: string
+      description: Outcome applied when a visitor submits a request (link mode; profile is always standard).
+      enum: [standard, auto_quote, auto_event]
+    RequestSource:
+      type: string
+      description: How the visitor entered the quote-request flow.
+      enum: [public_profile, shared_link]
+    PublicRequestLinkStatus:
+      type: string
+      enum: [active, used, expired, revoked]
+    PublicRequestLink:
+      type: object
+      description: Shareable link for unified Solicitudes / quote requests.
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizer_user_id:
+          type: string
+          format: uuid
+        token:
+          type: string
+        label:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/PublicRequestLinkStatus"
+        submit_mode:
+          $ref: "#/components/schemas/SubmitMode"
+        max_uses:
+          type: integer
+          nullable: true
+          minimum: 1
+          description: null = unlimited uses
+        use_count:
+          type: integer
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        url:
+          type: string
+          description: Computed absolute URL (/s/{token}); not stored
+    CreatePublicRequestLinkRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          nullable: true
+        ttl_days:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 7
+        max_uses:
+          type: integer
+          nullable: true
+          minimum: 1
+        submit_mode:
+          $ref: "#/components/schemas/SubmitMode"
+          default: auto_event
     CreatePublicRequestRequest:
       type: object
-      description: Unauthenticated visitor payload submitting a structured quote request.
-      required:
-        - contact_email
+      description: >
+        Unauthenticated visitor payload submitting a structured quote request
+        (profile CTA or shared link). Profile path requires contact_email;
+        shared link requires email or phone (auto_event also requires name, phone,
+        event_date, event_type, guest_count >= 1).
       properties:
         contact_email:
           type: string
@@ -2858,6 +2934,10 @@ components:
           type: string
           nullable: true
           maxLength: 160
+        contact_phone:
+          type: string
+          nullable: true
+          maxLength: 40
         event_type:
           type: string
           nullable: true
@@ -2867,6 +2947,9 @@ components:
           format: date
           nullable: true
         location:
+          type: string
+          nullable: true
+        city:
           type: string
           nullable: true
         guest_count:
@@ -2884,10 +2967,24 @@ components:
           maxLength: 3
         service_ids:
           type: array
-          description: IDs of the organizer's public services to quote. Validated against the catalog.
+          description: Legacy flat list of product IDs (qty defaults to 1). Prefer services[].
           items:
             type: string
             format: uuid
+        services:
+          type: array
+          description: Selected catalog line items with quantity (prices set server-side).
+          items:
+            type: object
+            required: [product_id]
+            properties:
+              product_id:
+                type: string
+                format: uuid
+              qty:
+                type: integer
+                minimum: 1
+                default: 1
         message:
           type: string
           nullable: true
@@ -2912,7 +3009,7 @@ components:
                 subsequent actions. Never returned on organizer inbox endpoints.
     PublicRequest:
       type: object
-      description: A structured quote request from a visitor to an organizer's public profile.
+      description: A structured quote request from a visitor (profile CTA or shared link).
       properties:
         id:
           type: string
@@ -2923,6 +3020,9 @@ components:
         contact_name:
           type: string
           nullable: true
+        contact_phone:
+          type: string
+          nullable: true
         event_type:
           type: string
           nullable: true
@@ -2931,6 +3031,9 @@ components:
           format: date
           nullable: true
         location:
+          type: string
+          nullable: true
+        city:
           type: string
           nullable: true
         guest_count:
@@ -2951,6 +3054,14 @@ components:
           nullable: true
         status:
           $ref: "#/components/schemas/PublicRequestStatus"
+        source:
+          $ref: "#/components/schemas/RequestSource"
+        submit_mode:
+          $ref: "#/components/schemas/SubmitMode"
+        link_id:
+          type: string
+          format: uuid
+          nullable: true
         is_read:
           type: boolean
         event_id:
@@ -5782,10 +5893,140 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/organizers/me/request-links:
+    get:
+      operationId: listPublicRequestLinks
+      summary: List shareable Solicitudes links for the authenticated organizer
+      responses:
+        "200":
+          description: List of request links
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublicRequestLink"
+        "401":
+          description: Unauthorized
+    post:
+      operationId: createPublicRequestLink
+      summary: Create a shareable Solicitudes link
+      description: >
+        Basic/free plans are limited to 3 active links. Default submit_mode is auto_event.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePublicRequestLinkRequest"
+      responses:
+        "201":
+          description: Link created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PublicRequestLink"
+        "400":
+          description: Validation error
+        "401":
+          description: Unauthorized
+        "402":
+          description: Plan limit reached (basic/free max 3 active links)
+  /api/organizers/me/request-links/{id}:
+    delete:
+      operationId: revokePublicRequestLink
+      summary: Revoke a request link
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Revoked
+        "404":
+          description: Link not found
+  /api/organizers/me/request-links/{id}/revoke:
+    post:
+      operationId: revokePublicRequestLinkPost
+      summary: Revoke a request link (POST alias)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Revoked
+        "404":
+          description: Link not found
+  /api/public/request-links/{token}:
+    get:
+      security: []
+      operationId: getPublicRequestLink
+      summary: Resolve a shareable Solicitudes link (branding + catalog)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Link data
+        "404":
+          description: Token never existed
+        "410":
+          description: Link invalid (expired, used, revoked, max uses)
+  /api/public/request-links/{token}/requests:
+    post:
+      security: []
+      operationId: submitPublicRequestViaLink
+      summary: Submit a quote request via shared link
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePublicRequestRequest"
+      responses:
+        "201":
+          description: Request created (status depends on submit_mode)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PublicRequestCreateResponse"
+        "400":
+          description: Validation error
+        "404":
+          description: Link not found
+        "410":
+          description: Link invalid
+        "429":
+          description: Rate limit or organizer inbox full
   /api/event-forms:
     get:
       operationId: listEventFormLinks
-      summary: List all shareable event form links for the authenticated user
+      summary: List all shareable event form links for the authenticated user (legacy; prefer request-links)
       responses:
         "200":
           description: List of event form links
