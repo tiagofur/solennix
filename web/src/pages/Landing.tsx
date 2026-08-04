@@ -38,6 +38,7 @@ const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.solennix.app";
 import { useTheme } from "@/hooks/useTheme";
 import { Logo } from "@/components/Logo";
+import { recordPageView } from "@/services/pageViewService";
 
 const FEATURES = [
   {
@@ -922,6 +923,9 @@ function AppMockup() {
 }
 
 export const Landing: React.FC = () => {
+  useEffect(() => {
+    void recordPageView("landing");
+  }, []);
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);

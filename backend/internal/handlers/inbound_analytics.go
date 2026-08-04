@@ -55,6 +55,11 @@ func recordPublicProfileView(
 		refPtr = &ref
 	}
 	source := deriveTrafficSource(ref, r.URL.Query().Get("src"), r.URL.Query().Get("utm_source"))
+	device := ClassifyDeviceClass(ua)
+	var countryPtr *string
+	if cc := CoarseCountryCode(r); cc != "" {
+		countryPtr = &cc
+	}
 
 	// Detach from request cancellation so slow clients still record.
 	bg, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
@@ -65,6 +70,8 @@ func recordPublicProfileView(
 		VisitorHash:     hash,
 		Referrer:        refPtr,
 		Source:          source,
+		DeviceClass:     device,
+		CountryCode:     countryPtr,
 	}); err != nil {
 		slog.Warn("inbound analytics: record view failed", "slug", slug, "error", err)
 	}

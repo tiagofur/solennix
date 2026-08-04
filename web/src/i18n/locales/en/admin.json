@@ -24,7 +24,10 @@
       "conversion_help": "basic → paid plan",
       "avg_events_help": "platform average",
       "churn_help": "canceled last 30 days vs active + those cancelations",
-      "platform_summary": "across the platform"
+      "platform_summary": "across the platform",
+      "landing_views": "Landing views",
+      "landing_unique": "Landing uniques",
+      "landing_help": "home page · 30 days"
     },
     "charts": {
       "plans_title": "Plan Distribution",
@@ -36,7 +39,10 @@
       "loading": "Loading...",
       "today": "Today",
       "week": "Week",
-      "month": "Month"
+      "month": "Month",
+      "landing_series_title": "Landing views (30 days)",
+      "device_title": "Visitors by device",
+      "country_title": "Visitors by country (top)"
     },
     "subscriptions": {
       "active": "Active",

@@ -98,6 +98,13 @@ type PlatformStats struct {
 	VisitorViewsLast30d  int                 `json:"visitor_views_last_30d"`
 	VisitorUniqueLast30d int                 `json:"visitor_unique_last_30d"`
 	VisitorViewsByDay    []AnalyticsDayCount `json:"visitor_views_by_day"`
+
+	// Slice 2 — landing + coarse device/country (visitor traffic).
+	LandingViewsLast30d  int                 `json:"landing_views_last_30d"`
+	LandingUniqueLast30d int                 `json:"landing_unique_last_30d"`
+	LandingViewsByDay    []AnalyticsDayCount `json:"landing_views_by_day"`
+	VisitorByDevice      map[string]int      `json:"visitor_by_device"`
+	VisitorByCountry     map[string]int      `json:"visitor_by_country"`
 }
 
 // AnalyticsDayCount is one calendar day for admin time-series charts.
@@ -420,6 +427,120 @@ func (r *AdminRepo) GetPlatformStats(ctx context.Context) (*PlatformStats, error
 	for d := visitorStart; d.Before(visitorEnd); d = d.AddDate(0, 0, 1) {
 		key := d.Format("2006-01-02")
 		stats.VisitorViewsByDay = append(stats.VisitorViewsByDay, AnalyticsDayCount{Date: key, Count: vMap[key]})
+	}
+
+	// Landing page views (site_page_views).
+	if err := r.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int, COUNT(DISTINCT visitor_hash)::int
+		FROM site_page_views
+		WHERE page_key = 'landing'
+		  AND viewed_at >= $1 AND viewed_at < $2`,
+		visitorStart, visitorEnd,
+	).Scan(&stats.LandingViewsLast30d, &stats.LandingUniqueLast30d); err != nil {
+		return nil, fmt.Errorf("failed to count landing views: %w", err)
+	}
+	stats.LandingViewsByDay = make([]AnalyticsDayCount, 0, 30)
+	lRows, err := r.pool.Query(ctx, `
+		SELECT to_char(viewed_at::date, 'YYYY-MM-DD'), COUNT(*)::int
+		FROM site_page_views
+		WHERE page_key = 'landing'
+		  AND viewed_at >= $1 AND viewed_at < $2
+		GROUP BY viewed_at::date
+		ORDER BY 1 ASC`,
+		visitorStart, visitorEnd,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query landing views by day: %w", err)
+	}
+	lMap := map[string]int{}
+	for lRows.Next() {
+		var d string
+		var c int
+		if err := lRows.Scan(&d, &c); err != nil {
+			lRows.Close()
+			return nil, fmt.Errorf("failed to scan landing views by day: %w", err)
+		}
+		lMap[d] = c
+	}
+	lRows.Close()
+	if err := lRows.Err(); err != nil {
+		return nil, fmt.Errorf("failed iterating landing views by day: %w", err)
+	}
+	for d := visitorStart; d.Before(visitorEnd); d = d.AddDate(0, 0, 1) {
+		key := d.Format("2006-01-02")
+		stats.LandingViewsByDay = append(stats.LandingViewsByDay, AnalyticsDayCount{Date: key, Count: lMap[key]})
+	}
+
+	// Device mix: profile + site page views.
+	stats.VisitorByDevice = make(map[string]int)
+	devRows, err := r.pool.Query(ctx, `
+		SELECT device_class, SUM(cnt)::int FROM (
+			SELECT COALESCE(NULLIF(device_class, ''), 'unknown') AS device_class, COUNT(*)::int AS cnt
+			FROM public_profile_views
+			WHERE viewed_at >= $1 AND viewed_at < $2
+			GROUP BY 1
+			UNION ALL
+			SELECT COALESCE(NULLIF(device_class, ''), 'unknown'), COUNT(*)::int
+			FROM site_page_views
+			WHERE viewed_at >= $1 AND viewed_at < $2
+			GROUP BY 1
+		) s
+		GROUP BY device_class`,
+		visitorStart, visitorEnd,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query visitor by device: %w", err)
+	}
+	for devRows.Next() {
+		var d string
+		var c int
+		if err := devRows.Scan(&d, &c); err != nil {
+			devRows.Close()
+			return nil, fmt.Errorf("failed to scan visitor by device: %w", err)
+		}
+		stats.VisitorByDevice[d] = c
+	}
+	devRows.Close()
+	if err := devRows.Err(); err != nil {
+		return nil, fmt.Errorf("failed iterating visitor by device: %w", err)
+	}
+
+	// Country mix (edge headers only).
+	stats.VisitorByCountry = make(map[string]int)
+	cRows, err := r.pool.Query(ctx, `
+		SELECT country_code, SUM(cnt)::int FROM (
+			SELECT UPPER(country_code) AS country_code, COUNT(*)::int AS cnt
+			FROM public_profile_views
+			WHERE viewed_at >= $1 AND viewed_at < $2
+			  AND country_code IS NOT NULL AND country_code <> ''
+			GROUP BY 1
+			UNION ALL
+			SELECT UPPER(country_code), COUNT(*)::int
+			FROM site_page_views
+			WHERE viewed_at >= $1 AND viewed_at < $2
+			  AND country_code IS NOT NULL AND country_code <> ''
+			GROUP BY 1
+		) s
+		GROUP BY country_code
+		ORDER BY 2 DESC
+		LIMIT 15`,
+		visitorStart, visitorEnd,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query visitor by country: %w", err)
+	}
+	for cRows.Next() {
+		var code string
+		var c int
+		if err := cRows.Scan(&code, &c); err != nil {
+			cRows.Close()
+			return nil, fmt.Errorf("failed to scan visitor by country: %w", err)
+		}
+		stats.VisitorByCountry[code] = c
+	}
+	cRows.Close()
+	if err := cRows.Err(); err != nil {
+		return nil, fmt.Errorf("failed iterating visitor by country: %w", err)
 	}
 
 	return stats, nil

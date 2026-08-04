@@ -15,6 +15,8 @@ type ProfileView struct {
 	VisitorHash     string
 	Referrer        *string
 	Source          string // directory | share | direct | other
+	DeviceClass     string // ios|android|desktop|mobile|bot|unknown
+	CountryCode     *string
 	ViewedAt        time.Time
 }
 
@@ -52,10 +54,14 @@ func (r *PublicProfileRepo) RecordProfileView(ctx context.Context, v ProfileView
 	if source == "" {
 		source = "direct"
 	}
+	device := v.DeviceClass
+	if device == "" {
+		device = "unknown"
+	}
 	_, err := r.pool.Exec(ctx, `
-		INSERT INTO public_profile_views (organizer_user_id, slug, visitor_hash, referrer, source, viewed_at)
-		VALUES ($1, $2, $3, $4, $5, COALESCE($6, NOW()))`,
-		v.OrganizerUserID, v.Slug, v.VisitorHash, v.Referrer, source, nullTime(v.ViewedAt),
+		INSERT INTO public_profile_views (organizer_user_id, slug, visitor_hash, referrer, source, device_class, country_code, viewed_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8, NOW()))`,
+		v.OrganizerUserID, v.Slug, v.VisitorHash, v.Referrer, source, device, v.CountryCode, nullTime(v.ViewedAt),
 	)
 	if err != nil {
 		return fmt.Errorf("record profile view: %w", err)
