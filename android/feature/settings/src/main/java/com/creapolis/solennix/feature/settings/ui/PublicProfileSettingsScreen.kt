@@ -81,7 +81,8 @@ import com.creapolis.solennix.feature.settings.viewmodel.PublicProfileSettingsVi
 @Composable
 fun PublicProfileSettingsScreen(
     viewModel: PublicProfileSettingsViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onPreviewProfile: (String) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -215,6 +216,16 @@ fun PublicProfileSettingsScreen(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(stringResource(R.string.settings_public_profile_share))
+                                }
+                            }
+                            val previewSlug = viewModel.slug.trim()
+                            if (previewSlug.isNotEmpty() && viewModel.slugError == null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedButton(
+                                    onClick = { onPreviewProfile(previewSlug) },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(stringResource(R.string.settings_public_profile_preview_action))
                                 }
                             }
                         }

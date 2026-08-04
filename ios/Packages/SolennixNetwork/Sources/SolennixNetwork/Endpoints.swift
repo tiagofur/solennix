@@ -302,6 +302,11 @@ public enum Endpoint {
         "/users/me/public-profile/faq/\(id)"
     }
 
+    /// Public visitor profile (unauthenticated) — #1126.
+    public static func publicOrganizer(_ slug: String) -> String {
+        "/public/organizers/\(slug.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? slug)"
+    }
+
     // MARK: - Subscriptions
 
     public static let subscriptionStatus = "/subscriptions/status"

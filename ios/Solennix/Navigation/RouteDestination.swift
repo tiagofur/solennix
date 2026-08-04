@@ -122,6 +122,8 @@ struct RouteDestination: View {
             BusinessSettingsView(apiClient: apiClient)
         case .publicProfileSettings:
             PublicProfileSettingsView(apiClient: apiClient)
+        case .publicProfilePreview(let slug):
+            PublicProfilePreviewView(apiClient: apiClient, slug: slug)
         case .contractDefaults:
             ContractDefaultsView(apiClient: apiClient)
         case .pricing:

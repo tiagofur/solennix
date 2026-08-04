@@ -9,6 +9,7 @@ import com.creapolis.solennix.core.model.OrganizerPublicProfile
 import com.creapolis.solennix.core.model.OrganizerPublicProfileUpsertRequest
 import com.creapolis.solennix.core.model.PackageCreateRequest
 import com.creapolis.solennix.core.model.PortfolioCreateRequest
+import com.creapolis.solennix.core.model.PublicOrganizerProfile
 import com.creapolis.solennix.core.model.PublicProfileServiceSelectionItem
 import com.creapolis.solennix.core.model.SetPublicProfileServicesRequest
 import com.creapolis.solennix.core.network.ApiService
@@ -20,7 +21,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Session-scoped repository for the organizer public-profile Settings screen.
+ * Session-scoped repository for the organizer public-profile Settings screen
+ * and public visitor preview (#1126).
  * No local cache — every call hits the network (same pattern as
  * [EventPublicLinkRepository]).
  */
@@ -38,6 +40,9 @@ interface PublicProfileRepository {
     suspend fun listFaq(): List<OrganizerPublicFaqItem>
     suspend fun createFaqItem(body: FaqCreateRequest): OrganizerPublicFaqItem
     suspend fun deleteFaqItem(id: String)
+
+    /** Public visitor profile for provider preview — #1126. */
+    suspend fun getPublicOrganizer(slug: String): PublicOrganizerProfile
 }
 
 @Singleton
@@ -105,5 +110,11 @@ class DefaultPublicProfileRepository @Inject constructor(
 
     override suspend fun deleteFaqItem(id: String) {
         apiService.delete(Endpoints.myPublicProfileFaqItem(id))
+    }
+
+    override suspend fun getPublicOrganizer(slug: String): PublicOrganizerProfile {
+        val envelope: DataEnvelope<PublicOrganizerProfile> =
+            apiService.get(Endpoints.publicOrganizer(slug))
+        return envelope.data
     }
 }

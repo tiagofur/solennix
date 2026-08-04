@@ -114,6 +114,7 @@ final class RouteCoreTests: XCTestCase {
         assertRoundTrip(.changePassword)
         assertRoundTrip(.businessSettings)
         assertRoundTrip(.publicProfileSettings)
+        assertRoundTrip(.publicProfilePreview(slug: "mi-negocio"))
         assertRoundTrip(.contractDefaults)
         assertRoundTrip(.pricing)
         assertRoundTrip(.subscription)
