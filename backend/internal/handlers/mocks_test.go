@@ -785,6 +785,14 @@ func (m *MockAdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]
 	return args.Get(0).([]repository.AdminUser), args.Error(1)
 }
 
+func (m *MockAdminRepo) GetAllUsersPage(ctx context.Context, accountType string, offset, limit int) ([]repository.AdminUser, int, error) {
+	args := m.Called(ctx, accountType, offset, limit)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]repository.AdminUser), args.Int(1), args.Error(2)
+}
+
 func (m *MockAdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*repository.AdminUser, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {

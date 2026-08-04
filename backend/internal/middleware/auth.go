@@ -303,7 +303,10 @@ func flushData(repo interface {
 type userCacheEntry struct {
 	Role                 string
 	RegistrationPlatform string
+	ExpiresAt            time.Time
 }
+
+const userCacheTTL = 15 * time.Minute
 
 var userCache sync.Map // Map[uuid.UUID]userCacheEntry
 
@@ -323,10 +326,15 @@ func ActivityTracker(repo ActivityTrackerRepo) func(http.Handler) http.Handler {
 
 				if val, found := userCache.Load(userID); found {
 					entry := val.(userCacheEntry)
-					role = entry.Role
-					regPlatform = entry.RegistrationPlatform
-					cached = true
-				} else {
+					if time.Now().Before(entry.ExpiresAt) {
+						role = entry.Role
+						regPlatform = entry.RegistrationPlatform
+						cached = true
+					} else {
+						userCache.Delete(userID)
+					}
+				}
+				if !cached {
 					// Query repository dynamically if it supports GetByID to avoid circular dependency
 					if userRepo, ok := repo.(interface {
 						GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
@@ -338,6 +346,7 @@ func ActivityTracker(repo ActivityTrackerRepo) func(http.Handler) http.Handler {
 							userCache.Store(userID, userCacheEntry{
 								Role:                 role,
 								RegistrationPlatform: regPlatform,
+								ExpiresAt:            time.Now().Add(userCacheTTL),
 							})
 							cached = true
 						}
@@ -366,6 +375,7 @@ func ActivityTracker(repo ActivityTrackerRepo) func(http.Handler) http.Handler {
 									userCache.Store(userID, userCacheEntry{
 										Role:                 role,
 										RegistrationPlatform: platform,
+										ExpiresAt:            time.Now().Add(userCacheTTL),
 									})
 								}
 							}()

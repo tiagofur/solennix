@@ -59,6 +59,16 @@ export interface SubscriptionOverview {
   stripe_count: number;
   apple_count: number;
   google_count: number;
+  /** Cancellations in the last 30 days (period churn numerator). */
+  canceled_last_30_days?: number;
+}
+
+export interface AdminUsersPage {
+  data: AdminUser[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
 }
 
 export const adminService = {
@@ -71,7 +81,25 @@ export const adminService = {
     if (moderationStatus) {
       params.moderation_status = moderationStatus;
     }
+    // Flat array (legacy) — used for small filtered sets / exports.
     return api.get<AdminUser[]>("/admin/users", params);
+  },
+
+  async getUsersPage(
+    accountType: AdminAccountType = 'users',
+    page = 1,
+    limit = 50,
+    moderationStatus?: string,
+  ) {
+    const params: Record<string, string> = {
+      account_type: accountType,
+      page: String(page),
+      limit: String(limit),
+    };
+    if (moderationStatus) {
+      params.moderation_status = moderationStatus;
+    }
+    return api.get<AdminUsersPage>("/admin/users", params);
   },
 
   async getInactiveUsers(days = 30) {

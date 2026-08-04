@@ -186,6 +186,7 @@ type AuditRepository interface {
 type AdminRepository interface {
 	GetPlatformStats(ctx context.Context) (*repository.PlatformStats, error)
 	GetAllUsers(ctx context.Context, accountType string) ([]repository.AdminUser, error)
+	GetAllUsersPage(ctx context.Context, accountType string, offset, limit int) ([]repository.AdminUser, int, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*repository.AdminUser, error)
 	BlockUser(ctx context.Context, id, adminID uuid.UUID, reason string) error
 	DeleteBlockedUserIfEligible(ctx context.Context, id uuid.UUID) error

@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { useAdminUser } from '@/hooks/queries/useAdminQueries';
 import { useAdminAuditLogs } from '@/hooks/queries/useActivityQueries';
 import { Pagination } from '@/components/Pagination';
+import { formatAdminLogAction, formatAdminLogDetails } from '@/lib/adminAuditFormat';
 import { format, parseISO } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import clsx from 'clsx';
@@ -44,35 +45,9 @@ export const AdminUserDetails: React.FC = () => {
     ? user.events_count + user.clients_count + user.products_count
     : 0;
 
-  const formatLogAction = (action: string): string => {
-    const key = `admin:users.details.actions.${action}`;
-    const translated = t(key);
-    return translated !== key ? translated : action;
-  };
-
-  const formatLogDetails = (details: string | null, action: string, resourceType: string): string => {
-    if (!details) {
-      return `${formatLogAction(action)} ${resourceType}`;
-    }
-
-    if (details.trim().startsWith('{')) {
-      try {
-        const parsed = JSON.parse(details);
-        if (parsed.reason) {
-          const reasonKey = `admin:users.details.reasons.${parsed.reason}`;
-          const translatedReason = t(reasonKey);
-          const reasonStr = translatedReason !== reasonKey ? translatedReason : parsed.reason.replace(/_/g, ' ');
-          
-          return `${formatLogAction(action)}: ${reasonStr}`;
-        }
-        return JSON.stringify(parsed);
-      } catch {
-        // Fallback to raw string
-      }
-    }
-
-    return details;
-  };
+  const formatLogAction = (action: string): string => formatAdminLogAction(t, action);
+  const formatLogDetails = (details: string | null, action: string, resourceType: string): string =>
+    formatAdminLogDetails(t, details, action, resourceType);
 
   const getRoleBadge = (role: string) => {
     const styles: Record<string, string> = {

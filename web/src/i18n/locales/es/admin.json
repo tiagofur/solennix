@@ -23,7 +23,7 @@
       "new_week": "semana",
       "conversion_help": "basic → plan pagado",
       "avg_events_help": "promedio plataforma",
-      "churn_help": "subs canceladas vs total",
+      "churn_help": "canceladas últimos 30 días vs activas + esas canceladas",
       "platform_summary": "en toda la plataforma"
     },
     "charts": {
@@ -240,7 +240,10 @@
         "auth_failed": "Fallo de autenticación",
         "rate_limited": "Límite excedido",
         "block": "Bloquear",
-        "unblock": "Desbloquear"
+        "unblock": "Desbloquear",
+        "upgrade": "Cambio de plan",
+        "verify_email": "Verificar correo",
+        "admin_delete": "Eliminación admin"
       },
       "reasons": {
         "email_not_verified": "Correo no verificado",
@@ -257,7 +260,11 @@
         "refresh_account_blocked": "Cuenta bloqueada durante refresco",
         "refresh_account_deleted": "Cuenta eliminada durante refresco",
         "refresh_token_reuse_detected": "Reutilización de token detectada",
-        "refresh_db_error": "Error de base de datos (transitorio)"
+        "refresh_db_error": "Error de base de datos (transitorio)",
+        "admin_block": "Bloqueo por administrador",
+        "admin_upgrade": "Plan actualizado por administrador",
+        "admin_verify_email": "Correo verificado por administrador",
+        "admin_delete": "Cuenta eliminada por administrador"
       }
     }
   },

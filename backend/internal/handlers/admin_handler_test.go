@@ -92,7 +92,7 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 			{ID: uuid.New(), Email: "a@b.com", Name: "Alice", Plan: "pro"},
 			{ID: uuid.New(), Email: "c@d.com", Name: "Bob", Plan: "basic"},
 		}
-		repo.On("GetAllUsers", mock.Anything, "users").Return(users, nil)
+		repo.On("GetAllUsersPage", mock.Anything, "users", 0, 0).Return(users, 2, nil)
 
 		req := httptest.NewRequest("GET", "/api/admin/users", nil)
 		w := httptest.NewRecorder()
@@ -112,7 +112,7 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 		repo := new(MockAdminRepo)
 		handler := NewAdminHandler(repo)
 
-		repo.On("GetAllUsers", mock.Anything, "users").Return(nil, nil)
+		repo.On("GetAllUsersPage", mock.Anything, "users", 0, 0).Return(nil, 0, nil)
 
 		req := httptest.NewRequest("GET", "/api/admin/users", nil)
 		w := httptest.NewRecorder()
@@ -129,11 +129,40 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 
+	t.Run("paginated success", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		users := []repository.AdminUser{
+			{ID: uuid.New(), Email: "a@b.com", Name: "Alice", Plan: "pro"},
+		}
+		repo.On("GetAllUsersPage", mock.Anything, "users", 0, 20).Return(users, 45, nil)
+
+		req := httptest.NewRequest("GET", "/api/admin/users?page=1&limit=20", nil)
+		w := httptest.NewRecorder()
+		handler.ListUsers(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var envelope struct {
+			Data       []repository.AdminUser `json:"data"`
+			Total      int                    `json:"total"`
+			Page       int                    `json:"page"`
+			Limit      int                    `json:"limit"`
+			TotalPages int                    `json:"total_pages"`
+		}
+		assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
+		assert.Len(t, envelope.Data, 1)
+		assert.Equal(t, 45, envelope.Total)
+		assert.Equal(t, 1, envelope.Page)
+		assert.Equal(t, 3, envelope.TotalPages)
+		repo.AssertExpectations(t)
+	})
+
 	t.Run("repo error", func(t *testing.T) {
 		repo := new(MockAdminRepo)
 		handler := NewAdminHandler(repo)
 
-		repo.On("GetAllUsers", mock.Anything, "users").Return(nil, assert.AnError)
+		repo.On("GetAllUsersPage", mock.Anything, "users", 0, 0).Return(nil, 0, assert.AnError)
 
 		req := httptest.NewRequest("GET", "/api/admin/users", nil)
 		w := httptest.NewRecorder()
@@ -149,7 +178,7 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 		repo := new(MockAdminRepo)
 		handler := NewAdminHandler(repo)
 
-		repo.On("GetAllUsers", mock.Anything, "invalid").Return(nil, fmt.Errorf("invalid account type"))
+		repo.On("GetAllUsersPage", mock.Anything, "invalid", 0, 0).Return(nil, 0, fmt.Errorf("invalid account type"))
 
 		req := httptest.NewRequest("GET", "/api/admin/users?account_type=invalid", nil)
 		w := httptest.NewRecorder()
@@ -684,7 +713,7 @@ func TestAdminHandler_ListUsers_WithModerationFilter(t *testing.T) {
 		{ID: uuid.New(), Email: "blocked2@example.com", AccountStatus: repository.AccountStatusBlocked, DeletionEligibleAt: &futureEligibleAt},
 	}
 
-	repo.On("GetAllUsers", mock.Anything, "users").Return(users, nil)
+	repo.On("GetAllUsersPage", mock.Anything, "users", 0, 0).Return(users, 3, nil)
 
 	req := httptest.NewRequest("GET", "/api/admin/users?moderation_status=eligible_for_deletion", nil)
 	w := httptest.NewRecorder()

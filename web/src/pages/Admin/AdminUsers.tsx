@@ -22,12 +22,13 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAdminUsers, useUpgradeUser, useAdminInactiveUsers, useAdminZeroResourceUsers, useDeleteAdminUser, useVerifyUserEmail, useBlockUser } from '@/hooks/queries/useAdminQueries';
+import { useAdminUsers, useAdminUsersPage, useUpgradeUser, useAdminInactiveUsers, useAdminZeroResourceUsers, useDeleteAdminUser, useVerifyUserEmail, useBlockUser } from '@/hooks/queries/useAdminQueries';
 import type { AdminAccountType } from '@/services/adminService';
 import { queryKeys } from '@/hooks/queries/queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { RowActionMenu } from '@/components/RowActionMenu';
+import { Pagination } from '@/components/Pagination';
 import { format, parseISO, isPast, differenceInDays } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import clsx from 'clsx';
@@ -88,11 +89,30 @@ export const AdminUsers: React.FC = () => {
   const [accountType, setAccountType] = useState<AccountTypeFilter>('users');
   const [auditFilter, setAuditFilter] = useState<'none' | 'inactive' | 'zero_resources' | 'eligible_for_deletion'>('none');
   const [inactiveDays] = useState(30);
+  const [listPage, setListPage] = useState(1);
+  const pageSize = 50;
 
-  const { data: standardUsers = [], isLoading: loadingStandard, error: usersError } = useAdminUsers(accountType);
-  const { data: inactiveUsers = [], isLoading: loadingInactive } = useAdminInactiveUsers(inactiveDays);
-  const { data: zeroResourceUsers = [], isLoading: loadingZero } = useAdminZeroResourceUsers();
-  const { data: eligibleUsers = [], isLoading: loadingEligible } = useAdminUsers(accountType, 'eligible_for_deletion');
+  // Paginated main list (SQL page). Secondary audit views load only when selected.
+  const {
+    data: standardPage,
+    isLoading: loadingStandard,
+    error: usersError,
+  } = useAdminUsersPage(accountType, listPage, pageSize, undefined, auditFilter === 'none');
+  const { data: inactiveUsers = [], isLoading: loadingInactive } = useAdminInactiveUsers(
+    inactiveDays,
+    auditFilter === 'inactive',
+  );
+  const { data: zeroResourceUsers = [], isLoading: loadingZero } = useAdminZeroResourceUsers(
+    auditFilter === 'zero_resources',
+  );
+  const { data: eligibleUsers = [], isLoading: loadingEligible } = useAdminUsers(
+    accountType,
+    'eligible_for_deletion',
+    auditFilter === 'eligible_for_deletion',
+  );
+
+  const standardUsers = standardPage?.data ?? [];
+  const serverTotalPages = standardPage?.total_pages ?? 1;
 
   const users = auditFilter === 'inactive'
     ? inactiveUsers
@@ -102,8 +122,11 @@ export const AdminUsers: React.FC = () => {
         ? eligibleUsers
         : standardUsers;
 
-  const loading = loadingStandard || loadingInactive || loadingZero || loadingEligible;
-  const { data: allAccounts = [] } = useAdminUsers('all');
+  const loading =
+    (auditFilter === 'none' && loadingStandard) ||
+    (auditFilter === 'inactive' && loadingInactive) ||
+    (auditFilter === 'zero_resources' && loadingZero) ||
+    (auditFilter === 'eligible_for_deletion' && loadingEligible);
   const upgradeUser = useUpgradeUser();
   const error = usersError ? t('admin:users.errors.loading') : null;
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,6 +140,12 @@ export const AdminUsers: React.FC = () => {
   const [blockReason, setBlockReason] = useState('');
   const [blockReasonError, setBlockReasonError] = useState('');
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  // Cross-role account list only when needed (type "all" or export menu open).
+  const { data: allAccounts = [] } = useAdminUsers(
+    'all',
+    undefined,
+    accountType === 'all' || exportMenuOpen,
+  );
   const blockUser = useBlockUser();
   const { addToast } = useToast();
 
@@ -870,7 +899,10 @@ export const AdminUsers: React.FC = () => {
               <button
                 key={card.value}
                 type="button"
-                onClick={() => setAccountType(card.value)}
+                onClick={() => {
+                  setAccountType(card.value);
+                  setListPage(1);
+                }}
                 className={clsx(
                   'text-left p-4 rounded-2xl border transition-all',
                   active
@@ -953,7 +985,10 @@ export const AdminUsers: React.FC = () => {
               <button
                 key={btn.id}
                 type="button"
-                onClick={() => setAuditFilter(btn.id as any)}
+                onClick={() => {
+                  setAuditFilter(btn.id as typeof auditFilter);
+                  setListPage(1);
+                }}
                 className={clsx(
                   'px-3 py-1.5 rounded-xl text-xs font-bold transition-all border',
                   auditFilter === btn.id
@@ -1233,9 +1268,13 @@ export const AdminUsers: React.FC = () => {
         </div>
 
         {!loading && sortedUsers.length > 0 && (
-          <div className="px-6 py-3 bg-surface-alt border-t border-border flex items-center justify-between text-xs text-text-secondary">
+          <div className="px-6 py-3 bg-surface-alt border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-text-secondary">
             <span>
-              {t('admin:users.table.footer.showing', { count: sortedUsers.length, filtered: sortedUsers.length, total: users.length })}
+              {t('admin:users.table.footer.showing', {
+                count: sortedUsers.length,
+                filtered: sortedUsers.length,
+                total: auditFilter === 'none' ? (standardPage?.total ?? users.length) : users.length,
+              })}
             </span>
             <span>
               {t('admin:users.table.footer.sorted_by')}{' '}
@@ -1244,6 +1283,17 @@ export const AdminUsers: React.FC = () => {
               </strong>{' '}
               ({sortDir === 'asc' ? '↑ asc' : '↓ desc'})
             </span>
+          </div>
+        )}
+        {auditFilter === 'none' && serverTotalPages > 1 && (
+          <div className="px-6 py-3 border-t border-border">
+            <Pagination
+              currentPage={listPage}
+              totalPages={serverTotalPages}
+              onPageChange={setListPage}
+              totalItems={standardPage?.total}
+              itemsPerPage={pageSize}
+            />
           </div>
         )}
       </div>

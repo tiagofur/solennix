@@ -124,9 +124,12 @@ type SubscriptionOverview struct {
 	TotalCanceled int `json:"total_canceled"`
 	TotalTrialing int `json:"total_trialing"`
 	TotalPastDue  int `json:"total_past_due"`
-	StripeCount   int `json:"stripe_count"`
-	AppleCount    int `json:"apple_count"`
-	GoogleCount   int `json:"google_count"`
+	// Provider counts are for active subscriptions only.
+	StripeCount int `json:"stripe_count"`
+	AppleCount  int `json:"apple_count"`
+	GoogleCount int `json:"google_count"`
+	// CanceledLast30Days is the period-churn numerator (last 30 days).
+	CanceledLast30Days int `json:"canceled_last_30_days"`
 }
 
 // GetPlatformStats returns global platform KPIs.
@@ -292,29 +295,24 @@ func (r *AdminRepo) GetPlatformStats(ctx context.Context) (*PlatformStats, error
 	return stats, nil
 }
 
-// GetAllUsers returns admin-user rows filtered by account type.
-func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]AdminUser, error) {
-	normalized := normalizeAdminAccountType(accountType)
-	if normalized == "" {
-		return nil, fmt.Errorf("invalid account type")
-	}
-
-	whereClause := ""
-	args := make([]any, 0)
-	switch normalized {
+func adminUsersWhere(accountType string) (whereClause string, ok bool) {
+	switch normalizeAdminAccountType(accountType) {
 	case AdminAccountTypeUsers:
-		whereClause = "WHERE u.role = 'user'"
+		return "WHERE u.role = 'user'", true
 	case AdminAccountTypeTeam:
-		whereClause = "WHERE u.role = 'team_member'"
+		return "WHERE u.role = 'team_member'", true
 	case AdminAccountTypeAssistants:
-		whereClause = "WHERE u.role = 'assistant'"
+		return "WHERE u.role = 'assistant'", true
 	case AdminAccountTypeAdmins:
-		whereClause = "WHERE u.role = 'admin'"
+		return "WHERE u.role = 'admin'", true
 	case AdminAccountTypeAll:
-		// No WHERE clause.
+		return "", true
+	default:
+		return "", false
 	}
+}
 
-	query := `
+const adminUserListSelect = `
 		SELECT
 			u.id, u.email, u.name, u.business_name, u.plan, u.role,
 			COALESCE(u.account_status, 'active') AS account_status,
@@ -331,12 +329,41 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 			COALESCE(u.registration_platform, 'unknown') AS registration_platform,
 			COALESCE((SELECT string_agg(platform, ',') FROM user_platforms WHERE user_id = u.id), '') AS active_platforms_str,
 			u.last_active_at, u.created_at, u.updated_at
-		FROM users u ` + whereClause + `
-		ORDER BY u.created_at DESC`
+		FROM users u `
+
+// GetAllUsers returns admin-user rows filtered by account type (unbounded — prefer GetAllUsersPage).
+func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]AdminUser, error) {
+	users, _, err := r.GetAllUsersPage(ctx, accountType, 0, 0)
+	return users, err
+}
+
+// GetAllUsersPage returns a page of admin users and the total matching count.
+// limit <= 0 returns all rows (legacy callers).
+func (r *AdminRepo) GetAllUsersPage(ctx context.Context, accountType string, offset, limit int) ([]AdminUser, int, error) {
+	whereClause, ok := adminUsersWhere(accountType)
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid account type")
+	}
+
+	countQuery := `SELECT COUNT(*) FROM users u ` + whereClause
+	var total int
+	if err := r.pool.QueryRow(ctx, countQuery).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count users: %w", err)
+	}
+
+	query := adminUserListSelect + whereClause + ` ORDER BY u.created_at DESC`
+	args := make([]any, 0, 2)
+	if limit > 0 {
+		if offset < 0 {
+			offset = 0
+		}
+		query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", len(args)+1, len(args)+2)
+		args = append(args, limit, offset)
+	}
 
 	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list users: %w", err)
+		return nil, 0, fmt.Errorf("failed to list users: %w", err)
 	}
 	defer rows.Close()
 
@@ -354,24 +381,22 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 			&u.RegistrationPlatform, &activePlatsStr,
 			&u.LastActiveAt, &u.CreatedAt, &u.UpdatedAt,
 		)
-		if err == nil {
-			u.PlatformActivity = []models.UserPlatform{}
-			if activePlatsStr != "" {
-				u.ActivePlatforms = strings.Split(activePlatsStr, ",")
-			} else {
-				u.ActivePlatforms = []string{}
-			}
-		}
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan user: %w", err)
+			return nil, 0, fmt.Errorf("failed to scan user: %w", err)
+		}
+		u.PlatformActivity = []models.UserPlatform{}
+		if activePlatsStr != "" {
+			u.ActivePlatforms = strings.Split(activePlatsStr, ",")
+		} else {
+			u.ActivePlatforms = []string{}
 		}
 		users = append(users, u)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating users: %w", err)
+		return nil, 0, fmt.Errorf("error iterating users: %w", err)
 	}
 
-	return users, nil
+	return users, total, nil
 }
 
 // GetUserByID returns a single user with usage stats for admin view.
@@ -622,19 +647,28 @@ func (r *AdminRepo) GetSubscriptionOverview(ctx context.Context) (*SubscriptionO
 		return nil, fmt.Errorf("failed to count past_due: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM subscriptions WHERE provider = 'stripe'`).Scan(&overview.StripeCount)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM subscriptions WHERE status = 'active' AND provider = 'stripe'`).Scan(&overview.StripeCount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count stripe: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM subscriptions WHERE provider = 'apple'`).Scan(&overview.AppleCount)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM subscriptions WHERE status = 'active' AND provider = 'apple'`).Scan(&overview.AppleCount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count apple: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM subscriptions WHERE provider = 'google'`).Scan(&overview.GoogleCount)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM subscriptions WHERE status = 'active' AND provider = 'google'`).Scan(&overview.GoogleCount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count google: %w", err)
+	}
+
+	// Prefer updated_at when present; fall back to created_at for period window.
+	err = r.pool.QueryRow(ctx, `
+		SELECT COUNT(*) FROM subscriptions
+		WHERE status = 'canceled'
+		  AND COALESCE(updated_at, created_at) >= NOW() - INTERVAL '30 days'`).Scan(&overview.CanceledLast30Days)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count canceled last 30 days: %w", err)
 	}
 
 	return overview, nil

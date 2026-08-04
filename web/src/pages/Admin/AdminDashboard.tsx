@@ -70,13 +70,20 @@ export const AdminDashboard: React.FC = () => {
     stats && stats.total_users > 0
       ? (stats.total_events / stats.total_users).toFixed(1)
       : "0.0";
+  // Period churn (30d): canceled_last_30 / (active + canceled_last_30).
+  // Falls back to lifetime only if the new field is missing (old backends).
+  const canceled30 = subs?.canceled_last_30_days;
   const churnRate =
-    subs && subs.total_active + subs.total_canceled > 0
-      ? (
-          (subs.total_canceled / (subs.total_active + subs.total_canceled)) *
-          100
-        ).toFixed(1)
-      : "0.0";
+    canceled30 != null && subs
+      ? subs.total_active + canceled30 > 0
+        ? ((canceled30 / (subs.total_active + canceled30)) * 100).toFixed(1)
+        : "0.0"
+      : subs && subs.total_active + subs.total_canceled > 0
+        ? (
+            (subs.total_canceled / (subs.total_active + subs.total_canceled)) *
+            100
+          ).toFixed(1)
+        : "0.0";
 
   const planDistribution = stats
     ? [
