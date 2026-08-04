@@ -727,6 +727,21 @@ func (r *UserRepo) UpdateLastActiveAt(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+// UpdateLastLoginAt records a successful authentication (email/password or OAuth).
+// Distinct from last_active_at (any authenticated API traffic).
+func (r *UserRepo) UpdateLastLoginAt(ctx context.Context, id uuid.UUID) error {
+	query := `
+		UPDATE users
+		SET last_login_at = NOW(),
+			last_active_at = NOW(),
+			inactivity_stage = 0,
+			inactivity_warning_sent_at = NULL,
+			updated_at = NOW()
+		WHERE id = $1`
+	_, err := r.pool.Exec(ctx, query, id)
+	return err
+}
+
 // UpdateRegistrationPlatform updates the user's registration platform retroactively.
 func (r *UserRepo) UpdateRegistrationPlatform(ctx context.Context, id uuid.UUID, platform string) error {
 	query := `

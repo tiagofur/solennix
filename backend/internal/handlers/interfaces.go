@@ -27,6 +27,7 @@ type FullUserRepository interface {
 	LinkGoogleAccount(ctx context.Context, userID uuid.UUID, googleUserID string) error
 	LinkAppleAccount(ctx context.Context, userID uuid.UUID, appleUserID string) error
 	UpdateLastActiveAt(ctx context.Context, id uuid.UUID) error
+	UpdateLastLoginAt(ctx context.Context, id uuid.UUID) error
 	DeleteOwnAccount(ctx context.Context, id uuid.UUID) error
 	CancelPendingDeletion(ctx context.Context, id uuid.UUID) error
 }
@@ -186,7 +187,7 @@ type AuditRepository interface {
 type AdminRepository interface {
 	GetPlatformStats(ctx context.Context) (*repository.PlatformStats, error)
 	GetAllUsers(ctx context.Context, accountType string) ([]repository.AdminUser, error)
-	GetAllUsersPage(ctx context.Context, accountType string, offset, limit int) ([]repository.AdminUser, int, error)
+	GetAllUsersPage(ctx context.Context, opts repository.AdminUserListOpts) ([]repository.AdminUser, int, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*repository.AdminUser, error)
 	BlockUser(ctx context.Context, id, adminID uuid.UUID, reason string) error
 	DeleteBlockedUserIfEligible(ctx context.Context, id uuid.UUID) error

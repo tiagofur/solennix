@@ -149,6 +149,11 @@ func (m *MockFullUserRepo) UpdateLastActiveAt(ctx context.Context, id uuid.UUID)
 	return args.Error(0)
 }
 
+func (m *MockFullUserRepo) UpdateLastLoginAt(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 func (m *MockFullUserRepo) DeleteOwnAccount(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
@@ -785,8 +790,8 @@ func (m *MockAdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]
 	return args.Get(0).([]repository.AdminUser), args.Error(1)
 }
 
-func (m *MockAdminRepo) GetAllUsersPage(ctx context.Context, accountType string, offset, limit int) ([]repository.AdminUser, int, error) {
-	args := m.Called(ctx, accountType, offset, limit)
+func (m *MockAdminRepo) GetAllUsersPage(ctx context.Context, opts repository.AdminUserListOpts) ([]repository.AdminUser, int, error) {
+	args := m.Called(ctx, opts)
 	if args.Get(0) == nil {
 		return nil, args.Int(1), args.Error(2)
 	}

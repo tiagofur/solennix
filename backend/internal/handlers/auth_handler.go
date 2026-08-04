@@ -314,6 +314,27 @@ func issueSessionCookies(w http.ResponseWriter, r *http.Request, accessToken, re
 	}
 }
 
+// recordSuccessfulLogin updates last_login_at (async) after credential/OAuth success.
+// Not used on token refresh.
+func (h *AuthHandler) recordSuccessfulLogin(userID uuid.UUID) {
+	if h.userRepo == nil || userID == uuid.Nil {
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		if err := h.userRepo.UpdateLastLoginAt(ctx, userID); err != nil {
+			slog.Warn("auth: failed to update last_login_at", "user_id", userID, "error", err)
+		}
+	}()
+}
+
+// issueLoginSession sets session cookies and records last_login_at.
+func (h *AuthHandler) issueLoginSession(w http.ResponseWriter, r *http.Request, accessToken, refreshToken string, userID uuid.UUID) {
+	issueSessionCookies(w, r, accessToken, refreshToken)
+	h.recordSuccessfulLogin(userID)
+}
+
 type registerRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -560,7 +581,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
 
 	// Set httpOnly cookie for auth token (SECURE)
-	issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
 
 	slog.Info("auth.event", "action", "login_success", "user_id", user.ID, "email", maskEmail(user.Email), "method", "email", "ip", clientIP(r))
 	middleware.LogSecurityAuditEvent(user.ID, "login", "session", map[string]any{
@@ -997,7 +1018,7 @@ func (h *AuthHandler) AcceptTeamInvite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-	issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
 
 	slog.Info("auth.event", "action", "team_invite_accepted", "user_id", user.ID, "email", maskEmail(user.Email), "ip", clientIP(r))
 
@@ -1336,7 +1357,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-		issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
 		slog.Info("auth.event", "action", "google_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"user":   user,
@@ -1361,7 +1382,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-			issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
 			slog.Info("auth.event", "action", "google_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":   user,
@@ -1385,7 +1406,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-		issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
 		slog.Info("auth.event", "action", "google_link_and_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"user":   user,
@@ -1424,7 +1445,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
-				issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+				h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, existingUser.ID)
 				writeJSON(w, http.StatusOK, map[string]interface{}{
 					"user":   existingUser,
 					"tokens": tokens,
@@ -1447,7 +1468,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
-			issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, existingUser.ID)
 			slog.Info("auth.event", "action", "google_link_and_login_race", "user_id", existingUser.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":   existingUser,
@@ -1468,7 +1489,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, newUser.ID)
-	issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, newUser.ID)
 	slog.Info("auth.event", "action", "google_register", "user_id", newUser.ID, "email", newUser.Email, "ip", clientIP(r))
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
@@ -1743,7 +1764,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-		issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
 		slog.Info("auth.event", "action", "apple_login", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"user":                   user,
@@ -1770,7 +1791,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-				issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+				h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
 				slog.Info("auth.event", "action", "apple_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 				writeJSON(w, http.StatusOK, map[string]interface{}{
 					"user":                   user,
@@ -1795,7 +1816,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-			issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
 			slog.Info("auth.event", "action", "apple_link", "user_id", user.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":                   user,
@@ -1833,7 +1854,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, newUser.ID)
-	issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, newUser.ID)
 
 	slog.Info("auth.event", "action", "apple_register", "user_id", newUser.ID, "email", newUser.Email, "ip", clientIP(r))
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
@@ -2030,7 +2051,7 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-		issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
 		http.Redirect(w, r, h.cfg.FrontendURL+"/dashboard", http.StatusFound)
 		return
 	}
@@ -2049,7 +2070,7 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-			issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
 			http.Redirect(w, r, h.cfg.FrontendURL+"/dashboard", http.StatusFound)
 			return
 		}
@@ -2079,7 +2100,7 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, newUser.ID)
-	issueSessionCookies(w, r, tokens.AccessToken, tokens.RefreshToken)
+	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, newUser.ID)
 	http.Redirect(w, r, h.cfg.FrontendURL+"/dashboard", http.StatusFound)
 }
 

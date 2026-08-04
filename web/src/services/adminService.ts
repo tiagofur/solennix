@@ -47,6 +47,8 @@ export interface AdminUser {
   }>;
   active_platforms?: string[];
   last_active_at?: string | null;
+  /** Last successful login (email/OAuth). Distinct from last_active_at (API activity). */
+  last_login_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -90,6 +92,8 @@ export const adminService = {
     page = 1,
     limit = 50,
     moderationStatus?: string,
+    search?: string,
+    plan?: string,
   ) {
     const params: Record<string, string> = {
       account_type: accountType,
@@ -98,6 +102,12 @@ export const adminService = {
     };
     if (moderationStatus) {
       params.moderation_status = moderationStatus;
+    }
+    if (search?.trim()) {
+      params.search = search.trim();
+    }
+    if (plan && plan !== 'all') {
+      params.plan = plan;
     }
     return api.get<AdminUsersPage>("/admin/users", params);
   },

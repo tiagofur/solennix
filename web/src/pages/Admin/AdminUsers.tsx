@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Users, 
@@ -61,6 +61,7 @@ interface AdminUser {
   registration_platform?: string;
   active_platforms?: string[];
   last_active_at?: string;
+  last_login_at?: string;
   created_at: string;
 }
 
@@ -91,13 +92,33 @@ export const AdminUsers: React.FC = () => {
   const [inactiveDays] = useState(30);
   const [listPage, setListPage] = useState(1);
   const pageSize = 50;
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [planFilter, setPlanFilter] = useState<PlanFilter>('all');
 
-  // Paginated main list (SQL page). Secondary audit views load only when selected.
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => window.clearTimeout(t);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setListPage(1);
+  }, [debouncedSearch, planFilter, accountType]);
+
+  // Paginated main list (SQL page + search/plan). Secondary audit views load only when selected.
   const {
     data: standardPage,
     isLoading: loadingStandard,
     error: usersError,
-  } = useAdminUsersPage(accountType, listPage, pageSize, undefined, auditFilter === 'none');
+  } = useAdminUsersPage(
+    accountType,
+    listPage,
+    pageSize,
+    undefined,
+    auditFilter === 'none',
+    debouncedSearch,
+    planFilter,
+  );
   const { data: inactiveUsers = [], isLoading: loadingInactive } = useAdminInactiveUsers(
     inactiveDays,
     auditFilter === 'inactive',
@@ -129,8 +150,6 @@ export const AdminUsers: React.FC = () => {
     (auditFilter === 'eligible_for_deletion' && loadingEligible);
   const upgradeUser = useUpgradeUser();
   const error = usersError ? t('admin:users.errors.loading') : null;
-  const [searchQuery, setSearchQuery] = useState('');
-  const [planFilter, setPlanFilter] = useState<PlanFilter>('all');
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [gift, setGift] = useState<GiftState | null>(null);
@@ -327,6 +346,7 @@ export const AdminUsers: React.FC = () => {
       t('admin:users.csv.headers.registration'),
       t('admin:users.csv.headers.registration_platform'),
       t('admin:users.csv.headers.active_platforms'),
+      t('admin:users.csv.headers.last_login'),
       t('admin:users.csv.headers.last_active'),
       t('admin:users.csv.headers.email_verified'),
       t('admin:users.csv.headers.account_status'),
@@ -344,6 +364,7 @@ export const AdminUsers: React.FC = () => {
       format(parseISO(u.created_at), 'dd/MM/yyyy', { locale: dateLocale }),
       u.registration_platform || 'unknown',
       (u.active_platforms || []).join(', '),
+      u.last_login_at ? format(parseISO(u.last_login_at), 'dd/MM/yyyy HH:mm') : '',
       u.last_active_at ? format(parseISO(u.last_active_at), 'dd/MM/yyyy HH:mm') : '',
       u.email_verified_at ? 'Verificado' : 'No verificado',
       u.account_status || 'active',
@@ -458,25 +479,29 @@ export const AdminUsers: React.FC = () => {
     addToast(t('admin:users.csv.success', { count: filteredUsers.length }), 'success');
   };
 
-  // Filter
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      searchQuery === '' ||
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.business_name &&
-        user.business_name.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesPlan = planFilter === 'all' || user.plan === planFilter;
-    return matchesSearch && matchesPlan;
-  });
+  // Main list: search/plan applied server-side when auditFilter is none.
+  // Audit lists are small; keep client filters for those views.
+  const filteredUsers =
+    auditFilter === 'none'
+      ? users
+      : users.filter((user) => {
+          const q = debouncedSearch.toLowerCase();
+          const matchesSearch =
+            q === '' ||
+            user.name.toLowerCase().includes(q) ||
+            user.email.toLowerCase().includes(q) ||
+            (user.business_name && user.business_name.toLowerCase().includes(q));
+          const matchesPlan = planFilter === 'all' || user.plan === planFilter;
+          return matchesSearch && matchesPlan;
+        });
 
   const filteredAllAccounts = allAccounts.filter((user) => {
+    const q = debouncedSearch.toLowerCase();
     const matchesSearch =
-      searchQuery === '' ||
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.business_name &&
-        user.business_name.toLowerCase().includes(searchQuery.toLowerCase()));
+      q === '' ||
+      user.name.toLowerCase().includes(q) ||
+      user.email.toLowerCase().includes(q) ||
+      (user.business_name && user.business_name.toLowerCase().includes(q));
     const matchesPlan = planFilter === 'all' || user.plan === planFilter;
     return matchesSearch && matchesPlan;
   });
@@ -1097,9 +1122,25 @@ export const AdminUsers: React.FC = () => {
                             {user.business_name && (
                               <div className="text-xs text-text-tertiary truncate mt-1">{user.business_name}</div>
                             )}
-                            <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-text-secondary">
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] text-text-secondary">
                               <span className="bg-surface-alt border border-border px-1 py-0.5 rounded text-text-tertiary">
                                 Reg: <span className="font-semibold text-text uppercase">{user.registration_platform || 'unknown'}</span>
+                              </span>
+                              <span className="bg-surface-alt border border-border px-1 py-0.5 rounded text-text-tertiary" title={t('admin:users.csv.headers.last_login')}>
+                                Login:{' '}
+                                <span className="font-semibold text-text">
+                                  {user.last_login_at
+                                    ? format(parseISO(user.last_login_at), "d MMM ''yy", { locale: dateLocale })
+                                    : '—'}
+                                </span>
+                              </span>
+                              <span className="bg-surface-alt border border-border px-1 py-0.5 rounded text-text-tertiary" title={t('admin:users.csv.headers.last_active')}>
+                                Act:{' '}
+                                <span className="font-semibold text-text">
+                                  {user.last_active_at
+                                    ? format(parseISO(user.last_active_at), "d MMM ''yy", { locale: dateLocale })
+                                    : '—'}
+                                </span>
                               </span>
                               <div className="flex items-center gap-1.5" title="Plataformas con uso registrado">
                                 {(user.active_platforms?.includes('web') || user.platform_activity?.some((p: any) => p.platform === 'web')) && (

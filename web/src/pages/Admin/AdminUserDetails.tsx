@@ -183,8 +183,26 @@ export const AdminUserDetails: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className="text-xs text-text-tertiary">
-                {t('admin:users.details.created_at', { date: format(parseISO(user.created_at), 'd MMM yyyy', { locale: dateLocale }) })}
+              <div className="text-xs text-text-tertiary space-y-0.5">
+                <div>
+                  {t('admin:users.details.created_at', { date: format(parseISO(user.created_at), 'd MMM yyyy', { locale: dateLocale }) })}
+                </div>
+                <div>
+                  {t('admin:users.details.last_login', {
+                    defaultValue: 'Último login: {{date}}',
+                    date: user.last_login_at
+                      ? format(parseISO(user.last_login_at), 'd MMM yyyy, HH:mm', { locale: dateLocale })
+                      : '—',
+                  })}
+                </div>
+                <div>
+                  {t('admin:users.details.last_active', {
+                    defaultValue: 'Última actividad: {{date}}',
+                    date: user.last_active_at
+                      ? format(parseISO(user.last_active_at), 'd MMM yyyy, HH:mm', { locale: dateLocale })
+                      : '—',
+                  })}
+                </div>
               </div>
             </div>
           </div>

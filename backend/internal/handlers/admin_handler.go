@@ -56,24 +56,34 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 		moderationStatus = repository.AdminModerationStatusAll
 	}
 
+	search := strings.TrimSpace(r.URL.Query().Get("search"))
+	plan := strings.TrimSpace(r.URL.Query().Get("plan"))
+
 	params := parsePaginationParams(r, nil, "created_at")
 	var (
 		users []repository.AdminUser
 		total int
 		err   error
 	)
+	baseOpts := repository.AdminUserListOpts{
+		AccountType: accountType,
+		Search:      search,
+		Plan:        plan,
+	}
 	if params != nil {
 		// When moderation filter needs post-processing, load a larger window then page in memory.
 		// For the common path (moderation_status=all) we page in SQL.
 		if moderationStatus == repository.AdminModerationStatusAll || moderationStatus == "" {
-			offset := (params.Page - 1) * params.Limit
-			users, total, err = h.adminRepo.GetAllUsersPage(r.Context(), accountType, offset, params.Limit)
+			opts := baseOpts
+			opts.Offset = (params.Page - 1) * params.Limit
+			opts.Limit = params.Limit
+			users, total, err = h.adminRepo.GetAllUsersPage(r.Context(), opts)
 		} else {
 			// Filtered views are smaller (blocked / eligible); load full role set then filter.
-			users, _, err = h.adminRepo.GetAllUsersPage(r.Context(), accountType, 0, 0)
+			users, _, err = h.adminRepo.GetAllUsersPage(r.Context(), baseOpts)
 		}
 	} else {
-		users, _, err = h.adminRepo.GetAllUsersPage(r.Context(), accountType, 0, 0)
+		users, _, err = h.adminRepo.GetAllUsersPage(r.Context(), baseOpts)
 	}
 	if err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), "invalid account type") {

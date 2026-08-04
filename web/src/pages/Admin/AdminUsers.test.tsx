@@ -96,8 +96,20 @@ describe('AdminUsers', () => {
       }
       return getMockData();
     });
-    vi.mocked(adminService.getUsersPage).mockImplementation(async () => {
-      const data = getMockData();
+    vi.mocked(adminService.getUsersPage).mockImplementation(async (_type, _page, _limit, _mod, search, plan) => {
+      let data = getMockData();
+      if (search?.trim()) {
+        const q = search.trim().toLowerCase();
+        data = data.filter(
+          (u) =>
+            u.name.toLowerCase().includes(q) ||
+            u.email.toLowerCase().includes(q) ||
+            (u.business_name || '').toLowerCase().includes(q),
+        );
+      }
+      if (plan && plan !== 'all') {
+        data = data.filter((u) => u.plan === plan);
+      }
       return {
         data,
         total: data.length,
@@ -248,15 +260,23 @@ describe('AdminUsers', () => {
     expect(screen.getByText('Expirado')).toBeInTheDocument();
     expect(screen.getByText('My Business')).toBeInTheDocument();
 
-    // 1. Filtering and Sorting
+    // 1. Filtering and Sorting (search is debounced 300ms + server-side)
     const searchInput = screen.getByPlaceholderText(/Buscar por nombre/i);
     fireEvent.change(searchInput, { target: { value: 'UnreachableXYZ123' } });
-    expect(screen.getByText('No se encontraron usuarios con esos filtros.')).toBeInTheDocument();
+    await waitFor(
+      () => expect(screen.getByText('No se encontraron usuarios con esos filtros.')).toBeInTheDocument(),
+      { timeout: 2000 },
+    );
 
     fireEvent.change(searchInput, { target: { value: 'Expiring Today' } });
-    expect(screen.getByText('Expiring Today')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Expiring Today')).toBeInTheDocument(), {
+      timeout: 2000,
+    });
 
     fireEvent.change(searchInput, { target: { value: '' } });
+    await waitFor(() => expect(screen.getByText('Premium User')).toBeInTheDocument(), {
+      timeout: 2000,
+    });
 
     const proFilterBtn = screen.getAllByRole('button', { name: /Pro/i })[0];
     fireEvent.click(proFilterBtn);

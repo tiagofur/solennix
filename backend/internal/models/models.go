@@ -77,7 +77,9 @@ type User struct {
 	AppleUserID             *string    `json:"-"`
 	PlanExpiresAt           *time.Time `json:"plan_expires_at,omitempty"`
 	LastActiveAt            *time.Time `json:"last_active_at,omitempty"`
-	RegistrationPlatform    string     `json:"registration_platform"`
+	// LastLoginAt is set only on successful credential/OAuth login (not API activity).
+	LastLoginAt          *time.Time `json:"last_login_at,omitempty"`
+	RegistrationPlatform string     `json:"registration_platform"`
 	InactivityStage         int        `json:"inactivity_stage"`
 	InactivityWarningSentAt *time.Time `json:"inactivity_warning_sent_at,omitempty"`
 	CreatedAt               time.Time  `json:"created_at"`

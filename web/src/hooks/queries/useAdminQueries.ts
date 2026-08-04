@@ -23,17 +23,29 @@ export function useAdminUsers(accountType: AdminAccountType = 'users', moderatio
   });
 }
 
-/** Paginated user list for the admin users table. */
+/** Paginated user list for the admin users table (server-side search/plan). */
 export function useAdminUsersPage(
   accountType: AdminAccountType = 'users',
   page = 1,
   limit = 50,
   moderationStatus?: string,
   enabled = true,
+  search = '',
+  plan = 'all',
 ) {
   return useQuery({
-    queryKey: [...queryKeys.admin.users, 'page', accountType, page, limit, moderationStatus || ''] as const,
-    queryFn: () => adminService.getUsersPage(accountType, page, limit, moderationStatus),
+    queryKey: [
+      ...queryKeys.admin.users,
+      'page',
+      accountType,
+      page,
+      limit,
+      moderationStatus || '',
+      search,
+      plan,
+    ] as const,
+    queryFn: () =>
+      adminService.getUsersPage(accountType, page, limit, moderationStatus, search, plan),
     enabled,
   });
 }

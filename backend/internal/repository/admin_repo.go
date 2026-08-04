@@ -114,8 +114,18 @@ type AdminUser struct {
 	PlatformActivity     []models.UserPlatform `json:"platform_activity"`
 	ActivePlatforms      []string              `json:"active_platforms"`
 	LastActiveAt         *time.Time            `json:"last_active_at,omitempty"`
+	LastLoginAt          *time.Time            `json:"last_login_at,omitempty"`
 	CreatedAt            time.Time             `json:"created_at"`
 	UpdatedAt            time.Time             `json:"updated_at"`
+}
+
+// AdminUserListOpts filters/pages the admin user list.
+type AdminUserListOpts struct {
+	AccountType string
+	Search      string // name, email, business_name (ILIKE)
+	Plan        string // empty or "all" = no filter
+	Offset      int
+	Limit       int // <= 0 = no limit (legacy full list)
 }
 
 // SubscriptionOverview holds subscription stats.
@@ -328,40 +338,69 @@ const adminUserListSelect = `
 			COALESCE((SELECT COUNT(*) FROM products p WHERE p.user_id = u.id), 0) AS products_count,
 			COALESCE(u.registration_platform, 'unknown') AS registration_platform,
 			COALESCE((SELECT string_agg(platform, ',') FROM user_platforms WHERE user_id = u.id), '') AS active_platforms_str,
-			u.last_active_at, u.created_at, u.updated_at
+			u.last_active_at, u.last_login_at, u.created_at, u.updated_at
 		FROM users u `
 
 // GetAllUsers returns admin-user rows filtered by account type (unbounded — prefer GetAllUsersPage).
 func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]AdminUser, error) {
-	users, _, err := r.GetAllUsersPage(ctx, accountType, 0, 0)
+	users, _, err := r.GetAllUsersPage(ctx, AdminUserListOpts{AccountType: accountType})
 	return users, err
 }
 
 // GetAllUsersPage returns a page of admin users and the total matching count.
-// limit <= 0 returns all rows (legacy callers).
-func (r *AdminRepo) GetAllUsersPage(ctx context.Context, accountType string, offset, limit int) ([]AdminUser, int, error) {
-	whereClause, ok := adminUsersWhere(accountType)
+// Limit <= 0 returns all matching rows (legacy callers).
+func (r *AdminRepo) GetAllUsersPage(ctx context.Context, opts AdminUserListOpts) ([]AdminUser, int, error) {
+	whereClause, ok := adminUsersWhere(opts.AccountType)
 	if !ok {
 		return nil, 0, fmt.Errorf("invalid account type")
 	}
 
+	args := make([]any, 0, 4)
+	extra := make([]string, 0, 2)
+
+	search := strings.TrimSpace(opts.Search)
+	if search != "" {
+		args = append(args, "%"+strings.ToLower(search)+"%")
+		n := len(args)
+		extra = append(extra, fmt.Sprintf(
+			`(LOWER(u.email) LIKE $%d OR LOWER(u.name) LIKE $%d OR LOWER(COALESCE(u.business_name, '')) LIKE $%d)`,
+			n, n, n,
+		))
+	}
+
+	plan := strings.ToLower(strings.TrimSpace(opts.Plan))
+	if plan != "" && plan != "all" {
+		args = append(args, plan)
+		extra = append(extra, fmt.Sprintf(`LOWER(u.plan) = $%d`, len(args)))
+	}
+
+	if len(extra) > 0 {
+		conj := strings.Join(extra, " AND ")
+		if whereClause == "" {
+			whereClause = "WHERE " + conj
+		} else {
+			whereClause = whereClause + " AND " + conj
+		}
+	}
+
 	countQuery := `SELECT COUNT(*) FROM users u ` + whereClause
 	var total int
-	if err := r.pool.QueryRow(ctx, countQuery).Scan(&total); err != nil {
+	if err := r.pool.QueryRow(ctx, countQuery, args...).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("failed to count users: %w", err)
 	}
 
 	query := adminUserListSelect + whereClause + ` ORDER BY u.created_at DESC`
-	args := make([]any, 0, 2)
-	if limit > 0 {
+	queryArgs := append([]any{}, args...)
+	if opts.Limit > 0 {
+		offset := opts.Offset
 		if offset < 0 {
 			offset = 0
 		}
-		query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", len(args)+1, len(args)+2)
-		args = append(args, limit, offset)
+		query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", len(queryArgs)+1, len(queryArgs)+2)
+		queryArgs = append(queryArgs, opts.Limit, offset)
 	}
 
-	rows, err := r.pool.Query(ctx, query, args...)
+	rows, err := r.pool.Query(ctx, query, queryArgs...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list users: %w", err)
 	}
@@ -379,7 +418,7 @@ func (r *AdminRepo) GetAllUsersPage(ctx context.Context, accountType string, off
 			&u.HasPaidSub, &u.PlanExpiresAt,
 			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
 			&u.RegistrationPlatform, &activePlatsStr,
-			&u.LastActiveAt, &u.CreatedAt, &u.UpdatedAt,
+			&u.LastActiveAt, &u.LastLoginAt, &u.CreatedAt, &u.UpdatedAt,
 		)
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to scan user: %w", err)
@@ -416,7 +455,7 @@ func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, 
 			COALESCE((SELECT COUNT(*) FROM clients c WHERE c.user_id = u.id), 0) AS clients_count,
 			COALESCE((SELECT COUNT(*) FROM products p WHERE p.user_id = u.id), 0) AS products_count,
 			COALESCE(u.registration_platform, 'unknown') AS registration_platform,
-			u.last_active_at, u.created_at, u.updated_at
+			u.last_active_at, u.last_login_at, u.created_at, u.updated_at
 		FROM users u
 		WHERE u.id = $1`
 
@@ -429,7 +468,7 @@ func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, 
 		&u.HasPaidSub, &u.PlanExpiresAt,
 		&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
 		&u.RegistrationPlatform,
-		&u.LastActiveAt, &u.CreatedAt, &u.UpdatedAt,
+		&u.LastActiveAt, &u.LastLoginAt, &u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -692,7 +731,7 @@ func (r *AdminRepo) GetInactiveUsers(ctx context.Context, days int) ([]AdminUser
 			COALESCE((SELECT COUNT(*) FROM products p WHERE p.user_id = u.id), 0) AS products_count,
 			COALESCE(u.registration_platform, 'unknown') AS registration_platform,
 			COALESCE((SELECT string_agg(platform, ',') FROM user_platforms WHERE user_id = u.id), '') AS active_platforms_str,
-			u.last_active_at, u.created_at, u.updated_at
+			u.last_active_at, u.last_login_at, u.created_at, u.updated_at
 		FROM users u
 		WHERE u.role = 'user'
 		  AND COALESCE(u.last_active_at, u.created_at) < NOW() - $1 * INTERVAL '1 day'
@@ -716,7 +755,7 @@ func (r *AdminRepo) GetInactiveUsers(ctx context.Context, days int) ([]AdminUser
 			&u.HasPaidSub, &u.PlanExpiresAt,
 			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
 			&u.RegistrationPlatform, &activePlatsStr,
-			&u.LastActiveAt, &u.CreatedAt, &u.UpdatedAt,
+			&u.LastActiveAt, &u.LastLoginAt, &u.CreatedAt, &u.UpdatedAt,
 		)
 		if err == nil {
 			if activePlatsStr != "" {
@@ -751,7 +790,7 @@ func (r *AdminRepo) GetUsersWithZeroResources(ctx context.Context) ([]AdminUser,
 			0 AS products_count,
 			COALESCE(u.registration_platform, 'unknown') AS registration_platform,
 			COALESCE((SELECT string_agg(platform, ',') FROM user_platforms WHERE user_id = u.id), '') AS active_platforms_str,
-			u.last_active_at, u.created_at, u.updated_at
+			u.last_active_at, u.last_login_at, u.created_at, u.updated_at
 		FROM users u
 		WHERE u.role = 'user'
 		  AND NOT EXISTS (SELECT 1 FROM events e WHERE e.user_id = u.id)
@@ -777,7 +816,7 @@ func (r *AdminRepo) GetUsersWithZeroResources(ctx context.Context) ([]AdminUser,
 			&u.HasPaidSub, &u.PlanExpiresAt,
 			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
 			&u.RegistrationPlatform, &activePlatsStr,
-			&u.LastActiveAt, &u.CreatedAt, &u.UpdatedAt,
+			&u.LastActiveAt, &u.LastLoginAt, &u.CreatedAt, &u.UpdatedAt,
 		)
 		if err == nil {
 			if activePlatsStr != "" {
