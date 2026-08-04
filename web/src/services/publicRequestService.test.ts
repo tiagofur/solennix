@@ -37,6 +37,31 @@ describe("publicRequestService", () => {
       expect(result.status).toBe("pending");
     });
 
+    it("returns client_token when present on create response", async () => {
+      server.use(
+        http.post(`${API_BASE}/public/organizers/alice/requests`, () =>
+          HttpResponse.json(
+            { data: makeRequest({ client_token: "tok-abc" }) },
+            { status: 201 },
+          ),
+        ),
+      );
+      const result = await publicRequestService.submit("alice", validPayload);
+      expect(result.client_token).toBe("tok-abc");
+    });
+
+    it("forwards honeypot website field when provided", async () => {
+      let capturedBody: Record<string, unknown> = {};
+      server.use(
+        http.post(`${API_BASE}/public/organizers/alice/requests`, async ({ request }) => {
+          capturedBody = (await request.json()) as Record<string, unknown>;
+          return HttpResponse.json({ data: makeRequest() }, { status: 201 });
+        }),
+      );
+      await publicRequestService.submit("alice", { ...validPayload, website: "" });
+      expect(capturedBody.website).toBe("");
+    });
+
     it("accepts a bare object response (no { data } wrapper)", async () => {
       server.use(
         http.post(`${API_BASE}/public/organizers/alice/requests`, () =>
@@ -146,6 +171,35 @@ describe("publicRequestService", () => {
       );
       await publicRequestService.submit("alice & bob", validPayload);
       expect(capturedUrl).toContain("alice%20%26%20bob");
+    });
+  });
+
+  describe("clientAction", () => {
+    it("posts action with X-Request-Token header", async () => {
+      let capturedAction: string | null = null;
+      let capturedToken: string | null = null;
+      server.use(
+        http.post(`${API_BASE}/public/requests/req-1/action`, async ({ request }) => {
+          capturedToken = request.headers.get("X-Request-Token");
+          const body = (await request.json()) as { action: string };
+          capturedAction = body.action;
+          return new HttpResponse(null, { status: 200 });
+        }),
+      );
+      await publicRequestService.clientAction("req-1", "tok-xyz", "accept");
+      expect(capturedToken).toBe("tok-xyz");
+      expect(capturedAction).toBe("accept");
+    });
+
+    it("throws PublicRequestError on 401", async () => {
+      server.use(
+        http.post(`${API_BASE}/public/requests/req-1/action`, () =>
+          HttpResponse.json({ error: "unauthorized" }, { status: 401 }),
+        ),
+      );
+      await expect(
+        publicRequestService.clientAction("req-1", "bad", "decline"),
+      ).rejects.toThrow(PublicRequestError);
     });
   });
 });

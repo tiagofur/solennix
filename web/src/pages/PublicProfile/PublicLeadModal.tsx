@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { X, CheckCircle2, Loader2, Calendar, Users, Send, MapPin, DollarSign, Info } from "lucide-react";
-import { publicRequestService, PublicRequestError } from "@/services/publicRequestService";
+import {
+  publicRequestService,
+  PublicRequestError,
+  PUBLIC_REQUEST_TOKEN_KEY,
+} from "@/services/publicRequestService";
 import type { PublicProfileServiceItem } from "@/services/publicProfileService";
 
 interface PublicLeadModalProps {
@@ -36,9 +41,13 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [message, setMessage] = useState("");
 
+  // Honeypot — bots fill hidden "website"; real users leave it empty.
+  const [website, setWebsite] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [statusPath, setStatusPath] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -51,8 +60,10 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
       setBudget("");
       setSelectedServices([]);
       setMessage("");
+      setWebsite("");
       setError(null);
       setSubmitted(false);
+      setStatusPath(null);
     }
   }, [isOpen]);
 
@@ -97,7 +108,7 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
     setSubmitting(true);
 
     try {
-      await publicRequestService.submit(slug, {
+      const result = await publicRequestService.submit(slug, {
         contact_email: contactEmail.trim(),
         contact_name: contactName.trim() || undefined,
         event_type: eventType || undefined,
@@ -108,7 +119,24 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
         currency: "MXN",
         service_ids: selectedServices.length > 0 ? selectedServices : undefined,
         message: message.trim() || undefined,
+        // Always send empty honeypot (bots fill the hidden input).
+        website: website || "",
       });
+      if (result.id && result.client_token) {
+        try {
+          sessionStorage.setItem(
+            PUBLIC_REQUEST_TOKEN_KEY(result.id),
+            result.client_token,
+          );
+        } catch {
+          /* sessionStorage unavailable */
+        }
+        setStatusPath(
+          `/solicitud/${result.id}?token=${encodeURIComponent(result.client_token)}`,
+        );
+      } else if (result.id) {
+        setStatusPath(`/solicitud/${result.id}`);
+      }
       setSubmitted(true);
     } catch (err) {
       if (err instanceof PublicRequestError) {
@@ -170,6 +198,26 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
                 {t("profile.quote_success_desc", { name: businessName })}
               </p>
             </div>
+            {statusPath && (
+              <div
+                className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-1.5"
+                data-testid="lead-status-link"
+              >
+                <p className="text-xs font-semibold text-text">
+                  {t("profile.quote_success_status_link")}
+                </p>
+                <p className="text-xs text-text-secondary">
+                  {t("profile.quote_success_status_hint")}
+                </p>
+                <Link
+                  to={statusPath}
+                  className="inline-block text-xs font-semibold text-primary hover:underline break-all"
+                  data-testid="lead-status-url"
+                >
+                  {statusPath}
+                </Link>
+              </div>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -206,6 +254,23 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Honeypot — visually hidden; do not label for users */}
+              <div
+                aria-hidden="true"
+                className="absolute -left-[9999px] h-0 w-0 overflow-hidden opacity-0"
+                style={{ position: "absolute", left: "-9999px", height: 0, width: 0, overflow: "hidden" }}
+              >
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  data-testid="lead-honeypot"
+                />
+              </div>
+
               {/* Email (obligatorio) + name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
