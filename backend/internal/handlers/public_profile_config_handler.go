@@ -48,6 +48,8 @@ type PublicProfileConfigHandler struct {
 	slugUpdater configSlugUpdater
 	geocoder    geocoderPort
 	frontendURL string
+	// analytics is optional (#1131); nil → GetInboundAnalytics returns 501.
+	analytics inboundAnalyticsStore
 	// defaultProfile builds the response shape returned when the organizer has
 	// no profile row yet. Overridable for tests; production uses the package
 	// default which mirrors the DB defaults.
@@ -85,6 +87,7 @@ func NewPublicProfileConfigHandler(
 		slugUpdater:    userRepo, // *UserRepo implements configSlugUpdater
 		geocoder:       geocoder,
 		frontendURL:    strings.TrimSuffix(frontendURL, "/"),
+		analytics:      profileRepo, // *PublicProfileRepo implements inbound analytics
 		defaultProfile: defaultPublicProfile,
 	}
 }

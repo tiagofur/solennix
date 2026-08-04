@@ -263,6 +263,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Delete("/users/me", authHandler.DeleteOwnAccount)
 		r.Get("/users/me/public-profile", publicProfileConfigHandler.GetMyPublicProfile)
 		r.Put("/users/me/public-profile", publicProfileConfigHandler.UpsertMyPublicProfile)
+		// Inbound analytics for the organizer (#1131).
+		r.Get("/users/me/inbound-analytics", publicProfileConfigHandler.GetInboundAnalytics)
 		r.Get("/users/me/public-profile/services", publicProfileServicesHandler.ListMyPublicProfileServices)
 		r.Put("/users/me/public-profile/services", publicProfileServicesHandler.SetMyPublicProfileServices)
 		r.Get("/users/me/public-profile/portfolio", publicProfilePortfolioHandler.ListPortfolioItems)

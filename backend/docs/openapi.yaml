@@ -2702,6 +2702,57 @@ components:
           type: integer
         total_pages:
           type: integer
+    InboundDayCount:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        count:
+          type: integer
+    InboundAnalytics:
+      type: object
+      description: Aggregated inbound funnel metrics for an organizer (#1131).
+      properties:
+        period_days:
+          type: integer
+        views:
+          type: integer
+        unique_visitors:
+          type: integer
+        previous_views:
+          type: integer
+        views_change_pct:
+          type: number
+          format: double
+          nullable: true
+        requests:
+          type: integer
+        responded:
+          type: integer
+        response_rate:
+          type: number
+          format: double
+        converted:
+          type: integer
+        conversion_rate:
+          type: number
+          format: double
+        requests_by_status:
+          type: object
+          additionalProperties:
+            type: integer
+        sources:
+          type: object
+          additionalProperties:
+            type: integer
+        views_by_day:
+          type: array
+          items:
+            $ref: "#/components/schemas/InboundDayCount"
+        limited:
+          type: boolean
+          description: True when Free plan teaser (views only).
     SubmitPublicLeadRequest:
       type: object
       required:
@@ -6809,6 +6860,38 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "429":
           description: Rate limit exceeded
+  /api/users/me/inbound-analytics:
+    get:
+      operationId: getMyInboundAnalytics
+      summary: Inbound analytics for the authenticated organizer (v2.0 #1131)
+      description: >
+        Aggregated public profile views + PublicRequest funnel for the selected
+        period (7, 30, or 90 days). Free plans receive a teaser (views only,
+        limited=true). Pro+ receive full funnel metrics. Views are privacy-safe
+        (hashed visitor id, no PII).
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            enum: [7, 30, 90]
+            default: 30
+      responses:
+        "200":
+          description: Inbound analytics payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/InboundAnalytics"
+        "401":
+          description: Unauthorized
+        "501":
+          description: Analytics not configured
+        "500":
+          description: Failed to load analytics
   /api/users/me/public-profile:
     get:
       operationId: getMyPublicProfile
