@@ -30,6 +30,8 @@
       "plans_title": "Plan Distribution",
       "signups_title": "New Signups",
       "subscriptions_title": "Subscriptions",
+      "dau_series_title": "DAU (30 days)",
+      "visitor_series_title": "Public profile views (30 days)",
       "no_data": "No data available",
       "loading": "Loading...",
       "today": "Today",

@@ -256,6 +256,92 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Engagement + visitor analytics (slice 1) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <p className="text-xs text-text-secondary uppercase tracking-wide">{t("admin:dashboard.stats.dau")}</p>
+          <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.dau ?? 0)}</p>
+          <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.dau_help")}</p>
+        </div>
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <p className="text-xs text-text-secondary uppercase tracking-wide">{t("admin:dashboard.stats.wau")}</p>
+          <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.wau ?? 0)}</p>
+          <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.wau_help")}</p>
+        </div>
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <p className="text-xs text-text-secondary uppercase tracking-wide">{t("admin:dashboard.stats.mau")}</p>
+          <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.mau ?? 0)}</p>
+          <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.mau_help")}</p>
+        </div>
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <p className="text-xs text-text-secondary uppercase tracking-wide">{t("admin:dashboard.stats.visitor_views")}</p>
+          <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.visitor_views_last_30d ?? 0)}</p>
+          <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.visitor_help")}</p>
+        </div>
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm col-span-2 md:col-span-1">
+          <p className="text-xs text-text-secondary uppercase tracking-wide">{t("admin:dashboard.stats.visitor_unique")}</p>
+          <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.visitor_unique_last_30d ?? 0)}</p>
+          <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.visitor_help")}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
+          <h3 className="text-base font-semibold text-text mb-4">
+            {t("admin:dashboard.charts.dau_series_title")}
+          </h3>
+          <div className="h-56">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
+              </div>
+            ) : (stats?.dau_by_day?.length ?? 0) > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <BarChart data={stats?.dau_by_day?.map((d) => ({ name: d.date.slice(5), value: d.count })) ?? []}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                  <XAxis dataKey="name" tick={{ fill: "var(--color-text-tertiary)", fontSize: 10 }} interval="preserveStartEnd" />
+                  <YAxis allowDecimals={false} tick={{ fill: "var(--color-text-tertiary)", fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="var(--color-primary)" radius={[4, 4, 0, 0]} name="DAU" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-secondary text-sm">
+                {t("admin:dashboard.charts.no_data")}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
+          <h3 className="text-base font-semibold text-text mb-4">
+            {t("admin:dashboard.charts.visitor_series_title")}
+          </h3>
+          <div className="h-56">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
+              </div>
+            ) : (stats?.visitor_views_by_day?.length ?? 0) > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <BarChart
+                  data={stats?.visitor_views_by_day?.map((d) => ({ name: d.date.slice(5), value: d.count })) ?? []}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                  <XAxis dataKey="name" tick={{ fill: "var(--color-text-tertiary)", fontSize: 10 }} interval="preserveStartEnd" />
+                  <YAxis allowDecimals={false} tick={{ fill: "var(--color-text-tertiary)", fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="var(--color-info)" radius={[4, 4, 0, 0]} name="Views" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-secondary text-sm">
+                {t("admin:dashboard.charts.no_data")}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Total Usuarios */}

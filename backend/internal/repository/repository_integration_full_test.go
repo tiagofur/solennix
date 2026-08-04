@@ -555,6 +555,52 @@ func TestAdminRepoGetPlatformStats(t *testing.T) {
 	if stats.NewUsersToday < 1 {
 		t.Fatalf("GetPlatformStats() NewUsersToday = %d, want >= 1", stats.NewUsersToday)
 	}
+	if len(stats.DauByDay) != 30 {
+		t.Fatalf("GetPlatformStats() DauByDay len = %d, want 30", len(stats.DauByDay))
+	}
+	if len(stats.VisitorViewsByDay) != 30 {
+		t.Fatalf("GetPlatformStats() VisitorViewsByDay len = %d, want 30", len(stats.VisitorViewsByDay))
+	}
+	// Seed a profile view + activity day to exercise aggregates.
+	if _, err := pool.Exec(context.Background(), `
+		INSERT INTO public_profile_views (organizer_user_id, slug, visitor_hash, source, viewed_at)
+		VALUES ($1, 'stats-slug', 'hash-abc', 'direct', NOW())`, userID); err != nil {
+		t.Fatalf("seed profile view: %v", err)
+	}
+	if _, err := pool.Exec(context.Background(), `
+		INSERT INTO user_activity_days (user_id, activity_date, platform)
+		VALUES ($1, (NOW() AT TIME ZONE 'UTC')::date, 'web')
+		ON CONFLICT DO NOTHING`, userID); err != nil {
+		t.Fatalf("seed activity day: %v", err)
+	}
+	if _, err := pool.Exec(context.Background(), `
+		UPDATE users SET last_active_at = NOW() WHERE id = $1`, userID); err != nil {
+		t.Fatalf("set last_active_at: %v", err)
+	}
+	stats2, err := repo.GetPlatformStats(context.Background())
+	if err != nil {
+		t.Fatalf("GetPlatformStats() second call error = %v", err)
+	}
+	if stats2.VisitorViewsLast30d < 1 {
+		t.Fatalf("VisitorViewsLast30d = %d, want >= 1", stats2.VisitorViewsLast30d)
+	}
+	if stats2.VisitorUniqueLast30d < 1 {
+		t.Fatalf("VisitorUniqueLast30d = %d, want >= 1", stats2.VisitorUniqueLast30d)
+	}
+	if stats2.DAU < 1 {
+		t.Fatalf("DAU = %d, want >= 1", stats2.DAU)
+	}
+	today := time.Now().UTC().Format("2006-01-02")
+	foundDau := false
+	for _, d := range stats2.DauByDay {
+		if d.Date == today && d.Count >= 1 {
+			foundDau = true
+			break
+		}
+	}
+	if !foundDau {
+		t.Fatalf("DauByDay missing today count: %+v", stats2.DauByDay[len(stats2.DauByDay)-3:])
+	}
 	if stats.NewUsersWeek < 1 {
 		t.Fatalf("GetPlatformStats() NewUsersWeek = %d, want >= 1", stats.NewUsersWeek)
 	}

@@ -87,6 +87,23 @@ type PlatformStats struct {
 	RegistrationsByPlatform map[string]int `json:"registrations_by_platform"`
 	ActiveUsersByPlatform   map[string]int `json:"active_users_by_platform"`
 	InteractionsByPlatform  map[string]int `json:"interactions_by_platform"`
+
+	// Product analytics slice 1 — engagement + public visitor traffic.
+	DAU int `json:"dau"` // distinct end-users active today (UTC)
+	WAU int `json:"wau"` // last 7 days
+	MAU int `json:"mau"` // last 30 days
+	// DauByDay is last 30 UTC days (zeros filled). Source: user_activity_days.
+	DauByDay []AnalyticsDayCount `json:"dau_by_day"`
+	// Visitor* aggregates public_profile_views platform-wide (not per-organizer).
+	VisitorViewsLast30d  int                 `json:"visitor_views_last_30d"`
+	VisitorUniqueLast30d int                 `json:"visitor_unique_last_30d"`
+	VisitorViewsByDay    []AnalyticsDayCount `json:"visitor_views_by_day"`
+}
+
+// AnalyticsDayCount is one calendar day for admin time-series charts.
+type AnalyticsDayCount struct {
+	Date  string `json:"date"` // YYYY-MM-DD (UTC)
+	Count int    `json:"count"`
 }
 
 // AdminUser represents a user with usage stats for admin views.
@@ -300,6 +317,109 @@ func (r *AdminRepo) GetPlatformStats(ctx context.Context) (*PlatformStats, error
 	}
 	if err := rowsInteractions.Err(); err != nil {
 		return nil, fmt.Errorf("failed iterating interactions by platform: %w", err)
+	}
+
+	// --- Product analytics: DAU / WAU / MAU (end-users, active accounts) ---
+	utcToday := time.Now().UTC().Truncate(24 * time.Hour)
+	if err := r.pool.QueryRow(ctx, `
+		SELECT COUNT(*) FROM users
+		WHERE `+activeUserFilter+`
+		  AND last_active_at >= $1`, utcToday).Scan(&stats.DAU); err != nil {
+		return nil, fmt.Errorf("failed to count DAU: %w", err)
+	}
+	if err := r.pool.QueryRow(ctx, `
+		SELECT COUNT(*) FROM users
+		WHERE `+activeUserFilter+`
+		  AND last_active_at >= NOW() - INTERVAL '7 days'`).Scan(&stats.WAU); err != nil {
+		return nil, fmt.Errorf("failed to count WAU: %w", err)
+	}
+	if err := r.pool.QueryRow(ctx, `
+		SELECT COUNT(*) FROM users
+		WHERE `+activeUserFilter+`
+		  AND last_active_at >= NOW() - INTERVAL '30 days'`).Scan(&stats.MAU); err != nil {
+		return nil, fmt.Errorf("failed to count MAU: %w", err)
+	}
+
+	// DAU series from user_activity_days (distinct users per UTC day, any platform).
+	seriesStart := utcToday.AddDate(0, 0, -29)
+	seriesEnd := utcToday.AddDate(0, 0, 1) // exclusive
+	stats.DauByDay = make([]AnalyticsDayCount, 0, 30)
+	dauRows, err := r.pool.Query(ctx, `
+		SELECT to_char(d.activity_date, 'YYYY-MM-DD'), COUNT(DISTINCT d.user_id)::int
+		FROM user_activity_days d
+		JOIN users u ON u.id = d.user_id
+		WHERE d.activity_date >= $1::date
+		  AND d.activity_date < $2::date
+		  AND u.role = 'user'
+		  AND COALESCE(u.account_status, 'active') = 'active'
+		  AND u.deleted_at IS NULL
+		GROUP BY d.activity_date
+		ORDER BY d.activity_date ASC`,
+		seriesStart, seriesEnd,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query DAU by day: %w", err)
+	}
+	dauMap := map[string]int{}
+	for dauRows.Next() {
+		var d string
+		var c int
+		if err := dauRows.Scan(&d, &c); err != nil {
+			dauRows.Close()
+			return nil, fmt.Errorf("failed to scan DAU by day: %w", err)
+		}
+		dauMap[d] = c
+	}
+	dauRows.Close()
+	if err := dauRows.Err(); err != nil {
+		return nil, fmt.Errorf("failed iterating DAU by day: %w", err)
+	}
+	for d := seriesStart; d.Before(seriesEnd); d = d.AddDate(0, 0, 1) {
+		key := d.Format("2006-01-02")
+		stats.DauByDay = append(stats.DauByDay, AnalyticsDayCount{Date: key, Count: dauMap[key]})
+	}
+
+	// Visitor public-profile views (platform-wide) last 30 days.
+	visitorStart := utcToday.AddDate(0, 0, -29)
+	visitorEnd := seriesEnd
+	if err := r.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int, COUNT(DISTINCT visitor_hash)::int
+		FROM public_profile_views
+		WHERE viewed_at >= $1 AND viewed_at < $2`,
+		visitorStart, visitorEnd,
+	).Scan(&stats.VisitorViewsLast30d, &stats.VisitorUniqueLast30d); err != nil {
+		return nil, fmt.Errorf("failed to count visitor views: %w", err)
+	}
+
+	stats.VisitorViewsByDay = make([]AnalyticsDayCount, 0, 30)
+	vRows, err := r.pool.Query(ctx, `
+		SELECT to_char(viewed_at::date, 'YYYY-MM-DD'), COUNT(*)::int
+		FROM public_profile_views
+		WHERE viewed_at >= $1 AND viewed_at < $2
+		GROUP BY viewed_at::date
+		ORDER BY 1 ASC`,
+		visitorStart, visitorEnd,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query visitor views by day: %w", err)
+	}
+	vMap := map[string]int{}
+	for vRows.Next() {
+		var d string
+		var c int
+		if err := vRows.Scan(&d, &c); err != nil {
+			vRows.Close()
+			return nil, fmt.Errorf("failed to scan visitor views by day: %w", err)
+		}
+		vMap[d] = c
+	}
+	vRows.Close()
+	if err := vRows.Err(); err != nil {
+		return nil, fmt.Errorf("failed iterating visitor views by day: %w", err)
+	}
+	for d := visitorStart; d.Before(visitorEnd); d = d.AddDate(0, 0, 1) {
+		key := d.Format("2006-01-02")
+		stats.VisitorViewsByDay = append(stats.VisitorViewsByDay, AnalyticsDayCount{Date: key, Count: vMap[key]})
 	}
 
 	return stats, nil
