@@ -20,7 +20,7 @@ function makeCard(overrides: Record<string, unknown> = {}) {
     primary_event_types: ["boda"],
     average_rating: 4.8,
     reviews_count: 23,
-    is_featured: true,
+    is_featured: false,
     response_time: "24h",
     ...overrides,
   };
@@ -66,6 +66,44 @@ describe("ProveedoresPage", () => {
     expect(screen.getByTestId("budget-select")).toBeInTheDocument();
     expect(screen.getByTestId("service-category-select")).toBeInTheDocument();
     expect(screen.getByTestId("available-on-input")).toBeInTheDocument();
+  });
+
+  it("shows featured strip when Business cards are present (#1129)", async () => {
+    server.use(
+      http.get(`${API_BASE}/public/organizers`, () =>
+        HttpResponse.json(
+          makeResponse(
+            [
+              makeCard({ slug: "biz-1", business_name: "Biz One", is_featured: true }),
+              makeCard({ slug: "pro-1", business_name: "Pro One", is_featured: false }),
+            ],
+            2,
+          ),
+        ),
+      ),
+    );
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByTestId("featured-strip")).toBeInTheDocument();
+    });
+    expect(screen.getByText(/proveedores destacados/i)).toBeInTheDocument();
+    // Featured appears in strip and still in full results (not removed).
+    expect(screen.getAllByText("Biz One").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("hides featured strip when no Business cards", async () => {
+    server.use(
+      http.get(`${API_BASE}/public/organizers`, () =>
+        HttpResponse.json(
+          makeResponse([makeCard({ is_featured: false, business_name: "Only Pro" })], 1),
+        ),
+      ),
+    );
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText("Only Pro")).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId("featured-strip")).not.toBeInTheDocument();
   });
 
   it("renders results grid on successful search", async () => {

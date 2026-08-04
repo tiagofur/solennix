@@ -537,14 +537,31 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 		n += 3
 	}
 
-	// Ranking. Default relevance = plan-featured → rating → reviews → recency.
-	// sort=rating/recent/distance override the order column.
-	orderClause := "ORDER BY (u.plan = 'business') DESC NULLS LAST, avg_rating DESC NULLS LAST, review_count DESC NULLS LAST, u.updated_at DESC"
+	// Ranking (#1129). Default relevance:
+	// 1) Business featured first (monetization driver — plan gating server-side)
+	// 2) Bayesian-ish score: avg_rating * ln(reviews+2) so mid rating + many
+	//    reviews ranks above high rating + few reviews
+	// 3) recency of profile update
+	// Featured never hides non-featured; it only reorders.
+	// sort=rating/recent ignore plan boost; sort=distance keeps Business first
+	// then proximity (featured within geo results still lead).
+	//
+	// NOTE: Postgres cannot use SELECT aliases inside expressions in ORDER BY
+	// (COALESCE(avg_rating, 0) fails with "column does not exist"). Repeat the
+	// aggregate expressions that define avg_rating / review_count.
+	const featuredFirst = "(u.plan = 'business') DESC NULLS LAST"
+	const avgRatingExpr = `CASE WHEN u.plan IN ('pro', 'business', 'premium') THEN AVG(er.rating)::float8 ELSE NULL END`
+	const reviewCountExpr = `CASE WHEN u.plan IN ('pro', 'business', 'premium') THEN COUNT(er.id)::int ELSE 0 END`
+	const relevanceScore = `(COALESCE(` + avgRatingExpr + `, 0) * LN(GREATEST(` + reviewCountExpr + `, 0) + 2)) DESC NULLS LAST`
+	orderClause := fmt.Sprintf(
+		"ORDER BY %s, %s, (%s) DESC NULLS LAST, u.updated_at DESC",
+		featuredFirst, relevanceScore, reviewCountExpr,
+	)
 	switch f.SortBy {
 	case "rating":
-		orderClause = "ORDER BY avg_rating DESC NULLS LAST, review_count DESC NULLS LAST"
+		orderClause = fmt.Sprintf("ORDER BY (%s) DESC NULLS LAST, (%s) DESC NULLS LAST", avgRatingExpr, reviewCountExpr)
 		if f.Order == "asc" {
-			orderClause = "ORDER BY avg_rating ASC NULLS LAST, review_count ASC NULLS LAST"
+			orderClause = fmt.Sprintf("ORDER BY (%s) ASC NULLS LAST, (%s) ASC NULLS LAST", avgRatingExpr, reviewCountExpr)
 		}
 	case "recent":
 		orderClause = "ORDER BY u.updated_at DESC"
@@ -556,8 +573,8 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 		// Requires visitor coords; if absent, falls back to relevance.
 		if f.Lat != nil && f.Lng != nil {
 			orderClause = fmt.Sprintf(
-				"ORDER BY POWER(opp.latitude - %f, 2) + POWER(opp.longitude - %f, 2) ASC NULLS LAST",
-				visitorLat, visitorLng)
+				"ORDER BY %s, POWER(opp.latitude - %f, 2) + POWER(opp.longitude - %f, 2) ASC NULLS LAST",
+				featuredFirst, visitorLat, visitorLng)
 		}
 	}
 

@@ -587,6 +587,12 @@
       "no_rating": "No reviews",
       "no_city": "Location not provided"
     },
+    "featured": {
+      "title": "Featured providers",
+      "title_city": "Featured in {{city}}",
+      "subtitle": "Business plans with priority visibility in the directory",
+      "all_results": "All results"
+    },
     "empty": {
       "title": "No results",
       "message": "We couldn't find providers with those filters.",
