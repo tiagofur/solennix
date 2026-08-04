@@ -766,8 +766,16 @@ export const AdminDashboard: React.FC = () => {
         {/* Platform Usage Intensity */}
         <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
           <h3 className="text-base font-semibold text-text mb-4">
-            {t("admin:dashboard.charts.platform_intensity_title", { defaultValue: "Intensidad de Uso (Clics / Usuario)" })}
+            {t("admin:dashboard.charts.platform_intensity_title", {
+              defaultValue: "Requests API / usuario activo (30d)",
+            })}
           </h3>
+          <p className="text-xs text-text-tertiary mb-3">
+            {t("admin:dashboard.charts.platform_intensity_hint", {
+              defaultValue:
+                "Promedio de requests HTTP autenticados (no clics de UI) entre usuarios activos en 30 días.",
+            })}
+          </p>
           <div className="h-56">
             {loading ? (
               <div className="h-full flex items-center justify-center">
@@ -795,7 +803,15 @@ export const AdminDashboard: React.FC = () => {
                       boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
                     }}
                   />
-                  <Bar dataKey="intensity" fill="var(--color-primary)" radius={[8, 8, 0, 0]} barSize={48} name="Clics Promedio" />
+                  <Bar
+                    dataKey="intensity"
+                    fill="var(--color-primary)"
+                    radius={[8, 8, 0, 0]}
+                    barSize={48}
+                    name={t("admin:dashboard.charts.platform_intensity_bar", {
+                      defaultValue: "Requests / usuario activo",
+                    })}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             ) : (

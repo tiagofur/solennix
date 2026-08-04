@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
@@ -132,28 +133,30 @@ type SubscriptionOverview struct {
 func (r *AdminRepo) GetPlatformStats(ctx context.Context) (*PlatformStats, error) {
 	stats := &PlatformStats{}
 
-	// Users by plan (end-user accounts only, excludes internal collaborator roles).
-	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user'`).Scan(&stats.TotalUsers)
+	// Users by plan: end-user accounts only, active & not soft-deleted.
+	const activeUserFilter = `role = 'user' AND COALESCE(account_status, 'active') = 'active' AND deleted_at IS NULL`
+
+	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE `+activeUserFilter).Scan(&stats.TotalUsers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND plan = 'basic'`).Scan(&stats.BasicUsers)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE `+activeUserFilter+` AND plan = 'basic'`).Scan(&stats.BasicUsers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count basic users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND plan = 'pro'`).Scan(&stats.ProUsers)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE `+activeUserFilter+` AND plan = 'pro'`).Scan(&stats.ProUsers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count pro users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND plan = 'business'`).Scan(&stats.BusinessUsers)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE `+activeUserFilter+` AND plan = 'business'`).Scan(&stats.BusinessUsers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count business users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND plan = 'premium'`).Scan(&stats.PremiumUsers)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE `+activeUserFilter+` AND plan = 'premium'`).Scan(&stats.PremiumUsers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count premium users: %w", err)
 	}
@@ -180,17 +183,17 @@ func (r *AdminRepo) GetPlatformStats(ctx context.Context) (*PlatformStats, error
 	weekStart := todayStart.AddDate(0, 0, -7)
 	monthStart := todayStart.AddDate(0, -1, 0)
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND created_at >= $1`, todayStart).Scan(&stats.NewUsersToday)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE `+activeUserFilter+` AND created_at >= $1`, todayStart).Scan(&stats.NewUsersToday)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count today's users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND created_at >= $1`, weekStart).Scan(&stats.NewUsersWeek)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE `+activeUserFilter+` AND created_at >= $1`, weekStart).Scan(&stats.NewUsersWeek)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count week's users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND created_at >= $1`, monthStart).Scan(&stats.NewUsersMonth)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE `+activeUserFilter+` AND created_at >= $1`, monthStart).Scan(&stats.NewUsersMonth)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count month's users: %w", err)
 	}
@@ -205,57 +208,85 @@ func (r *AdminRepo) GetPlatformStats(ctx context.Context) (*PlatformStats, error
 		return nil, fmt.Errorf("failed to count active subs: %w", err)
 	}
 
-	// Registrations by platform
+	// Registrations by platform (active, non-deleted users only).
 	stats.RegistrationsByPlatform = make(map[string]int)
 	rowsRegs, err := r.pool.Query(ctx, `
-		SELECT COALESCE(registration_platform, 'unknown'), COUNT(*)
+		SELECT COALESCE(NULLIF(registration_platform, ''), 'unknown'), COUNT(*)
 		FROM users
 		WHERE role = 'user'
-		GROUP BY registration_platform`)
-	if err == nil {
-		defer rowsRegs.Close()
-		for rowsRegs.Next() {
-			var p string
-			var count int
-			if err := rowsRegs.Scan(&p, &count); err == nil {
-				stats.RegistrationsByPlatform[p] = count
-			}
+		  AND COALESCE(account_status, 'active') = 'active'
+		  AND deleted_at IS NULL
+		GROUP BY 1`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count registrations by platform: %w", err)
+	}
+	defer rowsRegs.Close()
+	for rowsRegs.Next() {
+		var p string
+		var count int
+		if err := rowsRegs.Scan(&p, &count); err != nil {
+			return nil, fmt.Errorf("failed to scan registrations by platform: %w", err)
 		}
+		stats.RegistrationsByPlatform[p] = count
+	}
+	if err := rowsRegs.Err(); err != nil {
+		return nil, fmt.Errorf("failed iterating registrations by platform: %w", err)
 	}
 
 	// Active users in last 30 days by platform
 	stats.ActiveUsersByPlatform = make(map[string]int)
 	rowsActive, err := r.pool.Query(ctx, `
-		SELECT platform, COUNT(DISTINCT user_id)
-		FROM user_platforms
-		WHERE last_used_at >= NOW() - INTERVAL '30 days'
-		GROUP BY platform`)
-	if err == nil {
-		defer rowsActive.Close()
-		for rowsActive.Next() {
-			var p string
-			var count int
-			if err := rowsActive.Scan(&p, &count); err == nil {
-				stats.ActiveUsersByPlatform[p] = count
-			}
+		SELECT up.platform, COUNT(DISTINCT up.user_id)
+		FROM user_platforms up
+		JOIN users u ON u.id = up.user_id
+		WHERE up.last_used_at >= NOW() - INTERVAL '30 days'
+		  AND u.role = 'user'
+		  AND COALESCE(u.account_status, 'active') = 'active'
+		  AND u.deleted_at IS NULL
+		GROUP BY up.platform`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count active users by platform: %w", err)
+	}
+	defer rowsActive.Close()
+	for rowsActive.Next() {
+		var p string
+		var count int
+		if err := rowsActive.Scan(&p, &count); err != nil {
+			return nil, fmt.Errorf("failed to scan active users by platform: %w", err)
 		}
+		stats.ActiveUsersByPlatform[p] = count
+	}
+	if err := rowsActive.Err(); err != nil {
+		return nil, fmt.Errorf("failed iterating active users by platform: %w", err)
 	}
 
-	// Total interactions by platform
+	// Interactions for users active in the last 30 days (aligned with MAU window).
+	// interaction_count is cumulative, so this is "lifetime hits of 30d-active users",
+	// not pure 30d deltas — still better than all-time / 30d MAU mixing dead accounts.
 	stats.InteractionsByPlatform = make(map[string]int)
 	rowsInteractions, err := r.pool.Query(ctx, `
-		SELECT platform, SUM(interaction_count)
-		FROM user_platforms
-		GROUP BY platform`)
-	if err == nil {
-		defer rowsInteractions.Close()
-		for rowsInteractions.Next() {
-			var p string
-			var count int
-			if err := rowsInteractions.Scan(&p, &count); err == nil {
-				stats.InteractionsByPlatform[p] = count
-			}
+		SELECT up.platform, COALESCE(SUM(up.interaction_count), 0)
+		FROM user_platforms up
+		JOIN users u ON u.id = up.user_id
+		WHERE up.last_used_at >= NOW() - INTERVAL '30 days'
+		  AND u.role = 'user'
+		  AND COALESCE(u.account_status, 'active') = 'active'
+		  AND u.deleted_at IS NULL
+		GROUP BY up.platform`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sum interactions by platform: %w", err)
+	}
+	defer rowsInteractions.Close()
+	for rowsInteractions.Next() {
+		var p string
+		var count int
+		if err := rowsInteractions.Scan(&p, &count); err != nil {
+			return nil, fmt.Errorf("failed to scan interactions by platform: %w", err)
 		}
+		stats.InteractionsByPlatform[p] = count
+	}
+	if err := rowsInteractions.Err(); err != nil {
+		return nil, fmt.Errorf("failed iterating interactions by platform: %w", err)
 	}
 
 	return stats, nil
@@ -376,7 +407,10 @@ func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, 
 		&u.LastActiveAt, &u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
-		return nil, ErrAdminUserNotFound
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrAdminUserNotFound
+		}
+		return nil, fmt.Errorf("get admin user by id: %w", err)
 	}
 
 	u.PlatformActivity = []models.UserPlatform{}
@@ -388,15 +422,20 @@ func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, 
 		FROM user_platforms
 		WHERE user_id = $1
 		ORDER BY last_used_at DESC`, id)
-	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
-			var ap models.UserPlatform
-			if err := rows.Scan(&ap.UserID, &ap.Platform, &ap.InteractionCount, &ap.LastUsedAt); err == nil {
-				u.PlatformActivity = append(u.PlatformActivity, ap)
-				u.ActivePlatforms = append(u.ActivePlatforms, ap.Platform)
-			}
+	if err != nil {
+		return nil, fmt.Errorf("list user platforms: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var ap models.UserPlatform
+		if err := rows.Scan(&ap.UserID, &ap.Platform, &ap.InteractionCount, &ap.LastUsedAt); err != nil {
+			return nil, fmt.Errorf("scan user platform: %w", err)
 		}
+		u.PlatformActivity = append(u.PlatformActivity, ap)
+		u.ActivePlatforms = append(u.ActivePlatforms, ap.Platform)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate user platforms: %w", err)
 	}
 
 	return &u, nil
@@ -622,9 +661,8 @@ func (r *AdminRepo) GetInactiveUsers(ctx context.Context, days int) ([]AdminUser
 			u.last_active_at, u.created_at, u.updated_at
 		FROM users u
 		WHERE u.role = 'user'
-		  AND u.last_active_at IS NOT NULL
-		  AND u.last_active_at < NOW() - $1 * INTERVAL '1 day'
-		ORDER BY u.last_active_at ASC`
+		  AND COALESCE(u.last_active_at, u.created_at) < NOW() - $1 * INTERVAL '1 day'
+		ORDER BY COALESCE(u.last_active_at, u.created_at) ASC`
 
 	rows, err := r.pool.Query(ctx, query, days)
 	if err != nil {

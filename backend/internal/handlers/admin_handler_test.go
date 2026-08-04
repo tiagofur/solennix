@@ -213,7 +213,27 @@ func TestAdminHandler_GetUser(t *testing.T) {
 		assert.Contains(t, w.Body.String(), "Invalid user ID")
 	})
 
-	t.Run("repo error (not found)", func(t *testing.T) {
+	t.Run("user not found", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		userID := uuid.New()
+		repo.On("GetUserByID", mock.Anything, userID).Return(nil, repository.ErrAdminUserNotFound)
+
+		req := httptest.NewRequest("GET", "/api/admin/users/"+userID.String(), nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", userID.String())
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+		w := httptest.NewRecorder()
+
+		handler.GetUser(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		assert.Contains(t, w.Body.String(), "User not found")
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("repo infra error returns 503", func(t *testing.T) {
 		repo := new(MockAdminRepo)
 		handler := NewAdminHandler(repo)
 
@@ -228,8 +248,8 @@ func TestAdminHandler_GetUser(t *testing.T) {
 
 		handler.GetUser(w, req)
 
-		assert.Equal(t, http.StatusNotFound, w.Code)
-		assert.Contains(t, w.Body.String(), "User not found")
+		assert.Equal(t, http.StatusServiceUnavailable, w.Code)
+		assert.Contains(t, w.Body.String(), "temporarily unavailable")
 		repo.AssertExpectations(t)
 	})
 }

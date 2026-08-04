@@ -209,6 +209,27 @@ func (b *ActivityBuffer) Flush() map[uuid.UUID]map[string]int {
 	return flushed
 }
 
+// Requeue merges previously flushed counts back into the buffer after a failed
+// Upsert. Concurrent Increments that landed after Flush are preserved.
+func (b *ActivityBuffer) Requeue(batch map[uuid.UUID]map[string]int) {
+	if len(batch) == 0 {
+		return
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.data == nil {
+		b.data = make(map[uuid.UUID]map[string]int)
+	}
+	for userID, platforms := range batch {
+		if _, exists := b.data[userID]; !exists {
+			b.data[userID] = make(map[string]int)
+		}
+		for platform, count := range platforms {
+			b.data[userID][platform] += count
+		}
+	}
+}
+
 var (
 	activityBuf *ActivityBuffer
 	bufOnce     sync.Once
@@ -274,6 +295,8 @@ func flushData(repo interface {
 
 	if err := repo.UpsertUserPlatforms(ctx, records); err != nil {
 		slog.Error("failed to flush user platform activity metrics", "error", err)
+		// Put counts back so the next tick can retry instead of dropping traffic.
+		buffer.Requeue(data)
 	}
 }
 
@@ -318,6 +341,11 @@ func ActivityTracker(repo ActivityTrackerRepo) func(http.Handler) http.Handler {
 							})
 							cached = true
 						}
+						// If GetByID failed (transient DB), skip metrics for this request —
+						// do not fall through to uncached increment (would pollute stats).
+					} else {
+						// Mock repos without GetByID: still count activity for unit tests.
+						GetActivityBuffer().Increment(userID, platform)
 					}
 				}
 
@@ -343,9 +371,6 @@ func ActivityTracker(repo ActivityTrackerRepo) func(http.Handler) http.Handler {
 							}()
 						}
 					}
-				} else {
-					// Safe fallback for tests / mock repos that do not implement user fetching
-					GetActivityBuffer().Increment(userID, platform)
 				}
 
 				go func() {

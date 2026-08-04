@@ -1064,7 +1064,7 @@ export const AdminUsers: React.FC = () => {
                             )}
                             <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-text-secondary">
                               <span className="bg-surface-alt border border-border px-1 py-0.5 rounded text-text-tertiary">
-                                Reg: <span className="font-semibold text-text uppercase">{user.registration_platform || 'web'}</span>
+                                Reg: <span className="font-semibold text-text uppercase">{user.registration_platform || 'unknown'}</span>
                               </span>
                               <div className="flex items-center gap-1.5" title="Plataformas con uso registrado">
                                 {(user.active_platforms?.includes('web') || user.platform_activity?.some((p: any) => p.platform === 'web')) && (

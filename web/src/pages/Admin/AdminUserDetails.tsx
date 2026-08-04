@@ -187,7 +187,7 @@ export const AdminUserDetails: React.FC = () => {
                 <div className="flex items-center gap-1.5 mt-1 text-xs text-text-secondary">
                   <span className="font-semibold">{t('admin:users.details.registered_via', { defaultValue: 'Registro:' })}</span>
                   <span className="bg-surface border border-border px-1.5 py-0.5 rounded text-text font-bold uppercase tracking-wider text-[10px]">
-                    {user.registration_platform || 'web'}
+                    {user.registration_platform || 'unknown'}
                   </span>
                 </div>
               </div>
@@ -196,7 +196,11 @@ export const AdminUserDetails: React.FC = () => {
               <div className="flex items-center gap-2 text-sm text-text-secondary">
                 <span className="font-semibold text-text">{t('admin:users.details.plan_label')}</span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/25">
-                  {user.plan === 'premium' ? t('admin:users.filters.pro') : user.plan === 'pro' ? t('admin:users.filters.pro') : t('admin:users.filters.basic')}
+                  {user.plan === 'business'
+                    ? t('admin:users.filters.business')
+                    : user.plan === 'premium' || user.plan === 'pro'
+                      ? t('admin:users.filters.pro')
+                      : t('admin:users.filters.basic')}
                 </span>
                 {user.plan_expires_at && (
                   <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-warning/10 text-warning border border-warning/20">

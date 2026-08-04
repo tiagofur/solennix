@@ -130,8 +130,12 @@ func (h *AdminHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.adminRepo.GetUserByID(r.Context(), id)
 	if err != nil {
+		if errors.Is(err, repository.ErrAdminUserNotFound) {
+			writeError(w, http.StatusNotFound, "User not found")
+			return
+		}
 		slog.Error("admin: failed to get user", "error", err, "id", idStr)
-		writeError(w, http.StatusNotFound, "User not found")
+		writeError(w, http.StatusServiceUnavailable, "Service temporarily unavailable")
 		return
 	}
 
