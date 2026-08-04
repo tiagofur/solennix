@@ -53,7 +53,8 @@ import com.creapolis.solennix.feature.requests.viewmodel.RequestsInboxViewModel
 fun RequestDetailScreen(
     requestId: String,
     viewModel: RequestsInboxViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onOpenEvent: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -61,11 +62,19 @@ fun RequestDetailScreen(
     var showRespond by remember { mutableStateOf(false) }
     var showDecline by remember { mutableStateOf(false) }
     var amountText by remember { mutableStateOf("") }
+    var currencyText by remember { mutableStateOf("MXN") }
+    var validUntilText by remember { mutableStateOf(RequestsInboxViewModel.defaultValidUntil()) }
+    var inclusionsText by remember { mutableStateOf("") }
     var messageText by remember { mutableStateOf("") }
     var declineReason by remember { mutableStateOf("") }
 
     LaunchedEffect(requestId) {
         viewModel.loadDetail(requestId)
+    }
+    LaunchedEffect(uiState.convertedEventId) {
+        val eventId = uiState.convertedEventId ?: return@LaunchedEffect
+        viewModel.clearConvertedEventId()
+        onOpenEvent(eventId)
     }
     LaunchedEffect(uiState.actionSuccess) {
         uiState.actionSuccess?.let {
@@ -267,10 +276,31 @@ fun RequestDetailScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
+                        value = currencyText,
+                        onValueChange = { currencyText = it.uppercase() },
+                        label = { Text(stringResource(R.string.requests_respond_currency)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = validUntilText,
+                        onValueChange = { validUntilText = it },
+                        label = { Text(stringResource(R.string.requests_respond_valid_until)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = inclusionsText,
+                        onValueChange = { inclusionsText = it },
+                        label = { Text(stringResource(R.string.requests_respond_inclusions)) },
+                        minLines = 3,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
                         value = messageText,
                         onValueChange = { messageText = it },
                         label = { Text(stringResource(R.string.requests_respond_message)) },
-                        minLines = 3,
+                        minLines = 2,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -280,10 +310,17 @@ fun RequestDetailScreen(
                     onClick = {
                         val amount = amountText.replace(",", ".").toDoubleOrNull()
                         if (amount != null) {
+                            val inclusions = inclusionsText
+                                .lines()
+                                .map { it.trim() }
+                                .filter { it.isNotEmpty() }
                             viewModel.respond(
-                                requestId,
-                                amount,
-                                messageText.trim().ifBlank { null }
+                                id = requestId,
+                                amount = amount,
+                                currency = currencyText.trim().ifBlank { "MXN" },
+                                inclusions = inclusions,
+                                validUntil = validUntilText.trim().ifBlank { null },
+                                message = messageText.trim().ifBlank { null }
                             )
                         }
                     },

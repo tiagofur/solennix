@@ -45,7 +45,9 @@ data class RequestsInboxUiState(
     val isLoadingDetail: Boolean = false,
     val actionInFlight: Boolean = false,
     val actionError: String? = null,
-    val actionSuccess: String? = null
+    val actionSuccess: String? = null,
+    /** Set after convert-to-event succeeds so UI can navigate (#1125). */
+    val convertedEventId: String? = null
 )
 
 @HiltViewModel
@@ -192,13 +194,27 @@ class RequestsInboxViewModel @Inject constructor(
         }
     }
 
-    fun respond(id: String, amount: Double, message: String?) {
+    fun respond(
+        id: String,
+        amount: Double,
+        currency: String = "MXN",
+        inclusions: List<String> = emptyList(),
+        validUntil: String? = null,
+        message: String?
+    ) {
+        if (_uiState.value.actionInFlight) return
         viewModelScope.launch {
             _uiState.update { it.copy(actionInFlight = true, actionError = null) }
             try {
                 apiService.post<Map<String, PublicResponse>>(
                     "organizers/me/requests/$id/responses",
-                    RespondPublicRequestBody(quoteAmount = amount, message = message)
+                    RespondPublicRequestBody(
+                        quoteAmount = amount,
+                        currency = currency.ifBlank { "MXN" },
+                        inclusions = inclusions,
+                        validUntil = validUntil ?: defaultValidUntil(),
+                        message = message
+                    )
                 )
                 loadDetail(id)
                 refresh()
@@ -217,6 +233,7 @@ class RequestsInboxViewModel @Inject constructor(
     }
 
     fun requestInfo(id: String) {
+        if (_uiState.value.actionInFlight) return
         viewModelScope.launch {
             _uiState.update { it.copy(actionInFlight = true, actionError = null) }
             try {
@@ -238,6 +255,7 @@ class RequestsInboxViewModel @Inject constructor(
     }
 
     fun decline(id: String, reason: String?) {
+        if (_uiState.value.actionInFlight) return
         viewModelScope.launch {
             _uiState.update { it.copy(actionInFlight = true, actionError = null) }
             try {
@@ -261,11 +279,16 @@ class RequestsInboxViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Converts request to Event. On success sets [RequestsInboxUiState.convertedEventId]
+     * so the UI can navigate to event detail (#1125).
+     */
     fun convertToEvent(id: String) {
+        if (_uiState.value.actionInFlight) return
         viewModelScope.launch {
-            _uiState.update { it.copy(actionInFlight = true, actionError = null) }
+            _uiState.update { it.copy(actionInFlight = true, actionError = null, convertedEventId = null) }
             try {
-                apiService.post<ConvertEventEnvelope>(
+                val envelope = apiService.post<ConvertEventEnvelope>(
                     "organizers/me/requests/$id/convert-to-event",
                     EmptyJsonBody()
                 )
@@ -274,6 +297,7 @@ class RequestsInboxViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         actionInFlight = false,
+                        convertedEventId = envelope.data.eventId,
                         actionSuccess = if (isSpanish()) "Evento creado" else "Event created"
                     )
                 }
@@ -282,6 +306,21 @@ class RequestsInboxViewModel @Inject constructor(
                     it.copy(actionInFlight = false, actionError = e.message ?: "Error")
                 }
             }
+        }
+    }
+
+    fun clearConvertedEventId() {
+        _uiState.update { it.copy(convertedEventId = null) }
+    }
+
+    companion object {
+        fun defaultValidUntil(): String {
+            val cal = java.util.Calendar.getInstance()
+            cal.add(java.util.Calendar.DAY_OF_YEAR, 7)
+            val y = cal.get(java.util.Calendar.YEAR)
+            val m = cal.get(java.util.Calendar.MONTH) + 1
+            val d = cal.get(java.util.Calendar.DAY_OF_MONTH)
+            return "%04d-%02d-%02d".format(y, m, d)
         }
     }
 

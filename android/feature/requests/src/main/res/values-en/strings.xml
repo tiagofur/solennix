@@ -33,6 +33,9 @@
     <string name="requests_action_cancel">Cancel</string>
     <string name="requests_respond_title">Send quote</string>
     <string name="requests_respond_amount">Amount</string>
+    <string name="requests_respond_currency">Currency</string>
+    <string name="requests_respond_valid_until">Valid until (YYYY-MM-DD)</string>
+    <string name="requests_respond_inclusions">Includes (one per line)</string>
     <string name="requests_respond_message">Message (optional)</string>
     <string name="requests_decline_title">Decline request</string>
     <string name="requests_decline_reason">Reason (optional)</string>
