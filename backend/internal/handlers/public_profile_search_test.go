@@ -88,6 +88,53 @@ func TestSearchOrganizers_MapsAllFilters(t *testing.T) {
 	assert.Equal(t, 10, f.Offset) // page 3 × limit 5
 }
 
+func TestSearchOrganizers_MapsGeoParams(t *testing.T) {
+	repo := &fakeSearchRepo{}
+	h := newSearchHandler(repo)
+
+	req := httptest.NewRequest(http.MethodGet,
+		"/api/public/organizers?lat=19.4326&lng=-99.1332&radius_km=25&sort=distance", nil)
+	w := httptest.NewRecorder()
+	h.SearchOrganizers(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	f := repo.captured
+	require.NotNil(t, f.Lat)
+	require.NotNil(t, f.Lng)
+	require.NotNil(t, f.RadiusKm)
+	assert.InDelta(t, 19.4326, *f.Lat, 0.0001)
+	assert.InDelta(t, -99.1332, *f.Lng, 0.0001)
+	assert.InDelta(t, 25, *f.RadiusKm, 0.001)
+	assert.Equal(t, "distance", f.SortBy)
+}
+
+func TestSearchOrganizers_GeoIgnoresLatWithoutLng(t *testing.T) {
+	repo := &fakeSearchRepo{}
+	h := newSearchHandler(repo)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/public/organizers?lat=19.4&sort=distance", nil)
+	w := httptest.NewRecorder()
+	h.SearchOrganizers(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Nil(t, repo.captured.Lat)
+	assert.Nil(t, repo.captured.Lng)
+	assert.Nil(t, repo.captured.RadiusKm)
+}
+
+func TestSearchOrganizers_GeoIgnoresInvalidNumbers(t *testing.T) {
+	repo := &fakeSearchRepo{}
+	h := newSearchHandler(repo)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/public/organizers?lat=abc&lng=-99.1", nil)
+	w := httptest.NewRecorder()
+	h.SearchOrganizers(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Nil(t, repo.captured.Lat)
+	assert.Nil(t, repo.captured.Lng)
+}
+
 func TestSearchOrganizers_RepoError_Returns500(t *testing.T) {
 	repo := &fakeSearchRepo{err: errors.New("db down")}
 	h := newSearchHandler(repo)
