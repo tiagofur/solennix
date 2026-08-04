@@ -29,6 +29,8 @@
     <string name="nav_staff_rates">Collaborators and rates</string>
     <string name="nav_payment_receipts">Payment receipts</string>
     <string name="nav_review_client_submissions">Review client submissions</string>
+    <string name="nav_public_requests">Requests</string>
+    <string name="nav_public_requests_subtitle">Visitor quote requests</string>
     <string name="nav_reviews">Reviews</string>
     <string name="nav_reviews_subtitle">Client opinions</string>
     

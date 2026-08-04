@@ -84,6 +84,8 @@ fun parseAppDeepLinkRoute(
                 "quick_quote?clientId=${encodeQueryValue(clientId)}"
             }
         }
+        // #1123 / #1124 — public quote request inbox deep links
+        "requests" -> if (pathId.isNullOrBlank()) "requests_inbox" else "request_detail/$pathId"
         else -> null
     }
 }
