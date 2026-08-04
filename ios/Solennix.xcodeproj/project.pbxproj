@@ -136,7 +136,7 @@
 		F3CB350892669F4A6DBD712A /* SolennixProducts.storekit in Resources */ = {isa = PBXBuildFile; fileRef = C2D2D2FC95DE89E91CACFC96 /* SolennixProducts.storekit */; };
 		F3F65218047577356DF47D00 /* WidgetStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA766757943BD31DF24D4FB4 /* WidgetStateView.swift */; };
 		F7F57BF451ABC276348AEF96 /* PaginatedResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA149AF02100DB28164D3150 /* PaginatedResponseTests.swift */; };
-		F7FEE0E325354FC58B15BE19 /* EventFormLinksLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD1B67C3C6CA27A85EEBA99 /* EventFormLinksLocalizationTests.swift */; };
+		F7FEE0E325354FC58B15BE19 /* RequestLinksLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD1B67C3C6CA27A85EEBA99 /* RequestLinksLocalizationTests.swift */; };
 		FA21F9C37384204F97FE19A2 /* DashboardFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE9496EB7FCC0E14B7EB9B7E /* DashboardFormattingTests.swift */; };
 		FAC3704EE0586DE8CCB614D8 /* EventModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0832D220C2F81D77AA578D8A /* EventModelsTests.swift */; };
 		FAF34E5DE8553C59E4AA2E81 /* CachedModelConversionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C86D0D98819337D4F48773A9 /* CachedModelConversionTests.swift */; };
@@ -244,7 +244,7 @@
 		580AA1774790AC2E21AD5C3E /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		5A4C956999D89DE134DCD33B /* FeatureL10nPluralTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureL10nPluralTests.swift; sourceTree = "<group>"; };
 		5CCE1DA7E02AFAE5F7B0C74A /* EventLinkModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLinkModelsTests.swift; sourceTree = "<group>"; };
-		5CD1B67C3C6CA27A85EEBA99 /* EventFormLinksLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventFormLinksLocalizationTests.swift; sourceTree = "<group>"; };
+		5CD1B67C3C6CA27A85EEBA99 /* RequestLinksLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestLinksLocalizationTests.swift; sourceTree = "<group>"; };
 		5D001B8A6327B9C6BA4D5A99 /* TabMetadataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabMetadataTests.swift; sourceTree = "<group>"; };
 		5E4DB82EC9A6C6C52AFD8046 /* LockScreenWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenWidget.swift; sourceTree = "<group>"; };
 		5F34A685767D81C0E207E6AA /* MoreMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreMenuView.swift; sourceTree = "<group>"; };
@@ -506,7 +506,7 @@
 				5054F0E404CECD94D5873458 /* EventDetailDocumentExportTests.swift */,
 				1A61288722D88853A7E4E119 /* EventDetailViewModelTests.swift */,
 				72F41ABD56C3074AEF875CB1 /* EventDomainModelTests.swift */,
-				5CD1B67C3C6CA27A85EEBA99 /* EventFormLinksLocalizationTests.swift */,
+				5CD1B67C3C6CA27A85EEBA99 /* RequestLinksLocalizationTests.swift */,
 				E033A59BDB4A0530E9D508EC /* EventFormViewModelFinancialsEquivalenceTests.swift */,
 				779532BAB0AEE0D99C660F11 /* EventFormViewModelUnavailableDateTests.swift */,
 				7A8AB395AD1DA8AD3E22ACAF /* EventItemSuggestionsModelsTests.swift */,
@@ -1001,7 +1001,7 @@
 				72307E115EC8C543E3ACBCF5 /* EventDetailDocumentExportTests.swift in Sources */,
 				D46A28C054FF61B55E6CA9B9 /* EventDetailViewModelTests.swift in Sources */,
 				AEA3E0C10AF444C3D241F6FF /* EventDomainModelTests.swift in Sources */,
-				F7FEE0E325354FC58B15BE19 /* EventFormLinksLocalizationTests.swift in Sources */,
+				F7FEE0E325354FC58B15BE19 /* RequestLinksLocalizationTests.swift in Sources */,
 				4B1C3000754C88BDAEF56758 /* EventFormViewModelFinancialsEquivalenceTests.swift in Sources */,
 				E900574F74DABD55F756BDC7 /* EventFormViewModelUnavailableDateTests.swift in Sources */,
 				7AB9FC8932A1FEF1BB88BA5A /* EventItemSuggestionsModelsTests.swift in Sources */,

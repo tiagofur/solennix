@@ -96,4 +96,146 @@ enum RequestsStrings {
         case .expired: return statusExpired
         }
     }
+
+    // MARK: - Share links (Compartir link)
+
+    static var tabInbox: String { FeatureL10n.text("requests.tab.inbox", "Bandeja") }
+    static var tabLinks: String { FeatureL10n.text("requests.tab.links", "Links") }
+
+    static var linksTitle: String { FeatureL10n.text("requests.links.title", "Compartir link") }
+    static var linkGenerateAccessibility: String {
+        FeatureL10n.text("requests.links.accessibility.generate", "Generar link")
+    }
+    static var linkDeleteConfirmTitle: String {
+        FeatureL10n.text("requests.links.delete.confirm_title", "Eliminar link")
+    }
+    static var linkDeleteConfirmButton: String {
+        FeatureL10n.text("requests.links.delete.confirm_button", "Eliminar")
+    }
+    static var linkDeletedToast: String {
+        FeatureL10n.text("requests.links.toast.deleted", "Link eliminado")
+    }
+    static var linkErrorLoading: String {
+        FeatureL10n.text("requests.links.error.loading", "Error al cargar")
+    }
+    static var linkEmptyTitle: String {
+        FeatureL10n.text("requests.links.empty.title", "Sin links")
+    }
+    static var linkEmptyMessage: String {
+        FeatureL10n.text(
+            "requests.links.empty.message",
+            "Genera un link para que tus clientes envien una solicitud de evento."
+        )
+    }
+    static var linkEmptyAction: String {
+        FeatureL10n.text("requests.links.empty.action", "Generar link")
+    }
+    static var linkSwipeDelete: String { FeatureL10n.text("requests.links.swipe.delete", "Eliminar") }
+    static var linkSwipeCopy: String { FeatureL10n.text("requests.links.swipe.copy", "Copiar") }
+    static var linkSwipeShare: String { FeatureL10n.text("requests.links.swipe.share", "Compartir") }
+    static var linkContextCopy: String {
+        FeatureL10n.text("requests.links.context.copy", "Copiar Link")
+    }
+    static var linkLabelPlaceholder: String {
+        FeatureL10n.text("requests.links.label.placeholder", "Sin etiqueta")
+    }
+
+    static var linkStatusActive: String { FeatureL10n.text("requests.links.status.active", "Activo") }
+    static var linkStatusUsed: String { FeatureL10n.text("requests.links.status.used", "Usado") }
+    static var linkStatusExpired: String { FeatureL10n.text("requests.links.status.expired", "Expirado") }
+    static var linkStatusRevoked: String {
+        FeatureL10n.text("requests.links.status.revoked", "Revocado")
+    }
+
+    static var linkModeStandard: String {
+        FeatureL10n.text("requests.links.mode.standard", "Solo solicitud")
+    }
+    static var linkModeAutoQuote: String {
+        FeatureL10n.text("requests.links.mode.auto_quote", "Auto cotizacion")
+    }
+    static var linkModeAutoEvent: String {
+        FeatureL10n.text("requests.links.mode.auto_event", "Auto evento")
+    }
+
+    static var linkSheetLabelSection: String {
+        FeatureL10n.text("requests.links.sheet.label_section", "Etiqueta (opcional)")
+    }
+    static var linkSheetLabelPlaceholder: String {
+        FeatureL10n.text(
+            "requests.links.sheet.label_placeholder",
+            "Ej: Boda Rodriguez, Evento Mayo"
+        )
+    }
+    static var linkSheetTtlSection: String {
+        FeatureL10n.text("requests.links.sheet.ttl_section", "Vigencia del link")
+    }
+    static var linkSheetTtlLabel: String {
+        FeatureL10n.text("requests.links.sheet.ttl_label", "Dias de vigencia")
+    }
+    static var linkSheetMaxUsesSection: String {
+        FeatureL10n.text("requests.links.sheet.max_uses_section", "Usos maximos")
+    }
+    static var linkSheetMaxUsesPlaceholder: String {
+        FeatureL10n.text("requests.links.sheet.max_uses_placeholder", "Vacio = ilimitado")
+    }
+    static var linkSheetMaxUsesHint: String {
+        FeatureL10n.text(
+            "requests.links.sheet.max_uses_hint",
+            "Deja vacio para usos ilimitados hasta que expire."
+        )
+    }
+    static var linkSheetModeSection: String {
+        FeatureL10n.text("requests.links.sheet.mode_section", "Al enviar")
+    }
+    static var linkSheetModeLabel: String {
+        FeatureL10n.text("requests.links.sheet.mode_label", "Modo de envio")
+    }
+    static var linkSheetHint: String {
+        FeatureL10n.text(
+            "requests.links.sheet.hint",
+            "El cliente completa el formulario en el link. Por defecto se crea el evento automaticamente."
+        )
+    }
+    static var linkSheetTitle: String {
+        FeatureL10n.text("requests.links.sheet.title", "Generar Link")
+    }
+    static var linkSheetGenerateButton: String {
+        FeatureL10n.text("requests.links.sheet.generate_button", "Generar")
+    }
+
+    static var linkCopiedToast: String {
+        FeatureL10n.text("requests.links.toast.copied", "Link copiado")
+    }
+    static var linkErrorUnexpected: String {
+        FeatureL10n.text("requests.links.error.unexpected", "Ocurrio un error inesperado.")
+    }
+    static var linkErrorUnexpectedRetry: String {
+        FeatureL10n.text(
+            "requests.links.error.unexpected_retry",
+            "Ocurrio un error inesperado. Intenta de nuevo."
+        )
+    }
+
+    static func linkDeleteConfirmMessage(label: String) -> String {
+        FeatureL10n.format(
+            "requests.links.delete.confirm_message",
+            "Se eliminara el link \"%@\". Esta accion no se puede deshacer.",
+            label
+        )
+    }
+
+    static func linkExpiresLabel(date: String) -> String {
+        FeatureL10n.format("requests.links.status.expires_label", "Expira: %@", date)
+    }
+
+    static func linkUsesLabel(used: Int, max: Int) -> String {
+        FeatureL10n.format("requests.links.status.uses_label", "Usos: %lld / %lld", used, max)
+    }
+
+    static func linkTtlDaysLabel(_ count: Int) -> String {
+        if count == 1 {
+            return FeatureL10n.text("requests.links.sheet.ttl_day_single", "1 dia")
+        }
+        return FeatureL10n.plural("requests.links.sheet.ttl_days_plural", "%lld dias", count: count)
+    }
 }

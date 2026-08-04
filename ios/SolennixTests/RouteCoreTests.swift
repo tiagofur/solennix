@@ -109,7 +109,7 @@ final class RouteCoreTests: XCTestCase {
         assertRoundTrip(.quickQuote)
         assertRoundTrip(.paymentInbox)
         assertRoundTrip(.reviews)
-        assertRoundTrip(.eventFormLinks)
+        assertRoundTrip(.publicRequests)
         assertRoundTrip(.editProfile)
         assertRoundTrip(.changePassword)
         assertRoundTrip(.businessSettings)
