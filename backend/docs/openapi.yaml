@@ -2840,6 +2840,25 @@ components:
         message:
           type: string
           nullable: true
+        website:
+          type: string
+          description: >
+            Honeypot anti-spam field. Must be empty. Bots that fill hidden fields
+            receive a fake 201 without creating a request.
+          maxLength: 200
+    PublicRequestCreateResponse:
+      allOf:
+        - $ref: "#/components/schemas/PublicRequest"
+        - type: object
+          required:
+            - client_token
+          properties:
+            client_token:
+              type: string
+              format: uuid
+              description: >
+                Issued once on create. Visitor uses it as X-Request-Token for
+                subsequent actions. Never returned on organizer inbox endpoints.
     PublicRequest:
       type: object
       description: A structured quote request from a visitor to an organizer's public profile.
@@ -6375,7 +6394,7 @@ paths:
     get:
       security: []
       operationId: getPublicProfilesSitemap
-      summary: XML sitemap of enabled public profiles
+      summary: XML sitemap of directory-publicable public profiles
       responses:
         "200":
           description: Sitemap XML
@@ -6387,7 +6406,12 @@ paths:
     post:
       security: []
       operationId: submitPublicLead
-      summary: Submit an inquiry to an organizer's public profile (rate-limited, unauthenticated)
+      deprecated: true
+      summary: "[Deprecated] Submit a free-form inquiry — use POST .../requests instead"
+      description: >
+        Soft-deprecated in v2.0. Prefer structured PublicRequest via
+        POST /api/public/organizers/{slug}/requests. Still accepted for backward
+        compatibility until the Sunset date; responses include Deprecation headers.
       parameters:
         - name: slug
           in: path
@@ -6435,11 +6459,14 @@ paths:
               $ref: "#/components/schemas/CreatePublicRequestRequest"
       responses:
         "201":
-          description: Request submitted
+          description: Request submitted (includes client_token once)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PublicRequest"
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PublicRequestCreateResponse"
         "400":
           description: Invalid body or service_ids
         "404":
@@ -6582,6 +6609,8 @@ paths:
                   data:
                     type: object
                     properties:
+                      request:
+                        $ref: "#/components/schemas/PublicRequest"
                       responses:
                         type: array
                         items:
