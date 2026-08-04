@@ -133,7 +133,7 @@ func defaultPublicSlugForUser(user *models.User) string {
 
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, email, password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
+	query := `SELECT id, email, COALESCE(password_hash, '') AS password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
 		contract_template,
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
@@ -169,7 +169,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 
 func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, email, password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
+	query := `SELECT id, email, COALESCE(password_hash, '') AS password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
 		contract_template,
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
@@ -206,7 +206,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 // GetByPublicSlug resolves an organizer by users.public_slug (public profile lookup).
 func (r *UserRepo) GetByPublicSlug(ctx context.Context, slug string) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, email, password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
+	query := `SELECT id, email, COALESCE(password_hash, '') AS password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
 		contract_template,
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
@@ -300,7 +300,7 @@ func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName,
 			default_currency = COALESCE($21, default_currency),
 			updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, email, password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
+		RETURNING id, email, COALESCE(password_hash, '') AS password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
 			default_deposit_percent, default_cancellation_days, default_refund_percent,
 			contract_template,
 			email_payment_receipt, email_event_reminder, email_subscription_updates,
@@ -378,7 +378,7 @@ func (r *UserRepo) UpdatePlanByStripeCustomerID(ctx context.Context, stripeCusto
 // Used to look up user ID for RevenueCat entitlement sync on Stripe webhook events.
 func (r *UserRepo) GetByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, email, password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
+	query := `SELECT id, email, COALESCE(password_hash, '') AS password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
 		contract_template,
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
@@ -457,7 +457,7 @@ func (r *UserRepo) VerifyEmailByTokenHash(ctx context.Context, tokenHash string)
 		WHERE email_verification_token_hash = $1
 		  AND email_verification_expires_at > NOW()
 		  AND email_verified_at IS NULL
-		RETURNING id, email, password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
+		RETURNING id, email, COALESCE(password_hash, '') AS password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
 			default_deposit_percent, default_cancellation_days, default_refund_percent,
 			contract_template,
 			email_payment_receipt, email_event_reminder, email_subscription_updates,
@@ -553,7 +553,7 @@ func (r *UserRepo) AcceptStaffInvite(ctx context.Context, tokenHash, passwordHas
 	err = tx.QueryRow(ctx, `
 		INSERT INTO users (email, password_hash, name, plan, role)
 		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, email, password_hash, name, plan, role, created_at, updated_at
+		RETURNING id, email, COALESCE(password_hash, '') AS password_hash, name, plan, role, created_at, updated_at
 	`, email, passwordHash, staffName, "basic", targetRole).Scan(
 		&createdUser.ID,
 		&createdUser.Email,
@@ -604,7 +604,7 @@ func (r *UserRepo) AcceptStaffInvite(ctx context.Context, tokenHash, passwordHas
 // GetByGoogleUserID finds a user by their Google OAuth user ID
 func (r *UserRepo) GetByGoogleUserID(ctx context.Context, googleUserID string) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, email, password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
+	query := `SELECT id, email, COALESCE(password_hash, '') AS password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
 		contract_template,
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
@@ -630,7 +630,7 @@ func (r *UserRepo) GetByGoogleUserID(ctx context.Context, googleUserID string) (
 // GetByAppleUserID finds a user by their Apple OAuth user ID
 func (r *UserRepo) GetByAppleUserID(ctx context.Context, appleUserID string) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, email, password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
+	query := `SELECT id, email, COALESCE(password_hash, '') AS password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
 		contract_template,
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
