@@ -120,9 +120,9 @@ object Endpoints {
     const val DASHBOARD_PRODUCT_DEMAND = "dashboard/product-demand"
     const val DASHBOARD_FORECAST = "dashboard/forecast"
 
-    // Event Form Links
-    const val EVENT_FORM_LINKS = "event-forms"
-    fun eventFormLink(id: String) = "event-forms/$id"
+    // Public request links (Solicitudes share links)
+    const val PUBLIC_REQUEST_LINKS = "organizers/me/request-links"
+    fun publicRequestLink(id: String) = "organizers/me/request-links/$id"
 
     // Reviews (organizer inbox)
     const val REVIEWS = "reviews"

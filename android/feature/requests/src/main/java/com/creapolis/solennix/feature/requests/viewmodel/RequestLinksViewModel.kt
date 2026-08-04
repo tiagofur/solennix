@@ -1,9 +1,9 @@
-package com.creapolis.solennix.feature.settings.viewmodel
+package com.creapolis.solennix.feature.requests.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.creapolis.solennix.core.model.EventFormLink
-import com.creapolis.solennix.core.model.GenerateEventFormLinkRequest
+import com.creapolis.solennix.core.model.GeneratePublicRequestLinkRequest
+import com.creapolis.solennix.core.model.PublicRequestLink
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.get
@@ -16,23 +16,24 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed interface EventFormLinksUiState {
-    data object Loading : EventFormLinksUiState
+sealed interface RequestLinksUiState {
+    data object Loading : RequestLinksUiState
     data class Success(
-        val links: List<EventFormLink>,
+        val links: List<PublicRequestLink>,
         val isGenerating: Boolean = false,
         val deletingId: String? = null
-    ) : EventFormLinksUiState
-    data class Error(val message: String) : EventFormLinksUiState
+    ) : RequestLinksUiState
+
+    data class Error(val message: String) : RequestLinksUiState
 }
 
 @HiltViewModel
-class EventFormLinksViewModel @Inject constructor(
+class RequestLinksViewModel @Inject constructor(
     private val apiService: ApiService
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<EventFormLinksUiState>(EventFormLinksUiState.Loading)
-    val uiState: StateFlow<EventFormLinksUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<RequestLinksUiState>(RequestLinksUiState.Loading)
+    val uiState: StateFlow<RequestLinksUiState> = _uiState.asStateFlow()
 
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
@@ -43,39 +44,50 @@ class EventFormLinksViewModel @Inject constructor(
 
     fun loadLinks() {
         viewModelScope.launch {
-            _uiState.value = EventFormLinksUiState.Loading
+            _uiState.value = RequestLinksUiState.Loading
             try {
-                val links: List<EventFormLink> = apiService.get(Endpoints.EVENT_FORM_LINKS)
-                _uiState.value = EventFormLinksUiState.Success(links = links)
+                val links: List<PublicRequestLink> = apiService.get(Endpoints.PUBLIC_REQUEST_LINKS)
+                _uiState.value = RequestLinksUiState.Success(
+                    links = links.sortedByDescending { it.createdAt }
+                )
             } catch (e: Exception) {
-                _uiState.value = EventFormLinksUiState.Error(
+                _uiState.value = RequestLinksUiState.Error(
                     message = e.message ?: "Error al cargar los enlaces"
                 )
             }
         }
     }
 
-    fun generateLink(label: String?, ttlDays: Int?) {
+    fun generateLink(
+        label: String?,
+        ttlDays: Int?,
+        maxUses: Int?,
+        submitMode: String = "auto_event"
+    ) {
         viewModelScope.launch {
             val current = _uiState.value
-            if (current is EventFormLinksUiState.Success) {
+            if (current is RequestLinksUiState.Success) {
                 _uiState.value = current.copy(isGenerating = true)
             }
             try {
-                val request = GenerateEventFormLinkRequest(
+                val request = GeneratePublicRequestLinkRequest(
                     label = label?.takeIf { it.isNotBlank() },
-                    ttlDays = ttlDays
+                    ttlDays = ttlDays,
+                    maxUses = maxUses,
+                    submitMode = submitMode
                 )
-                val newLink: EventFormLink = apiService.post(Endpoints.EVENT_FORM_LINKS, request)
-                val updated = (_uiState.value as? EventFormLinksUiState.Success)
+                val newLink: PublicRequestLink =
+                    apiService.post(Endpoints.PUBLIC_REQUEST_LINKS, request)
+                val updated = (_uiState.value as? RequestLinksUiState.Success)
                     ?.let { it.copy(links = listOf(newLink) + it.links, isGenerating = false) }
-                    ?: EventFormLinksUiState.Success(links = listOf(newLink))
+                    ?: RequestLinksUiState.Success(links = listOf(newLink))
                 _uiState.value = updated
                 _snackbarMessage.value = "Enlace generado"
             } catch (e: Exception) {
-                if (_uiState.value is EventFormLinksUiState.Success) {
+                if (_uiState.value is RequestLinksUiState.Success) {
                     _uiState.update { state ->
-                        (state as? EventFormLinksUiState.Success)?.copy(isGenerating = false) ?: state
+                        (state as? RequestLinksUiState.Success)?.copy(isGenerating = false)
+                            ?: state
                     }
                 }
                 _snackbarMessage.value = e.message ?: "Error al generar enlace"
@@ -85,10 +97,10 @@ class EventFormLinksViewModel @Inject constructor(
 
     fun deleteLink(id: String) {
         viewModelScope.launch {
-            val current = _uiState.value as? EventFormLinksUiState.Success ?: return@launch
+            val current = _uiState.value as? RequestLinksUiState.Success ?: return@launch
             _uiState.value = current.copy(deletingId = id)
             try {
-                apiService.delete(Endpoints.eventFormLink(id))
+                apiService.delete(Endpoints.publicRequestLink(id))
                 _uiState.value = current.copy(
                     links = current.links.filter { it.id != id },
                     deletingId = null
