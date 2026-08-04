@@ -56,10 +56,10 @@
 
 ## Phase 6: Mobile organizer parity
 
-- [ ] 6.1 iOS: models + endpoints for request-links; fold EventFormLinks UI into Requests (“Compartir link”); remove separate menu entry.
-- [ ] 6.2 Android: same for `feature/requests` + drop standalone EventFormLinks screen from settings nav.
-- [ ] 6.3 Push/deeplink unchanged (`public_request` → request detail); verify auto_event still notifies.
-- [ ] 6.4 Platform unit/UI tests for link create + list.
+- [x] 6.1 iOS: models + endpoints for request-links; fold EventFormLinks UI into Requests (“Compartir link”); remove separate menu entry.
+- [x] 6.2 Android: same for `feature/requests` + drop standalone EventFormLinks screen from settings nav.
+- [x] 6.3 Push/deeplink unchanged (`public_request` → request detail); verify auto_event still notifies.
+- [x] 6.4 Platform unit/UI tests for link create + list.
 
 ## Phase 7: Docs + cleanup
 
