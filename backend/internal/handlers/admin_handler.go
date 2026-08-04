@@ -16,12 +16,18 @@ import (
 
 // AdminHandler handles admin-only operations.
 type AdminHandler struct {
-	adminRepo AdminRepository
+	adminRepo  AdminRepository
+	moderation listingModerationStore // optional #1130 listing moderation
 }
 
 // NewAdminHandler creates a new AdminHandler.
 func NewAdminHandler(adminRepo AdminRepository) *AdminHandler {
 	return &AdminHandler{adminRepo: adminRepo}
+}
+
+// SetListingModeration wires #1130 listing review queue (optional).
+func (h *AdminHandler) SetListingModeration(m listingModerationStore) {
+	h.moderation = m
 }
 
 // GetStats returns platform-wide KPIs.

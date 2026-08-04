@@ -86,6 +86,11 @@ const TeamMemberCalendarPage = React.lazy(() => import("@/pages/TeamMember/TeamC
 const AdminDashboard = React.lazy(() => import("@/pages/Admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 const AdminUsers = React.lazy(() => import("@/pages/Admin/AdminUsers").then((m) => ({ default: m.AdminUsers })));
 const AdminUserDetails = React.lazy(() => import("@/pages/Admin/AdminUserDetails").then((m) => ({ default: m.AdminUserDetails })));
+const AdminListingModeration = React.lazy(() =>
+  import("@/pages/Admin/AdminListingModeration").then((m) => ({
+    default: m.AdminListingModeration,
+  })),
+);
 
 import { useTranslation } from "react-i18next";
 
@@ -181,6 +186,7 @@ function App() {
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
                 <Route path="/admin/users/:id" element={<AdminRoute><AdminUserDetails /></AdminRoute>} />
+                <Route path="/admin/listing-moderation" element={<AdminRoute><AdminListingModeration /></AdminRoute>} />
               </Route>
 
               <Route

@@ -5,8 +5,18 @@ import type { components } from "@/types/api";
  * Source of truth: backend/docs/openapi.yaml.
  * Organizer public-profile config (auth Settings) and its upsert payload.
  */
+export type PublicationStatus =
+  | "unpublished"
+  | "pending_review"
+  | "published"
+  | "rejected";
+
 export type OrganizerPublicProfile =
-  components["schemas"]["OrganizerPublicProfile"];
+  components["schemas"]["OrganizerPublicProfile"] & {
+    publication_status?: PublicationStatus;
+    publication_rejection_reason?: string | null;
+    publication_spam_flag?: boolean;
+  };
 export type OrganizerPublicProfileUpsertRequest =
   components["schemas"]["OrganizerPublicProfileUpsertRequest"];
 export type OrganizerPublicPortfolioItem =
@@ -97,6 +107,15 @@ class PublicProfileConfigService {
     const response = await api.put<{ data: OrganizerPublicProfile }>(
       "/users/me/public-profile",
       body,
+    );
+    return response.data;
+  }
+
+  /** POST /api/users/me/public-profile/submit-for-review — directory moderation (#1130). */
+  async submitForDirectoryReview(): Promise<OrganizerPublicProfile> {
+    const response = await api.post<{ data: OrganizerPublicProfile }>(
+      "/users/me/public-profile/submit-for-review",
+      {},
     );
     return response.data;
   }

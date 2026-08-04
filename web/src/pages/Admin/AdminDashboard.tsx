@@ -15,6 +15,7 @@ import {
   XCircle,
   UserPlus,
   CreditCard,
+  ClipboardCheck,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -211,7 +212,14 @@ export const AdminDashboard: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to="/admin/listing-moderation"
+            className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
+          >
+            <ClipboardCheck className="h-4 w-4 mr-1" />
+            {t("admin:dashboard.actions.moderation", { defaultValue: "Listings" })}
+          </Link>
           <Link
             to="/admin/users"
             className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-colors shadow-sm"

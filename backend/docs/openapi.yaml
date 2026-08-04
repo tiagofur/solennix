@@ -6302,9 +6302,11 @@ paths:
       summary: Search the public organizers directory (paginated, unauthenticated, v2.0 #1116)
       description: >
         Returns a paginated slice of PublicOrganizerCard with plan-aware ranking
-        (Business first). Only "publicable" profiles appear (cover/logo, headline/
+        (#1129): default relevance = Business featured first, then
+        avg_rating * ln(reviews+2), then recency. Distance sort keeps Business
+        first then proximity. Only publicable profiles appear (cover, headline/
         about, city+country, ≥1 visible service). Free plan cards omit rating/
-        reviews (social-proof gating). NG1: visitor has no account.
+        reviews. NG1: visitor has no account.
       parameters:
         - name: city
           in: query

@@ -263,6 +263,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Delete("/users/me", authHandler.DeleteOwnAccount)
 		r.Get("/users/me/public-profile", publicProfileConfigHandler.GetMyPublicProfile)
 		r.Put("/users/me/public-profile", publicProfileConfigHandler.UpsertMyPublicProfile)
+		// Directory listing moderation submit (#1130).
+		r.Post("/users/me/public-profile/submit-for-review", publicProfileConfigHandler.SubmitForDirectoryReview)
 		// Inbound analytics for the organizer (#1131).
 		r.Get("/users/me/inbound-analytics", publicProfileConfigHandler.GetInboundAnalytics)
 		r.Get("/users/me/public-profile/services", publicProfileServicesHandler.ListMyPublicProfileServices)
@@ -513,6 +515,10 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Post("/users/{id}/verify-email", adminHandler.VerifyUserEmail)
 		r.Get("/subscriptions", adminHandler.GetSubscriptions)
 		r.Get("/audit-logs", auditHandler.GetAllAuditLogs)
+		// Listing moderation queue (#1130).
+		r.Get("/listing-moderation", adminHandler.ListListingModeration)
+		r.Post("/listing-moderation/{id}/approve", adminHandler.ApproveListing)
+		r.Post("/listing-moderation/{id}/reject", adminHandler.RejectListing)
 	})
 
 	// Mount API subrouter under versioned prefix (canonical) and legacy prefix (backward compatible)

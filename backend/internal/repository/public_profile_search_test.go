@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -35,12 +36,13 @@ func seedPublicableOrganizer(t *testing.T, pool *pgxpool.Pool, email, plan, city
 	about, _ := fields["about"].(string)
 	if _, err := pool.Exec(ctx, `
 		INSERT INTO organizer_public_profiles
-			(user_id, is_enabled, headline, about, city, country, event_types,
+			(user_id, is_enabled, publication_status, headline, about, city, country, event_types,
 			 show_prices, show_services, show_reviews, show_portfolio, show_contact, socials)
-		VALUES ($1, true, $2, NULLIF($3, ''), $4, $5, ARRAY['boda','corporativo']::text[],
+		VALUES ($1, true, 'published', $2, NULLIF($3, ''), $4, $5, ARRAY['boda','corporativo']::text[],
 		        false, true, true, true, true, '{}'::jsonb)
 		ON CONFLICT (user_id) DO UPDATE SET
-			is_enabled = true, headline = $2, about = NULLIF($3, ''), city = $4, country = $5`,
+			is_enabled = true, publication_status = 'published',
+			headline = $2, about = NULLIF($3, ''), city = $4, country = $5`,
 		userID, headline, about, city, country); err != nil {
 		t.Fatalf("seed public profile: %v", err)
 	}
@@ -169,6 +171,101 @@ func TestSearchPublicProfiles_RankingBusinessFirst(t *testing.T) {
 	}
 	if items[0].Slug != "slug-biz@test.dev" {
 		t.Fatalf("first slug = %s, want biz", items[0].Slug)
+	}
+}
+
+// #1129: among non-Business, mid rating with many reviews beats high rating with few.
+func TestSearchPublicProfiles_RankingWeightedRating(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+	ctx := context.Background()
+
+	// High rating (5.0) but only 1 review.
+	highFew := seedPublicableOrganizer(t, pool, "highfew@test.dev", "pro", "CDMX", "MX")
+	seedPublicReviews(t, pool, highFew, []int{5})
+
+	// Mid rating (~4.0) with many reviews.
+	midMany := seedPublicableOrganizer(t, pool, "midmany@test.dev", "pro", "CDMX", "MX")
+	seedPublicReviews(t, pool, midMany, []int{4, 4, 4, 4, 4, 4, 4, 4, 4, 4})
+
+	repo := NewPublicProfileRepo(pool)
+	items, _, err := repo.SearchPublicProfiles(ctx, SearchPublicProfilesFilters{Limit: 20})
+	if err != nil {
+		t.Fatalf("Search error = %v", err)
+	}
+	if len(items) < 2 {
+		t.Fatalf("items = %d, want ≥ 2", len(items))
+	}
+	if items[0].Slug != "slug-midmany@test.dev" {
+		t.Fatalf("first = %s, want midmany (weighted reviews should win)", items[0].Slug)
+	}
+}
+
+func TestSearchPublicProfiles_DistanceKeepsFeaturedFirst(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	// Business farther away, pro closer — Business still first under distance sort.
+	biz := seedPublicableOrganizer(t, pool, "bizfar@test.dev", "business", "CDMX", "MX")
+	setCoords(t, pool, biz, 19.50, -99.20) // farther
+	pro := seedPublicableOrganizer(t, pool, "proclose@test.dev", "pro", "CDMX", "MX")
+	setCoords(t, pool, pro, 19.43, -99.13) // near visitor
+
+	repo := NewPublicProfileRepo(pool)
+	items, _, err := repo.SearchPublicProfiles(context.Background(), SearchPublicProfilesFilters{
+		Lat: floatPtr(19.43), Lng: floatPtr(-99.13), SortBy: "distance", Limit: 20,
+	})
+	if err != nil {
+		t.Fatalf("Search error = %v", err)
+	}
+	if len(items) < 2 {
+		t.Fatalf("items = %d, want ≥ 2", len(items))
+	}
+	if items[0].Slug != "slug-bizfar@test.dev" {
+		t.Fatalf("distance sort first = %s, want Business even when farther", items[0].Slug)
+	}
+}
+
+// seedPublicReviews inserts public event_reviews with the given ratings for ranking tests.
+func seedPublicReviews(t *testing.T, pool *pgxpool.Pool, userID uuid.UUID, ratings []int) {
+	t.Helper()
+	ctx := context.Background()
+	if _, err := pool.Exec(ctx, `
+		INSERT INTO clients (user_id, name, phone) VALUES ($1, 'Reviewer', $2)`,
+		userID, fmt.Sprintf("555-%s", userID.String()[:8])); err != nil {
+		t.Fatalf("seed client: %v", err)
+	}
+	clientID := mustGetClientID(t, pool, userID)
+	for i, r := range ratings {
+		// Unique client per review (unique on event_id, client_id).
+		var cid uuid.UUID
+		if i == 0 {
+			cid = clientID
+		} else {
+			if _, err := pool.Exec(ctx, `
+				INSERT INTO clients (user_id, name, phone) VALUES ($1, $2, $3)`,
+				userID, fmt.Sprintf("Reviewer%d", i), fmt.Sprintf("556-%d-%s", i, userID.String()[:6])); err != nil {
+				t.Fatalf("seed client %d: %v", i, err)
+			}
+			if err := pool.QueryRow(ctx, `
+				SELECT id FROM clients WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`, userID).Scan(&cid); err != nil {
+				t.Fatalf("get client: %v", err)
+			}
+		}
+		if _, err := pool.Exec(ctx, `
+			INSERT INTO events (user_id, client_id, event_date, service_type, num_people, status, total_amount)
+			VALUES ($1, $2, $3, 'boda', 50, 'completed', 1000)`,
+			userID, cid, fmt.Sprintf("2026-01-%02d", i+1)); err != nil {
+			t.Fatalf("seed event: %v", err)
+		}
+		eventID := mustGetEventID(t, pool, userID)
+		if _, err := pool.Exec(ctx, `
+			INSERT INTO event_reviews (user_id, client_id, event_id, rating, visibility)
+			VALUES ($1, $2, $3, $4, 'public')`, userID, cid, eventID, r); err != nil {
+			t.Fatalf("seed review: %v", err)
+		}
 	}
 }
 

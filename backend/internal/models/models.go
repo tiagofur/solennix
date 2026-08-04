@@ -584,6 +584,14 @@ type EventReview struct {
 	PublicSlug    *string `json:"public_slug,omitempty"`
 }
 
+// Publication status for directory listing moderation (#1130).
+const (
+	PublicationUnpublished   = "unpublished"
+	PublicationPendingReview = "pending_review"
+	PublicationPublished     = "published"
+	PublicationRejected      = "rejected"
+)
+
 // OrganizerPublicProfile is the 1:1 public-profile config for an organizer (auth Settings).
 type OrganizerPublicProfile struct {
 	UserID          uuid.UUID         `json:"user_id"`
@@ -613,6 +621,14 @@ type OrganizerPublicProfile struct {
 	EventTypes      []string          `json:"event_types,omitempty"`
 	ResponseTime    *string           `json:"response_time,omitempty"`
 	Languages       []string          `json:"languages,omitempty"`
+	// PublicationStatus gates directory appearance (#1130). Independent of is_enabled
+	// (/u/:slug). Values: unpublished | pending_review | published | rejected.
+	PublicationStatus          string     `json:"publication_status"`
+	PublicationRejectionReason *string    `json:"publication_rejection_reason,omitempty"`
+	PublicationReviewedAt      *time.Time `json:"publication_reviewed_at,omitempty"`
+	PublicationReviewedBy      *uuid.UUID `json:"publication_reviewed_by,omitempty"`
+	PublicationSubmittedAt     *time.Time `json:"publication_submitted_at,omitempty"`
+	PublicationSpamFlag        bool       `json:"publication_spam_flag"`
 	// PublicSlug is denormalized from users.public_slug for Settings convenience.
 	PublicSlug *string   `json:"public_slug,omitempty"`
 	CreatedAt  time.Time `json:"created_at"`
