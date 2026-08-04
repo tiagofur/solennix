@@ -316,12 +316,14 @@ public enum Endpoint {
     public static let registerDevice = "/devices/register"
     public static let unregisterDevice = "/devices/unregister"
 
-    // MARK: - Event Form Links
+    // MARK: - Public request links (Solicitudes share links)
 
-    public static let eventFormLinks = "/event-forms"
+    /// GET/POST /organizers/me/request-links
+    public static let publicRequestLinks = "/organizers/me/request-links"
 
-    public static func eventFormLink(_ id: String) -> String {
-        "/event-forms/\(id)"
+    /// DELETE /organizers/me/request-links/{id}
+    public static func publicRequestLink(_ id: String) -> String {
+        "/organizers/me/request-links/\(id)"
     }
 
     // MARK: - Live Activities (iOS Dynamic Island remote updates)

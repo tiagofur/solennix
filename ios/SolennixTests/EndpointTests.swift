@@ -91,7 +91,7 @@ final class EndpointTests: XCTestCase {
         XCTAssertEqual(Endpoint.uploadImage, "/uploads/image")
         XCTAssertEqual(Endpoint.uploadPresign, "/uploads/presign")
         XCTAssertEqual(Endpoint.uploadComplete, "/uploads/complete")
-        XCTAssertEqual(Endpoint.eventFormLinks, "/event-forms")
-        XCTAssertEqual(Endpoint.eventFormLink("form_1"), "/event-forms/form_1")
+        XCTAssertEqual(Endpoint.publicRequestLinks, "/organizers/me/request-links")
+        XCTAssertEqual(Endpoint.publicRequestLink("link_1"), "/organizers/me/request-links/link_1")
     }
 }
