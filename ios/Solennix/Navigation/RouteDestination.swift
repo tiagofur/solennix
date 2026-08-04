@@ -89,10 +89,6 @@ struct RouteDestination: View {
         case .inventoryForm(let id):
             InventoryFormView(apiClient: apiClient, itemId: id)
 
-        // Event Form Links
-        case .eventFormLinks:
-            EventFormLinksView(apiClient: apiClient)
-
         // Payment Submissions
         case .paymentInbox:
             PaymentInboxView(apiClient: apiClient)

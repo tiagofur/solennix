@@ -57,9 +57,6 @@ public enum Route: Hashable, Codable {
     case search(query: String = "")
     case settings
 
-    // MARK: Event Form Links
-    case eventFormLinks
-
     // MARK: Payment Submissions (organizer inbox)
     case paymentInbox
 

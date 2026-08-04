@@ -101,7 +101,6 @@ import com.creapolis.solennix.feature.settings.ui.NotificationPreferencesScreen
 import com.creapolis.solennix.feature.settings.ui.PrivacyScreen
 import com.creapolis.solennix.feature.settings.ui.SettingsScreen
 import com.creapolis.solennix.feature.settings.ui.SubscriptionScreen
-import com.creapolis.solennix.feature.settings.ui.EventFormLinksScreen
 import com.creapolis.solennix.feature.settings.ui.TermsScreen
 import com.creapolis.solennix.feature.staff.ui.StaffDetailScreen
 import com.creapolis.solennix.feature.staff.ui.StaffFormScreen
@@ -303,7 +302,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onProductsClick = { navController.navigate("products") },
                     onInventoryClick = { navController.navigate("inventory") },
                     onStaffClick = { navController.navigate("staff") },
-                    onEventFormLinksClick = { navController.navigate("event_form_links") },
                     onSettingsClick = { navController.navigate("settings") },
                     onPaymentInboxClick = { navController.navigate("payment_inbox") },
                     onRequestsInboxClick = { navController.navigate("requests_inbox") },
@@ -470,12 +468,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 // instructions. The legacy PricingScreen (static marketing copy with a
                 // broken upgrade button) was removed in Bloque C.
                 SubscriptionScreen(
-                    viewModel = hiltViewModel(),
-                    onNavigateBack = { navController.popBackStack() }
-                )
-            }
-            composable("event_form_links") {
-                EventFormLinksScreen(
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() }
                 )
@@ -681,7 +673,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
     onProductsClick: () -> Unit,
     onInventoryClick: () -> Unit,
     onStaffClick: () -> Unit,
-    onEventFormLinksClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onPaymentInboxClick: () -> Unit = {},
     onRequestsInboxClick: () -> Unit = {},
@@ -738,13 +729,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 icon = Icons.Default.Group,
                 iconColor = SolennixTheme.colors.iconSteel,
                 onClick = onStaffClick
-            )
-            MenuOptionItem(
-                title = stringResource(R.string.nav_form_links),
-                subtitle = stringResource(R.string.nav_share_clients),
-                icon = Icons.Default.Link,
-                iconColor = SolennixTheme.colors.iconSage,
-                onClick = onEventFormLinksClick
             )
             MenuOptionItem(
                 title = stringResource(R.string.nav_reviews),

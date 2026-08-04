@@ -68,18 +68,27 @@ La implementación del Perfil Profesional Público (#787, PR chain #1097–#1102
 
 ### 2.1 Lo que se reutiliza sin tocar
 
-- `User` (`backend/internal/models/models.go:35-85`): sin cambios. Todos autenticados = organizadores.
-- `Client` CRM (`models.go:87-102`): sin cambios. Registro del proveedor, sin credenciales.
-- `EventFormLink` → `Event(quoted)`: se reutiliza. No se crea entidad `Quote` nueva.
-- `PublicLead` (`models.go:785-797`): se extiende a "solicitud estructurada" — no se reemplaza.
-- `OrganizerPublicProfile`, `PublicReview`, `OrganizerPublicPortfolioItem`, `OrganizerPublicPackage`: ya implementados en #787, se consumen.
+- `User` (`backend/internal/models/models.go`): sin cambios. Todos autenticados = organizadores.
+- `Client` CRM: sin cambios. Registro del proveedor, sin credenciales.
+- Conversión a `Event(status=quoted)`: helpers TX compartidos (antes EventFormLink). **No** se crea entidad `Quote` nueva.
+- `OrganizerPublicProfile`, `PublicReview`, `OrganizerPublicPortfolioItem`, `OrganizerPublicPackage`: se consumen.
 
-### 2.2 Nuevas entidades mínimas
+### 2.1.1 Unificación inbound (2026-08) — supersede
+
+> **Formularios compartibles + PublicLead + PublicRequest → un solo sistema: Solicitudes.**
+>
+> - Canónico: `PublicRequest` + `public_request_links` (dos puertas: perfil público y link del proveedor).
+> - **Eliminados:** `EventFormLink` / `event_form_links`, `PublicLead` / `public_leads` (migración 079).
+> - Link `submit_mode`: `standard` \| `auto_quote` \| `auto_event` (default `auto_event`).
+> - Detalle: `openspec/changes/unify-solicitudes-forms/`.
+
+### 2.2 Entidades de solicitud / presupuesto
 
 | Entidad | Propósito | Fase |
 | --- | --- | --- |
-| `PublicRequest` (extiende `PublicLead`) | Solicitud estructurada del cliente (visitante anónimo con email de contacto) | F1 |
-| `PublicResponse` (nueva) | Respuesta del proveedor con presupuesto | F1 |
+| `PublicRequest` | Solicitud estructurada (visitante anónimo; source perfil o link) | F1 |
+| `PublicResponse` | Respuesta del proveedor con presupuesto | F1 |
+| `PublicRequestLink` | Token compartible del proveedor (TTL, uses, submit_mode) | F1 (unificación) |
 
 ### 2.3 Modelos postergados / descartados para v2.0
 

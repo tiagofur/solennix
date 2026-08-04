@@ -38,20 +38,20 @@ final class SidebarSectionTests: XCTestCase {
             SidebarSection.mainSections,
             [
                 .dashboard, .events, .clients, .personnel, .products, .inventory,
-                .paymentInbox, .publicRequests, .eventFormLinks, .reviews,
+                .paymentInbox, .publicRequests, .reviews,
             ]
         )
     }
 
-    func testMainSectionsCountIsTen() {
-        // Includes publicRequests (#1122); calendar remains excluded.
-        XCTAssertEqual(SidebarSection.mainSections.count, 10)
+    func testMainSectionsCountIsNine() {
+        // Includes publicRequests (#1122); form links folded into Requests (Phase 6).
+        XCTAssertEqual(SidebarSection.mainSections.count, 9)
     }
 
     func testMoreMenuCatalogSectionsContainExpectedOrder() {
         XCTAssertEqual(
             SidebarSection.moreMenuCatalogSections,
-            [.products, .inventory, .paymentInbox, .publicRequests, .personnel, .eventFormLinks, .reviews]
+            [.products, .inventory, .paymentInbox, .publicRequests, .personnel, .reviews]
         )
     }
 
@@ -68,7 +68,6 @@ final class SidebarSectionTests: XCTestCase {
         XCTAssertEqual(SidebarSection.inventory.route, .inventoryList)
         XCTAssertEqual(SidebarSection.paymentInbox.route, .paymentInbox)
         XCTAssertEqual(SidebarSection.publicRequests.route, .publicRequests)
-        XCTAssertEqual(SidebarSection.eventFormLinks.route, .eventFormLinks)
         XCTAssertEqual(SidebarSection.reviews.route, .reviews)
         XCTAssertEqual(SidebarSection.settings.route, .settings)
     }

@@ -8,17 +8,43 @@ import type { components } from "@/types/api";
  * Create response may include `client_token` once (never re-issued). Visitor
  * uses it as X-Request-Token for accept/decline actions.
  */
-export type CreatePublicRequestRequest =
-  components["schemas"]["CreatePublicRequestRequest"] & {
-    /** Honeypot anti-spam. Must stay empty; bots that fill it get a fake 201. */
-    website?: string;
-  };
+/** Catalog line item with quantity (preferred over flat service_ids). */
+export type CreatePublicRequestServiceLine = {
+  product_id: string;
+  qty?: number;
+};
 
-export type PublicRequest = components["schemas"]["PublicRequest"];
+/**
+ * Unified visitor payload (profile CTA + shared link).
+ * Extends OpenAPI schema with fields from unify-solicitudes (phone, city, services[].qty)
+ * until `web/src/types/api.ts` is fully regenerated.
+ */
+export type CreatePublicRequestRequest = Omit<
+  components["schemas"]["CreatePublicRequestRequest"],
+  "contact_email"
+> & {
+  /** Required on profile path; optional on link if phone is present. */
+  contact_email?: string;
+  contact_phone?: string | null;
+  city?: string | null;
+  services?: CreatePublicRequestServiceLine[];
+  /** Honeypot anti-spam. Must stay empty; bots that fill it get a fake 201. */
+  website?: string;
+};
+
+export type PublicRequest = components["schemas"]["PublicRequest"] & {
+  contact_phone?: string | null;
+  city?: string | null;
+  source?: "public_profile" | "shared_link";
+  submit_mode?: "standard" | "auto_quote" | "auto_event";
+  event_id?: string | null;
+};
 
 /** Create response: PublicRequest + one-time client_token when issued. */
 export type PublicRequestCreateResult = PublicRequest & {
   client_token?: string;
+  event_id?: string | null;
+  status?: string;
 };
 
 export type PublicRequestClientAction = "accept" | "decline";

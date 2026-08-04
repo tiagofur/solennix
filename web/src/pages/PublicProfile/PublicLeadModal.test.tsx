@@ -97,6 +97,7 @@ describe("PublicLeadModal (solicitud estructurada, #1118)", () => {
     fireEvent.change(screen.getByTestId("lead-event-type-select"), {
       target: { value: "wedding" },
     });
+    fireEvent.click(screen.getByTestId("lead-services-toggle"));
     fireEvent.click(screen.getByTestId("lead-service-svc-1"));
 
     fireEvent.click(screen.getByTestId("lead-submit-button"));
@@ -106,7 +107,7 @@ describe("PublicLeadModal (solicitud estructurada, #1118)", () => {
     });
     expect(capturedBody.contact_email).toBe("client@example.com");
     expect(capturedBody.event_type).toBe("wedding");
-    expect(capturedBody.service_ids).toEqual(["svc-1"]);
+    expect(capturedBody.services).toEqual([{ product_id: "svc-1", qty: 1 }]);
     expect(capturedBody.currency).toBe("MXN");
     expect(capturedBody.website).toBe("");
     expect(screen.getByTestId("lead-status-link")).toBeInTheDocument();
@@ -193,6 +194,7 @@ describe("PublicLeadModal (solicitud estructurada, #1118)", () => {
 
   it("toggles service selection on click", () => {
     renderModal();
+    fireEvent.click(screen.getByTestId("lead-services-toggle"));
     const chip = screen.getByTestId("lead-service-svc-1");
     expect(chip).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(chip);

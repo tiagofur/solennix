@@ -54,4 +54,41 @@
     <string name="requests_field_guests">Invitados</string>
     <string name="requests_field_budget">Presupuesto</string>
     <string name="requests_field_status">Estado</string>
+
+    <string name="requests_tab_inbox">Bandeja</string>
+    <string name="requests_tab_links">Links</string>
+    <string name="requests_links_new_link">Nuevo link</string>
+    <string name="requests_links_retry">Reintentar</string>
+    <string name="requests_links_empty_title">Sin links</string>
+    <string name="requests_links_empty_message">Genera un link para que tus clientes envíen una solicitud de evento.</string>
+    <string name="requests_links_delete_title">Eliminar link</string>
+    <string name="requests_links_delete_message">¿Estás seguro de que querés eliminar este link? Esta acción no se puede deshacer.</string>
+    <string name="requests_links_delete_confirm">Eliminar</string>
+    <string name="requests_links_cancel">Cancelar</string>
+    <string name="requests_links_no_label">Sin etiqueta</string>
+    <string name="requests_links_created_on">Creado: %1$s</string>
+    <string name="requests_links_expires_on">Expira: %1$s</string>
+    <string name="requests_links_uses">Usos: %1$d / %2$d</string>
+    <string name="requests_links_share">Compartir link</string>
+    <string name="requests_links_copy">Copiar link</string>
+    <string name="requests_links_clip_label">Link de solicitud</string>
+    <string name="requests_links_share_subject">Solicitud de evento</string>
+    <string name="requests_links_share_subject_with_label">Solicitud de evento - %1$s</string>
+    <string name="requests_links_status_active">Activo</string>
+    <string name="requests_links_status_used">Usado</string>
+    <string name="requests_links_status_expired">Expirado</string>
+    <string name="requests_links_status_revoked">Revocado</string>
+    <string name="requests_links_generate_title">Nuevo link de solicitud</string>
+    <string name="requests_links_label_field">Etiqueta (opcional)</string>
+    <string name="requests_links_label_placeholder">Ej: Boda García</string>
+    <string name="requests_links_ttl_days">Días de vigencia</string>
+    <string name="requests_links_max_uses">Usos máximos</string>
+    <string name="requests_links_max_uses_hint">Vacío = ilimitado</string>
+    <string name="requests_links_submit_mode">Al enviar</string>
+    <string name="requests_links_mode_auto_event">Auto evento</string>
+    <string name="requests_links_mode_auto_quote">Auto cotización</string>
+    <string name="requests_links_mode_standard">Solo solicitud</string>
+    <string name="requests_links_generate">Generar</string>
+
 </resources>
+

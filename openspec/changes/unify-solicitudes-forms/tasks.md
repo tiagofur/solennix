@@ -46,27 +46,29 @@
 
 ## Phase 5: Web (visitor + organizer)
 
-- [ ] 5.1 Shared `RequestForm` component (layers, honeypot, optional catalog, validation matrices).
-- [ ] 5.2 Route `/s/:token` (replace `/form/:token`); profile modal uses same form → existing `/requests` create.
-- [ ] 5.3 Hub `/requests`: Inbox + **Links** tab (create/copy/revoke, submit_mode, ttl, max_uses); remove nav to `/event-forms`.
-- [ ] 5.4 Services: `requestLinkService` + extend `publicRequestService`; delete/stop using `eventFormService` + `submitLead`.
-- [ ] 5.5 Redirects: `/form/:token` → `/s/:token` or friendly 410; `/event-forms` → `/requests?tab=links`.
-- [ ] 5.6 i18n ES/EN; unit tests for form validation + link manager limit messaging.
-- [ ] 5.7 Visitor success: standard/auto_quote → `/solicitud/:id`; auto_event → success with event created copy (no negotiate).
+- [x] 5.1 Shared `RequestForm` component (layers, honeypot, optional catalog, validation matrices).
+- [x] 5.2 Route `/s/:token` (replace `/form/:token`); profile modal uses same form → existing `/requests` create.
+- [x] 5.3 Hub `/requests`: Inbox + **Links** tab (create/copy/revoke, submit_mode, ttl, max_uses); remove nav to `/event-forms`.
+- [x] 5.4 Services: `requestLinkService` + extend `publicRequestService`; delete/stop using `eventFormService` + `submitLead`.
+- [x] 5.5 Redirects: `/form/:token` → `/s/:token` or friendly 410; `/event-forms` → `/requests?tab=links`.
+- [x] 5.6 i18n ES/EN; unit tests for form validation + link manager limit messaging.
+- [x] 5.7 Visitor success: standard/auto_quote → `/solicitud/:id`; auto_event → success with event created copy (no negotiate).
 
 ## Phase 6: Mobile organizer parity
 
-- [ ] 6.1 iOS: models + endpoints for request-links; fold EventFormLinks UI into Requests (“Compartir link”); remove separate menu entry.
-- [ ] 6.2 Android: same for `feature/requests` + drop standalone EventFormLinks screen from settings nav.
-- [ ] 6.3 Push/deeplink unchanged (`public_request` → request detail); verify auto_event still notifies.
-- [ ] 6.4 Platform unit/UI tests for link create + list.
+- [x] 6.1 iOS: models + endpoints for request-links; fold EventFormLinks UI into Requests (“Compartir link”); remove separate menu entry.
+- [x] 6.2 Android: same for `feature/requests` + drop standalone EventFormLinks screen from settings nav.
+- [x] 6.3 Push/deeplink unchanged (`public_request` → request detail); verify auto_event still notifies.
+- [x] 6.4 Platform unit/UI tests for link create + list.
 
 ## Phase 7: Docs + cleanup
 
-- [ ] 7.1 Update `docs/*/Módulo Formularios Compartibles.md` → point to Solicitudes / archive or rewrite as “Links de Solicitud”.
-- [ ] 7.2 PRD/status note: unified inbound; remove dual-path language in marketplace docs if present.
-- [ ] 7.3 Delete dead web/mobile/backend files; `./init.sh` or platform test suites green.
-- [ ] 7.4 Mark this change ready for verify/archive.
+- [x] 7.1 Update `docs/*/Módulo Formularios Compartibles.md` → point to Solicitudes / archive or rewrite as “Links de Solicitud”.
+- [x] 7.2 PRD/status note: unified inbound; remove dual-path language in marketplace docs if present.
+- [x] 7.3 Delete dead web/mobile/backend files; `./init.sh` or platform test suites green.
+- [x] 7.4 Mark this change ready for verify/archive.
+
+> **Ready for verify/archive.** Implementation phases 0–7 complete on branch `feat/unify-solicitudes-backend-pr1`. Split into chained PRs before merge (backend / web / mobile / docs as needed).
 
 ---
 

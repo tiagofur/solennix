@@ -129,7 +129,6 @@ public enum SidebarSection: String, Hashable, CaseIterable, Codable {
     case products
     case inventory
     case paymentInbox
-    case eventFormLinks
     case reviews
     case publicRequests
     case settings
@@ -144,7 +143,6 @@ public enum SidebarSection: String, Hashable, CaseIterable, Codable {
         case .products:        return "shippingbox.fill"
         case .inventory:       return "archivebox.fill"
         case .paymentInbox:    return "wallet.pass.fill"
-        case .eventFormLinks:  return "link"
         case .reviews:         return "star.fill"
         case .publicRequests:  return "tray.and.arrow.down.fill"
         case .settings:        return "gearshape.fill"
@@ -161,7 +159,6 @@ public enum SidebarSection: String, Hashable, CaseIterable, Codable {
         case .products:        return CommonStrings.navProducts
         case .inventory:       return CommonStrings.navInventory
         case .paymentInbox:    return CommonStrings.navPaymentInbox
-        case .eventFormLinks:  return CommonStrings.navEventFormLinks
         case .reviews:         return CommonStrings.navReviews
         case .publicRequests:  return CommonStrings.navPublicRequests
         case .settings:        return CommonStrings.navSettings
@@ -175,12 +172,12 @@ extension SidebarSection {
     /// Main sidebar order for iPad/macOS.
     static let mainSections: [SidebarSection] = [
         .dashboard, .events, .clients, .personnel, .products, .inventory,
-        .paymentInbox, .publicRequests, .eventFormLinks, .reviews
+        .paymentInbox, .publicRequests, .reviews
     ]
 
     /// Catalog section order for the iPhone "Mas" menu.
     static let moreMenuCatalogSections: [SidebarSection] = [
-        .products, .inventory, .paymentInbox, .publicRequests, .personnel, .eventFormLinks, .reviews
+        .products, .inventory, .paymentInbox, .publicRequests, .personnel, .reviews
     ]
 
     /// Canonical route destination used by menu navigation.
@@ -204,8 +201,6 @@ extension SidebarSection {
             return .paymentInbox
         case .publicRequests:
             return .publicRequests
-        case .eventFormLinks:
-            return .eventFormLinks
         case .reviews:
             return .reviews
         case .settings:
@@ -218,10 +213,7 @@ extension SidebarSection {
     /// The sidebar applies `.symbolVariant(.fill)` dynamically on active state, so it
     /// keeps the plain base name; the More menu always renders the filled variant.
     var moreMenuIconName: String {
-        switch self {
-        case .eventFormLinks:  return "link.circle.fill"
-        default:               return iconName
-        }
+        iconName
     }
 
     /// Secondary text used by the iPhone "Mas" list rows.
@@ -235,8 +227,6 @@ extension SidebarSection {
             return CommonStrings.moreMenuPaymentInboxSubtitle
         case .publicRequests:
             return CommonStrings.moreMenuPublicRequestsSubtitle
-        case .eventFormLinks:
-            return CommonStrings.moreMenuEventFormLinksSubtitle
         case .personnel:
             return CommonStrings.moreMenuPersonnelSubtitle
         case .reviews:

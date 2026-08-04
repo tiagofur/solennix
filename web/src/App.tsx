@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { queryClient } from "@/lib/queryClient";
@@ -56,11 +56,15 @@ const InventoryForm = React.lazy(() => import("@/pages/Inventory/InventoryForm")
 const InventoryDetails = React.lazy(() => import("@/pages/Inventory/InventoryDetails").then((m) => ({ default: m.InventoryDetails })));
 
 const QuickQuotePage = React.lazy(() => import("@/pages/QuickQuote/QuickQuotePage").then((m) => ({ default: m.QuickQuotePage })));
-const PublicEventFormPage = React.lazy(() => import("@/pages/PublicEventForm/PublicEventFormPage").then((m) => ({ default: m.PublicEventFormPage })));
 const ClientPortalPage = React.lazy(() => import("@/pages/ClientPortal/ClientPortalPage").then((m) => ({ default: m.ClientPortalPage })));
 const PublicReviewPage = React.lazy(() => import("@/pages/PublicReview/PublicReviewPage").then((m) => ({ default: m.PublicReviewPage })));
 const PublicProfilePage = React.lazy(() => import("@/pages/PublicProfile/PublicProfilePage").then((m) => ({ default: m.PublicProfilePage })));
 const ProveedoresPage = React.lazy(() => import("@/pages/Proveedores/ProveedoresPage").then((m) => ({ default: m.ProveedoresPage })));
+const PublicRequestLinkPage = React.lazy(() =>
+  import("@/pages/PublicRequest/PublicRequestLinkPage").then((m) => ({
+    default: m.PublicRequestLinkPage,
+  })),
+);
 const PublicRequestStatusPage = React.lazy(() =>
   import("@/pages/PublicRequest/PublicRequestStatusPage").then((m) => ({
     default: m.PublicRequestStatusPage,
@@ -105,6 +109,12 @@ function PageFallback() {
   );
 }
 
+/** Legacy `/form/:token` → unified `/s/:token` (Solicitudes link form). */
+function LegacyFormTokenRedirect() {
+  const { token } = useParams<{ token: string }>();
+  return <Navigate to={`/s/${token ?? ""}`} replace />;
+}
+
 function App() {
   return (
     <ThemeProvider>
@@ -128,7 +138,9 @@ function App() {
               <Route path="/help/changelog" element={<Changelog />} />
               <Route path="/help" element={<Help />} />
               <Route path="/eliminar-cuenta" element={<AccountDeletion />} />
-              <Route path="/form/:token" element={<PublicEventFormPage />} />
+              {/* Legacy EFL URL → unified Solicitudes link form */}
+              <Route path="/form/:token" element={<LegacyFormTokenRedirect />} />
+              <Route path="/s/:token" element={<PublicRequestLinkPage />} />
               <Route path="/client/:token" element={<ClientPortalPage />} />
               <Route path="/organizer/review/:token" element={<PublicReviewPage />} />
               {/* v2.0 public directory (#1117) — inbound tooling, NG1 ratified */}

@@ -163,22 +163,6 @@ export type Payment = components['schemas']['Payment']
 export type PaymentInsert = Omit<Payment, 'id' | 'user_id' | 'created_at'>
 export type PaymentUpdate = Partial<PaymentInsert>
 
-// ===== Event Form Link =====
-export interface EventFormLink {
-    id: string
-    user_id: string
-    token: string
-    label?: string
-    status: 'active' | 'used' | 'expired'
-    submitted_event_id?: string
-    submitted_client_id?: string
-    url: string
-    expires_at: string
-    used_at?: string
-    created_at: string
-    updated_at: string
-}
-
 // ===== Staff (Personal / Colaboradores) =====
 // Hasta que el spec openapi incluya Staff/EventStaff declaramos las shapes
 // localmente. Alinea 1:1 con backend/internal/models/models.go::Staff.

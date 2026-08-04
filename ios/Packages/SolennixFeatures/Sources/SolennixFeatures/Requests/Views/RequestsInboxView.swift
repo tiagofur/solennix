@@ -3,40 +3,72 @@ import SolennixCore
 import SolennixNetwork
 import SolennixDesign
 
-/// Organizer inbox for public quote requests (#1122).
+/// Organizer inbox for public quote requests + share links (#1122 / unify Phase 6).
 public struct RequestsInboxView: View {
 
+    private enum InboxTab: String, CaseIterable, Identifiable {
+        case inbox
+        case links
+        var id: String { rawValue }
+    }
+
     @State private var viewModel: RequestsInboxViewModel
+    @State private var selectedTab: InboxTab = .inbox
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
+    private let apiClient: APIClient
+
     public init(apiClient: APIClient) {
+        self.apiClient = apiClient
         _viewModel = State(wrappedValue: RequestsInboxViewModel(apiClient: apiClient))
     }
 
     public var body: some View {
-        content
+        VStack(spacing: 0) {
+            Picker("", selection: $selectedTab) {
+                Text(RequestsStrings.tabInbox).tag(InboxTab.inbox)
+                Text(RequestsStrings.tabLinks).tag(InboxTab.links)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
+
+            Group {
+                switch selectedTab {
+                case .inbox:
+                    inboxContent
+                case .links:
+                    RequestLinksView(apiClient: apiClient, embedded: true)
+                }
+            }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(SolennixColors.surfaceGrouped)
-            .navigationTitle(RequestsStrings.title)
-            .navigationBarTitleDisplayMode(.large)
-            .task {
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(SolennixColors.surfaceGrouped)
+        .navigationTitle(RequestsStrings.title)
+        .navigationBarTitleDisplayMode(.large)
+        .task {
+            if selectedTab == .inbox {
                 await viewModel.refresh()
             }
-            .refreshable {
+        }
+        .refreshable {
+            if selectedTab == .inbox {
                 await viewModel.refresh()
             }
-            .alert(RequestsStrings.errorTitle, isPresented: Binding(
-                get: { viewModel.errorMessage != nil && viewModel.items.isEmpty },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            )) {
-                Button(RequestsStrings.errorOk) { viewModel.errorMessage = nil }
-            } message: {
-                Text(viewModel.errorMessage ?? "")
-            }
+        }
+        .alert(RequestsStrings.errorTitle, isPresented: Binding(
+            get: { viewModel.errorMessage != nil && viewModel.items.isEmpty && selectedTab == .inbox },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button(RequestsStrings.errorOk) { viewModel.errorMessage = nil }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 
     @ViewBuilder
-    private var content: some View {
+    private var inboxContent: some View {
         if let error = viewModel.errorMessage, viewModel.items.isEmpty, !viewModel.isLoading {
             ContentUnavailableView {
                 Label(RequestsStrings.errorLoadingTitle, systemImage: "network")
