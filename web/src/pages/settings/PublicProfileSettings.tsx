@@ -83,6 +83,8 @@ export default function PublicProfileSettings() {
   const [city, setCity] = useState("");
   const [region, setRegion] = useState("");
   const [country, setCountry] = useState("");
+  // Empty or 0 = unlimited coverage (backend: 0 clears / null = no limit).
+  const [serviceRadiusKm, setServiceRadiusKm] = useState<number | "">("");
   const [contactType, setContactType] = useState<ContactType>("email");
   const [contactValue, setContactValue] = useState("");
   const [socialsText, setSocialsText] = useState(""); // "instagram=@x,twitter=@y"
@@ -138,6 +140,12 @@ export default function PublicProfileSettings() {
         setCity(data.city ?? "");
         setRegion(data.region ?? "");
         setCountry(data.country ?? "");
+        {
+          const radius = (data as { service_radius_km?: number | null }).service_radius_km;
+          setServiceRadiusKm(
+            typeof radius === "number" && radius > 0 ? radius : "",
+          );
+        }
         if (data.contact_type) setContactType(data.contact_type as ContactType);
         setContactValue(data.contact_value ?? "");
         if (data.socials) {
@@ -420,6 +428,11 @@ export default function PublicProfileSettings() {
       city: city || null,
       region: region || null,
       country: country || null,
+      // 0 clears radius (unlimited); omit null when empty so backend treats as clear.
+      service_radius_km:
+        typeof serviceRadiusKm === "number" && serviceRadiusKm > 0
+          ? serviceRadiusKm
+          : 0,
       show_prices: profile.show_prices,
       show_services: profile.show_services,
       show_reviews: paid ? profile.show_reviews : false,
@@ -754,7 +767,7 @@ export default function PublicProfileSettings() {
         <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
           {t("publicProfile.location")}
         </p>
-        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border">
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input
             type="text"
@@ -778,6 +791,33 @@ export default function PublicProfileSettings() {
             placeholder={t("publicProfile.country")}
             className={fieldClass}
           />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-text-secondary" htmlFor="pp-service-radius">
+            {t("publicProfile.serviceRadius")}
+          </label>
+          <input
+            id="pp-service-radius"
+            type="number"
+            min="0"
+            step="1"
+            value={serviceRadiusKm}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === "") {
+                setServiceRadiusKm("");
+                return;
+              }
+              const n = parseFloat(v);
+              setServiceRadiusKm(Number.isFinite(n) ? n : "");
+            }}
+            placeholder={t("publicProfile.serviceRadiusPlaceholder")}
+            className={fieldClass}
+            data-testid="pp-service-radius"
+          />
+          <p className="text-xs text-text-tertiary">
+            {t("publicProfile.serviceRadiusHint")}
+          </p>
         </div>
         </div>
       </div>

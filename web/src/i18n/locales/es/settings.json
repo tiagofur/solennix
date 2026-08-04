@@ -28,6 +28,9 @@
     "city": "Ciudad",
     "region": "Región",
     "country": "País",
+    "serviceRadius": "Radio de servicio (km)",
+    "serviceRadiusPlaceholder": "ej. 50 (vacío = sin límite)",
+    "serviceRadiusHint": "Dejá vacío o 0 para cobertura ilimitada en búsqueda cercana.",
     "contact": "Contacto público",
     "contactTypes": {
       "phone": "Teléfono",
