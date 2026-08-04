@@ -662,8 +662,10 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	// treat 401/403 from /auth/refresh as definitive session death and clear tokens.
 	user, err := h.userRepo.GetByID(r.Context(), claims.UserID)
 	if err != nil {
-		if errors.Is(r.Context().Err(), context.Canceled) || errors.Is(err, context.Canceled) {
-			slog.Debug("auth.event", "action", "token_refresh_canceled", "user_id", claims.UserID)
+		// Client went away or request timed out — not an auth failure; do not audit.
+		if errors.Is(r.Context().Err(), context.Canceled) || errors.Is(err, context.Canceled) ||
+			errors.Is(r.Context().Err(), context.DeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
+			slog.Debug("auth.event", "action", "token_refresh_canceled", "user_id", claims.UserID, "error", err)
 			return
 		}
 		if repository.IsUserNotFound(err) {
@@ -675,12 +677,11 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 			writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.token_invalid_or_expired")
 			return
 		}
-		// Transient DB error — do NOT invalidate the session, return 503 so the
-		// client knows to retry rather than wiping local credentials.
+		// Transient DB / infra error — do NOT invalidate the session (503 so clients
+		// retry). Do NOT write auth_failed audit: clients retry aggressively and that
+		// flooded admin timelines with "Database error (transient)" noise that looks
+		// like credential failures. Ops still get slog.Error.
 		slog.Error("auth.event", "action", "token_refresh_failed", "reason", "db_error", "user_id", claims.UserID, "error", err, "ip", clientIP(r))
-		middleware.LogSecurityAuditEvent(claims.UserID, "auth_failed", "session", map[string]any{
-			"reason": "refresh_db_error",
-		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusServiceUnavailable, "auth.service_unavailable")
 		return
 	}
