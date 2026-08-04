@@ -1986,6 +1986,42 @@ components:
         status:
           type: string
           enum: [quoted, confirmed, completed, cancelled]
+    # Legacy public form catalog/brand shapes still referenced by web until the
+    # Solicitudes web cutover lands (PR #1178). Endpoints /event-forms are gone;
+    # keep schemas so openapi:types + tsc on main's PublicEventFormPage stay green.
+    PublicProduct:
+      type: object
+      required:
+        - id
+        - name
+        - category
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: string
+        image_url:
+          type: string
+          nullable: true
+    PublicOrganizer:
+      type: object
+      properties:
+        business_name:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          nullable: true
+        cover_url:
+          type: string
+          nullable: true
+          description: Public profile hero cover image URL
+        brand_color:
+          type: string
+          nullable: true
     PublicOrganizerBrand:
       type: object
       properties:
