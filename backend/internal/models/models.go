@@ -870,34 +870,93 @@ func (s RequestStatus) IsTerminal() bool {
 	return false
 }
 
+// SubmitMode controls what happens when a visitor submits a PublicRequest
+// (from a shared link or profile CTA). Profile CTA is always standard.
+type SubmitMode string
+
+const (
+	SubmitModeStandard  SubmitMode = "standard"
+	SubmitModeAutoQuote SubmitMode = "auto_quote"
+	SubmitModeAutoEvent SubmitMode = "auto_event"
+)
+
+// RequestSource is how the visitor entered the quote-request flow.
+type RequestSource string
+
+const (
+	RequestSourcePublicProfile RequestSource = "public_profile"
+	RequestSourceSharedLink    RequestSource = "shared_link"
+)
+
+// PublicRequestLinkStatus is the lifecycle of a shareable request link.
+type PublicRequestLinkStatus string
+
+const (
+	PublicRequestLinkActive  PublicRequestLinkStatus = "active"
+	PublicRequestLinkUsed    PublicRequestLinkStatus = "used"
+	PublicRequestLinkExpired PublicRequestLinkStatus = "expired"
+	PublicRequestLinkRevoked PublicRequestLinkStatus = "revoked"
+)
+
+// PublicRequestLink is a provider-generated shareable URL for quote requests.
+// Replaces EventFormLink as the canonical link primitive (EFL kept until PR2).
+type PublicRequestLink struct {
+	ID              uuid.UUID               `json:"id"`
+	OrganizerUserID uuid.UUID               `json:"organizer_user_id"`
+	Token           string                  `json:"token"`
+	Label           *string                 `json:"label,omitempty"`
+	Status          PublicRequestLinkStatus `json:"status"`
+	SubmitMode      SubmitMode              `json:"submit_mode"`
+	MaxUses         *int                    `json:"max_uses,omitempty"` // nil = unlimited
+	UseCount        int                     `json:"use_count"`
+	ExpiresAt       *time.Time              `json:"expires_at,omitempty"` // nil = no expiry
+	CreatedAt       time.Time               `json:"created_at"`
+	UpdatedAt       time.Time               `json:"updated_at"`
+	URL             string                  `json:"url,omitempty"` // computed, not stored
+}
+
 // PublicRequestServiceSnapshot captures a service the visitor selected at
 // submission time. Stored as a JSONB snapshot in PublicRequest.Services so the
 // historical quote survives catalog changes (price edits, product deletion).
 type PublicRequestServiceSnapshot struct {
 	ProductID  uuid.UUID `json:"product_id"`
 	Name       string    `json:"name"`
-	Price      *float64  `json:"price,omitempty"`
+	Price      *float64  `json:"price,omitempty"` // unit price at snapshot time
+	Qty        int       `json:"qty,omitempty"`   // defaults to 1 when 0/absent
 	IsFeatured bool      `json:"is_featured,omitempty"`
 }
 
+// SnapshotQty returns qty defaulting to 1 when unset (legacy rows).
+func (s PublicRequestServiceSnapshot) SnapshotQty() int {
+	if s.Qty <= 0 {
+		return 1
+	}
+	return s.Qty
+}
+
 // PublicRequest is a structured quote request submitted by an unauthenticated
-// visitor (contact_email) to an organizer's public profile. The visitor acts on
-// their own request via client_token (no account, NG1 ratified).
+// visitor (contact_email) to an organizer's public profile or shared link.
+// The visitor acts on their own request via client_token (no account, NG1).
 type PublicRequest struct {
 	ID               uuid.UUID                      `json:"id"`
 	OrganizerUserID  uuid.UUID                      `json:"-"`
 	ClientToken      uuid.UUID                      `json:"-"`
 	ContactEmail     string                         `json:"contact_email"`
 	ContactName      *string                        `json:"contact_name,omitempty"`
+	ContactPhone     *string                        `json:"contact_phone,omitempty"`
 	EventType        *string                        `json:"event_type,omitempty"`
 	EventDate        *string                        `json:"event_date,omitempty"`
 	Location         *string                        `json:"location,omitempty"`
+	City             *string                        `json:"city,omitempty"`
 	GuestCount       *int                           `json:"guest_count,omitempty"`
 	Budget           *float64                       `json:"budget,omitempty"`
 	Currency         string                         `json:"currency"`
 	Services         []PublicRequestServiceSnapshot `json:"services"`
 	Message          *string                        `json:"message,omitempty"`
 	Status           RequestStatus                  `json:"status"`
+	Source           RequestSource                  `json:"source"`
+	LinkID           *uuid.UUID                     `json:"link_id,omitempty"`
+	SubmitMode       SubmitMode                     `json:"submit_mode"`
 	IsRead           bool                           `json:"is_read"`
 	EventID          *uuid.UUID                     `json:"event_id,omitempty"`
 	DeclinedReason   *string                        `json:"declined_reason,omitempty"`
