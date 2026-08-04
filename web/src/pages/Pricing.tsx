@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shield, Zap, CheckCircle, ArrowRight, Star, Building2 } from 'lucide-react';
 import { subscriptionService } from '../services/subscriptionService';
 import { useAuth } from '../contexts/AuthContext';
 import { logError } from '../lib/errorHandler';
 import { useTranslation } from 'react-i18next';
+import { recordPageView } from '@/services/pageViewService';
 
 type PlanKey = 'pro' | 'business';
 
 export const Pricing: React.FC = () => {
   const { t } = useTranslation(['pricing']);
+  useEffect(() => { void recordPageView('pricing'); }, []);
   // `upgradingPlan` doubles as a per-plan loading flag — both buttons can't
   // be spinning at once and we need to know WHICH button was clicked.
   const [upgradingPlan, setUpgradingPlan] = useState<PlanKey | null>(null);

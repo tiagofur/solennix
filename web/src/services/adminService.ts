@@ -28,6 +28,11 @@ export interface PlatformStats {
   visitor_views_last_30d?: number;
   visitor_unique_last_30d?: number;
   visitor_views_by_day?: Array<{ date: string; count: number }>;
+  landing_views_last_30d?: number;
+  landing_unique_last_30d?: number;
+  landing_views_by_day?: Array<{ date: string; count: number }>;
+  visitor_by_device?: Record<string, number>;
+  visitor_by_country?: Record<string, number>;
 }
 
 export interface AdminUser {

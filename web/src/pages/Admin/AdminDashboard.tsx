@@ -283,6 +283,16 @@ export const AdminDashboard: React.FC = () => {
           <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.visitor_unique_last_30d ?? 0)}</p>
           <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.visitor_help")}</p>
         </div>
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <p className="text-xs text-text-secondary uppercase tracking-wide">{t("admin:dashboard.stats.landing_views")}</p>
+          <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.landing_views_last_30d ?? 0)}</p>
+          <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.landing_help")}</p>
+        </div>
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <p className="text-xs text-text-secondary uppercase tracking-wide">{t("admin:dashboard.stats.landing_unique")}</p>
+          <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.landing_unique_last_30d ?? 0)}</p>
+          <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.landing_help")}</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -333,6 +343,99 @@ export const AdminDashboard: React.FC = () => {
                   <Bar dataKey="value" fill="var(--color-info)" radius={[4, 4, 0, 0]} name="Views" />
                 </BarChart>
               </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-secondary text-sm">
+                {t("admin:dashboard.charts.no_data")}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Slice 2: landing + device + country */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="bg-card shadow-sm border border-border rounded-2xl p-6 xl:col-span-1">
+          <h3 className="text-base font-semibold text-text mb-4">
+            {t("admin:dashboard.charts.landing_series_title")}
+          </h3>
+          <div className="h-56">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
+              </div>
+            ) : (stats?.landing_views_by_day?.length ?? 0) > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <BarChart
+                  data={stats?.landing_views_by_day?.map((d) => ({ name: d.date.slice(5), value: d.count })) ?? []}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                  <XAxis dataKey="name" tick={{ fill: "var(--color-text-tertiary)", fontSize: 10 }} interval="preserveStartEnd" />
+                  <YAxis allowDecimals={false} tick={{ fill: "var(--color-text-tertiary)", fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="var(--color-success)" radius={[4, 4, 0, 0]} name="Landing" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-secondary text-sm">
+                {t("admin:dashboard.charts.no_data")}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
+          <h3 className="text-base font-semibold text-text mb-4">
+            {t("admin:dashboard.charts.device_title")}
+          </h3>
+          <div className="h-56">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
+              </div>
+            ) : Object.keys(stats?.visitor_by_device ?? {}).length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <BarChart
+                  data={Object.entries(stats?.visitor_by_device ?? {}).map(([name, value]) => ({
+                    name: name.toUpperCase(),
+                    value,
+                  }))}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                  <XAxis dataKey="name" tick={{ fill: "var(--color-text-tertiary)", fontSize: 11 }} />
+                  <YAxis allowDecimals={false} tick={{ fill: "var(--color-text-tertiary)", fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="var(--color-warning)" radius={[4, 4, 0, 0]} name="Views" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-secondary text-sm">
+                {t("admin:dashboard.charts.no_data")}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
+          <h3 className="text-base font-semibold text-text mb-4">
+            {t("admin:dashboard.charts.country_title")}
+          </h3>
+          <div className="h-56 overflow-y-auto">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
+              </div>
+            ) : Object.keys(stats?.visitor_by_country ?? {}).length > 0 ? (
+              <ul className="space-y-2">
+                {Object.entries(stats?.visitor_by_country ?? {})
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([code, count]) => (
+                    <li
+                      key={code}
+                      className="flex items-center justify-between text-sm border border-border rounded-xl px-3 py-2 bg-surface-alt/40"
+                    >
+                      <span className="font-semibold text-text tracking-wide">{code}</span>
+                      <span className="text-text-secondary tabular-nums">{count}</span>
+                    </li>
+                  ))}
+              </ul>
             ) : (
               <div className="h-full flex items-center justify-center text-text-secondary text-sm">
                 {t("admin:dashboard.charts.no_data")}

@@ -563,9 +563,14 @@ func TestAdminRepoGetPlatformStats(t *testing.T) {
 	}
 	// Seed a profile view + activity day to exercise aggregates.
 	if _, err := pool.Exec(context.Background(), `
-		INSERT INTO public_profile_views (organizer_user_id, slug, visitor_hash, source, viewed_at)
-		VALUES ($1, 'stats-slug', 'hash-abc', 'direct', NOW())`, userID); err != nil {
+		INSERT INTO public_profile_views (organizer_user_id, slug, visitor_hash, source, device_class, country_code, viewed_at)
+		VALUES ($1, 'stats-slug', 'hash-abc', 'direct', 'ios', 'MX', NOW())`, userID); err != nil {
 		t.Fatalf("seed profile view: %v", err)
+	}
+	if _, err := pool.Exec(context.Background(), `
+		INSERT INTO site_page_views (page_key, visitor_hash, device_class, country_code, source, viewed_at)
+		VALUES ('landing', 'hash-land-1', 'desktop', 'MX', 'direct', NOW())`); err != nil {
+		t.Fatalf("seed landing view: %v", err)
 	}
 	if _, err := pool.Exec(context.Background(), `
 		INSERT INTO user_activity_days (user_id, activity_date, platform)
@@ -586,6 +591,15 @@ func TestAdminRepoGetPlatformStats(t *testing.T) {
 	}
 	if stats2.VisitorUniqueLast30d < 1 {
 		t.Fatalf("VisitorUniqueLast30d = %d, want >= 1", stats2.VisitorUniqueLast30d)
+	}
+	if stats2.LandingViewsLast30d < 1 {
+		t.Fatalf("LandingViewsLast30d = %d, want >= 1", stats2.LandingViewsLast30d)
+	}
+	if stats2.VisitorByDevice["ios"] < 1 && stats2.VisitorByDevice["desktop"] < 1 {
+		t.Fatalf("VisitorByDevice = %+v, want ios/desktop", stats2.VisitorByDevice)
+	}
+	if stats2.VisitorByCountry["MX"] < 1 {
+		t.Fatalf("VisitorByCountry = %+v, want MX", stats2.VisitorByCountry)
 	}
 	if stats2.DAU < 1 {
 		t.Fatalf("DAU = %d, want >= 1", stats2.DAU)

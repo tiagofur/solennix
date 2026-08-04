@@ -33,7 +33,10 @@
       "mau_help": "últimos 30 días",
       "visitor_views": "Vistas visitante",
       "visitor_unique": "Visitantes únicos",
-      "visitor_help": "perfiles públicos · 30 días"
+      "visitor_help": "perfiles públicos · 30 días",
+      "landing_views": "Vistas landing",
+      "landing_unique": "Únicos landing",
+      "landing_help": "página de inicio · 30 días"
     },
     "charts": {
       "plans_title": "Distribución de Planes",
@@ -41,6 +44,9 @@
       "subscriptions_title": "Suscripciones",
       "dau_series_title": "DAU (30 días)",
       "visitor_series_title": "Vistas de perfiles públicos (30 días)",
+      "landing_series_title": "Vistas de landing (30 días)",
+      "device_title": "Visitantes por dispositivo",
+      "country_title": "Visitantes por país (top)",
       "no_data": "Sin datos disponibles",
       "loading": "Cargando...",
       "today": "Hoy",
