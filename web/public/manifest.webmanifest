@@ -1,7 +1,7 @@
 {
   "name": "Solennix — Gestión de Eventos",
   "short_name": "Solennix",
-  "description": "Plataforma profesional para organizadores de eventos. Gestiona clientes, cotizaciones, inventario y pagos.",
+  "description": "Encontrá proveedores para tu evento y gestioná tu negocio de eventos. Cotizaciones, inventario y pagos.",
   "lang": "es",
   "start_url": "/dashboard",
   "scope": "/",

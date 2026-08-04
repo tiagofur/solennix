@@ -18,11 +18,12 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'pwa-192x192.png'],
+      includeAssets: ['favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'Solennix — Gestión de Eventos',
         short_name: 'Solennix',
-        description: 'Plataforma profesional para organizadores de eventos. Gestiona clientes, cotizaciones, inventario y pagos.',
+        description:
+          'Encontrá proveedores para tu evento y gestioná tu negocio de eventos. Cotizaciones, inventario y pagos.',
         lang: 'es',
         theme_color: '#C4A265',
         background_color: '#F5F4F1',
@@ -30,6 +31,8 @@ export default defineConfig({
         // 'any' lets desktop installs resize freely instead of locking to
         // portrait (mobile-first constraint felt wrong on macOS Windows #888).
         orientation: 'any',
+        // Organizer default; inbound visitors install from /proveedores and still
+        // get standalone. Dashboard redirects unauthenticated users to login.
         start_url: '/dashboard',
         scope: '/',
         categories: ['business', 'productivity'],
@@ -69,6 +72,21 @@ export default defineConfig({
             options: {
               cacheName: 'google-fonts',
               expiration: { maxEntries: 10, maxAgeSeconds: 365 * 24 * 60 * 60 },
+            },
+          },
+          // Public organizer profiles + directory (#1132): offline read of
+          // visited shells. NetworkFirst so fresh data wins when online.
+          {
+            urlPattern: /\/api\/public\/organizers(?:\/|$)/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'public-profiles',
+              networkTimeoutSeconds: 5,
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 7 * 24 * 60 * 60,
+              },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
         ],

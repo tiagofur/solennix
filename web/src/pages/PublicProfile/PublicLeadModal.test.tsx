@@ -110,6 +110,8 @@ describe("PublicLeadModal (solicitud estructurada, #1118)", () => {
     expect(capturedBody.currency).toBe("MXN");
     expect(capturedBody.website).toBe("");
     expect(screen.getByTestId("lead-status-link")).toBeInTheDocument();
+    // #1132 — clear "what next" steps for the visitor
+    expect(screen.getByTestId("lead-success-next-steps")).toBeInTheDocument();
   });
 
   it("includes honeypot input hidden from users", () => {

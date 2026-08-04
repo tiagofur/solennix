@@ -186,9 +186,9 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
         </button>
 
         {submitted ? (
-          <div className="py-6 text-center space-y-4" data-testid="lead-success-view">
+          <div className="py-6 text-center space-y-5 animate-scale-in" data-testid="lead-success-view">
             <div className="mx-auto w-16 h-16 rounded-full bg-success/10 flex items-center justify-center text-success">
-              <CheckCircle2 className="h-10 w-10" />
+              <CheckCircle2 className="h-10 w-10" aria-hidden="true" />
             </div>
             <div className="space-y-2">
               <h3 className="text-xl font-bold text-text">
@@ -198,9 +198,45 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
                 {t("profile.quote_success_desc", { name: businessName })}
               </p>
             </div>
+
+            {/* Qué sigue — clear next steps for the visitor (#1132), no account */}
+            <ol
+              className="mx-auto max-w-sm space-y-2.5 text-left"
+              data-testid="lead-success-next-steps"
+              aria-label={t("profile.quote_success_next_heading")}
+            >
+              <li className="flex gap-2.5 text-sm text-text-secondary">
+                <span
+                  className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-bold text-primary"
+                  aria-hidden="true"
+                >
+                  1
+                </span>
+                <span>{t("profile.quote_success_next_1", { name: businessName })}</span>
+              </li>
+              <li className="flex gap-2.5 text-sm text-text-secondary">
+                <span
+                  className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-bold text-primary"
+                  aria-hidden="true"
+                >
+                  2
+                </span>
+                <span>{t("profile.quote_success_next_2")}</span>
+              </li>
+              <li className="flex gap-2.5 text-sm text-text-secondary">
+                <span
+                  className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-bold text-primary"
+                  aria-hidden="true"
+                >
+                  3
+                </span>
+                <span>{t("profile.quote_success_next_3")}</span>
+              </li>
+            </ol>
+
             {statusPath && (
               <div
-                className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-1.5"
+                className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-1.5 text-left"
                 data-testid="lead-status-link"
               >
                 <p className="text-xs font-semibold text-text">

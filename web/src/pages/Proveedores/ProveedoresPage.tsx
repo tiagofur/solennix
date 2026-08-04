@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Search as SearchIcon, MapPin, Calendar, Loader2, AlertCircle, Crosshair, X } from "lucide-react";
 import Empty from "@/components/Empty";
 import { Pagination } from "@/components/Pagination";
+import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 import { upsertMeta, setDocumentTitle } from "@/lib/seo";
 import { useDirectoryFilters } from "./useDirectoryFilters";
 import { useSearchOrganizers } from "./useSearchOrganizers";
@@ -73,7 +74,7 @@ export const ProveedoresPage: React.FC = () => {
   }, [t]);
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg animate-fade-in">
       {/* Hero */}
       <div className="border-b border-border bg-gradient-to-b from-primary/5 to-transparent">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
@@ -415,6 +416,9 @@ export const ProveedoresPage: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Optional A2HS for inbound visitors (#1132) — no client account */}
+      <PwaInstallBanner />
     </div>
   );
 };

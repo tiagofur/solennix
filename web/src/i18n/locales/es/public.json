@@ -424,6 +424,7 @@
     "not_found_title": "Perfil no disponible",
     "not_found_desc": "Este perfil público no existe o no está publicado en este momento.",
     "back_home": "Volver a Solennix",
+    "browse_directory": "Ver proveedores",
     "contact_cta": "Contactar",
     "services_title": "Servicios",
     "services_all_categories": "Todos",
@@ -482,6 +483,10 @@
     "quote_success_desc": "Tu mensaje ha sido enviado directamente a {{name}}. Se pondrán en contacto contigo muy pronto.",
     "quote_success_status_link": "Guardá este enlace para seguir tu solicitud",
     "quote_success_status_hint": "Abrilo más tarde para aceptar o rechazar la cotización.",
+    "quote_success_next_heading": "Qué sigue",
+    "quote_success_next_1": "{{name}} recibió tu solicitud en su bandeja.",
+    "quote_success_next_2": "Te van a contactar por el email que dejaste — no hace falta cuenta.",
+    "quote_success_next_3": "Si te envían una cotización, usá el enlace de abajo para aceptar o rechazar.",
     "close_modal": "Cerrar",
     "actions": {
       "save_contact": "Guardar contacto",
@@ -595,11 +600,20 @@
     },
     "empty": {
       "title": "Sin resultados",
-      "message": "No encontramos proveedores con esos filtros.",
+      "message": "No encontramos proveedores con esos filtros. Probá otra ciudad o limpiá los filtros.",
       "clear_cta": "Limpiar filtros"
     },
     "error_title": "No pudimos cargar el directorio",
     "loading": "Cargando proveedores..."
+  },
+  "pwa": {
+    "region_label": "Agregar Solennix a la pantalla de inicio",
+    "title": "Acceso rápido desde tu inicio",
+    "body": "Agregá Solennix a tu pantalla de inicio para volver al directorio sin abrir el navegador. No crea una cuenta.",
+    "install_cta": "Agregar a inicio",
+    "ios_body": "Podés agregar Solennix a tu pantalla de inicio para acceso rápido. No crea una cuenta de cliente.",
+    "ios_hint": "Tocá Compartir y después «Agregar a pantalla de inicio».",
+    "dismiss": "Cerrar aviso de instalación"
   },
   "request_status": {
     "title": "Tu solicitud de cotización",
