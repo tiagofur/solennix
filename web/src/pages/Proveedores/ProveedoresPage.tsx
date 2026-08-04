@@ -49,6 +49,11 @@ export const ProveedoresPage: React.FC = () => {
   const items = data?.data ?? [];
   const totalPages = data?.total_pages ?? 0;
   const isFirstLoad = isLoading && !data;
+  // #1129 — featured strip on page 1 only (cap 6). Does not hide them from the grid.
+  const featuredStrip =
+    page === 1
+      ? items.filter((o) => o.is_featured).slice(0, 6)
+      : [];
 
   // Scroll to top on page change for predictable navigation.
   useEffect(() => {
@@ -351,9 +356,43 @@ export const ProveedoresPage: React.FC = () => {
           />
         )}
 
-        {/* Grid */}
+        {/* Featured strip (#1129) — Business first slot, subtle gold, no empty slots */}
+        {!isFirstLoad && !isError && featuredStrip.length > 0 && (
+          <section className="mb-10" data-testid="featured-strip" aria-labelledby="featured-heading">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <h2
+                  id="featured-heading"
+                  className="text-lg font-bold tracking-tight text-text sm:text-xl"
+                >
+                  {filters.city
+                    ? t("public:directory.featured.title_city", { city: filters.city })
+                    : t("public:directory.featured.title")}
+                </h2>
+                <p className="mt-0.5 text-sm text-text-secondary">
+                  {t("public:directory.featured.subtitle")}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredStrip.map((organizer, idx) => (
+                <OrganizerCard
+                  key={`feat-${organizer.slug ?? idx}`}
+                  organizer={organizer}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Full results grid (featured still appear — reorder only, AC) */}
         {!isFirstLoad && !isError && items.length > 0 && (
           <>
+            {featuredStrip.length > 0 && (
+              <h2 className="mb-4 text-base font-semibold text-text-secondary">
+                {t("public:directory.featured.all_results")}
+              </h2>
+            )}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((organizer, idx) => (
                 <OrganizerCard key={organizer.slug ?? `org-${idx}`} organizer={organizer} />

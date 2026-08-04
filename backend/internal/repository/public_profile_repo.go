@@ -537,9 +537,20 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 		n += 3
 	}
 
-	// Ranking. Default relevance = plan-featured → rating → reviews → recency.
-	// sort=rating/recent/distance override the order column.
-	orderClause := "ORDER BY (u.plan = 'business') DESC NULLS LAST, avg_rating DESC NULLS LAST, review_count DESC NULLS LAST, u.updated_at DESC"
+	// Ranking (#1129). Default relevance:
+	// 1) Business featured first (monetization driver — plan gating server-side)
+	// 2) Bayesian-ish score: avg_rating * ln(reviews+2) so mid rating + many
+	//    reviews ranks above high rating + few reviews
+	// 3) recency of profile update
+	// Featured never hides non-featured; it only reorders.
+	// sort=rating/recent ignore plan boost; sort=distance keeps Business first
+	// then proximity (featured within geo results still lead).
+	const featuredFirst = "(u.plan = 'business') DESC NULLS LAST"
+	const relevanceScore = `(COALESCE(avg_rating, 0) * LN(GREATEST(review_count, 0) + 2)) DESC NULLS LAST`
+	orderClause := fmt.Sprintf(
+		"ORDER BY %s, %s, review_count DESC NULLS LAST, u.updated_at DESC",
+		featuredFirst, relevanceScore,
+	)
 	switch f.SortBy {
 	case "rating":
 		orderClause = "ORDER BY avg_rating DESC NULLS LAST, review_count DESC NULLS LAST"
@@ -556,8 +567,8 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 		// Requires visitor coords; if absent, falls back to relevance.
 		if f.Lat != nil && f.Lng != nil {
 			orderClause = fmt.Sprintf(
-				"ORDER BY POWER(opp.latitude - %f, 2) + POWER(opp.longitude - %f, 2) ASC NULLS LAST",
-				visitorLat, visitorLng)
+				"ORDER BY %s, POWER(opp.latitude - %f, 2) + POWER(opp.longitude - %f, 2) ASC NULLS LAST",
+				featuredFirst, visitorLat, visitorLng)
 		}
 	}
 

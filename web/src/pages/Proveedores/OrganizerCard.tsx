@@ -48,7 +48,10 @@ export const OrganizerCard: React.FC<{ organizer: PublicOrganizerCard }> = ({
           </div>
         )}
         {organizer.is_featured && (
-          <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-on-primary shadow-sm">
+          <span
+            className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-card/95 px-2.5 py-1 text-xs font-semibold text-primary shadow-sm backdrop-blur-sm"
+            data-testid="featured-badge"
+          >
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             {t("public:directory.card.featured_badge")}
           </span>

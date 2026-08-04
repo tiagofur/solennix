@@ -587,6 +587,12 @@
       "no_rating": "Sin reseñas",
       "no_city": "Ubicación no informada"
     },
+    "featured": {
+      "title": "Proveedores destacados",
+      "title_city": "Destacados en {{city}}",
+      "subtitle": "Planes Business con visibilidad prioritaria en el directorio",
+      "all_results": "Todos los resultados"
+    },
     "empty": {
       "title": "Sin resultados",
       "message": "No encontramos proveedores con esos filtros.",
