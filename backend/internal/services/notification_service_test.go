@@ -229,6 +229,39 @@ func TestSendEventConfirmed_GivenNoTokens_WhenSending_ThenReturnsNil(t *testing.
 	assert.NoError(t, err)
 }
 
+func TestSendPublicRequestCreated_GivenPushDisabled_WhenSending_ThenNil(t *testing.T) {
+	ps := &PushService{enabled: false}
+	repo := &mockDeviceTokenFetcher{
+		tokens: []models.DeviceToken{{ID: uuid.New(), Token: "tok", Platform: "ios"}},
+	}
+	svc := NewNotificationService(ps, repo, nil, nil)
+	name := "María"
+	et := "boda"
+	req := &models.PublicRequest{
+		ID: uuid.New(), ContactName: &name, EventType: &et,
+	}
+	err := svc.SendPublicRequestCreated(context.Background(), uuid.New(), req)
+	assert.NoError(t, err)
+}
+
+func TestSendPublicRequestCreated_GivenNoTokens_WhenSending_ThenNil(t *testing.T) {
+	ps := &PushService{enabled: true}
+	repo := &mockDeviceTokenFetcher{tokens: []models.DeviceToken{}}
+	svc := NewNotificationService(ps, repo, nil, nil)
+	req := &models.PublicRequest{ID: uuid.New()}
+	err := svc.SendPublicRequestCreated(context.Background(), uuid.New(), req)
+	assert.NoError(t, err)
+}
+
+func TestPublicRequestPushBody_UsesNameAndEventType(t *testing.T) {
+	name := "Ana"
+	et := "xv"
+	req := &models.PublicRequest{ContactName: &name, EventType: &et}
+	body := publicRequestPushBody(req)
+	assert.Contains(t, body, "Ana")
+	assert.Contains(t, body, "xv")
+}
+
 func TestSendEventConfirmed_GivenTokensAndDisabledPush_WhenSending_ThenReturnsNil(t *testing.T) {
 	ps := &PushService{enabled: false}
 	repo := &mockDeviceTokenFetcher{

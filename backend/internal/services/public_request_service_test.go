@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -92,6 +93,19 @@ func newSvc(t *testing.T, rs *mockRequestStore, prof *mockProfileLookup, prod *m
 	return NewPublicRequestService(rs, prof, prod, ul, nil, 100)
 }
 
+type mockPublicRequestNotifier struct {
+	called int
+	lastID uuid.UUID
+	err    error
+}
+
+func (m *mockPublicRequestNotifier) SendPublicRequestCreated(_ context.Context, organizerUserID uuid.UUID, req *models.PublicRequest) error {
+	m.called++
+	m.lastID = organizerUserID
+	_ = req
+	return m.err
+}
+
 // --- CreatePublicRequest ---
 
 func TestCreatePublicRequest_ProfileDisabled_ReturnsErrPublicProfileDisabled(t *testing.T) {
@@ -162,6 +176,48 @@ func TestCreatePublicRequest_HappyPath_BuildsSnapshotAndPersists(t *testing.T) {
 	assert.Equal(t, "Banquete", store.created.Services[0].Name)
 	assert.Equal(t, &price, store.created.Services[0].Price)
 	assert.True(t, store.created.Services[0].IsFeatured)
+}
+
+func TestCreatePublicRequest_NotifiesOrganizerAsync(t *testing.T) {
+	uid := uuid.New()
+	store := &mockRequestStore{pendingCount: 0}
+	// Create populates ID only if the mock sets it — simulate repo Create filling ID.
+	store.createErr = nil
+	svc := newSvc(t, store,
+		&mockProfileLookup{profile: &models.OrganizerPublicProfile{IsEnabled: true}},
+		&mockProductLookup{},
+		&mockUserSlugLookup{user: &models.User{ID: uid}})
+	n := &mockPublicRequestNotifier{}
+	svc.SetNotifier(n)
+
+	// Ensure Create assigns an ID like the real repo.
+	origCreate := store.Create
+	_ = origCreate
+	store2 := &mockRequestStoreWithID{mockRequestStore: store}
+	svc.requestRepo = store2
+
+	_, err := svc.CreatePublicRequest(context.Background(), CreatePublicRequestInput{
+		OrganizerSlug: "x", ContactEmail: "c@x.dev",
+	})
+	require.NoError(t, err)
+
+	// Async goroutine — wait briefly.
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) && n.called == 0 {
+		time.Sleep(10 * time.Millisecond)
+	}
+	assert.Equal(t, 1, n.called)
+	assert.Equal(t, uid, n.lastID)
+}
+
+// mockRequestStoreWithID assigns a UUID on Create like the real repo.
+type mockRequestStoreWithID struct {
+	*mockRequestStore
+}
+
+func (m *mockRequestStoreWithID) Create(ctx context.Context, req *models.PublicRequest) error {
+	req.ID = uuid.New()
+	return m.mockRequestStore.Create(ctx, req)
 }
 
 // --- State machine (Respond / RequestInfo / Decline / ClientAction) ---

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -467,6 +468,133 @@ func (s *NotificationService) SendEventConfirmed(ctx context.Context, userID uui
 	failed := s.pushService.SendToTokens(ctx, tokens, msg)
 	s.cleanupFailedTokens(ctx, userID, failed)
 	return nil
+}
+
+// publicRequestPushThrottleWindow limits bursts when many requests land at once
+// (PRD §3.4 / #1124). Beyond the cap we still accept the HTTP request; we just
+// stop notifying until the window rolls forward.
+const (
+	publicRequestPushThrottleWindow = 10 * time.Minute
+	publicRequestPushThrottleMax    = 5
+	publicRequestNotifType          = "public_request_created"
+)
+
+// SendPublicRequestCreated notifies the organizer that a visitor submitted a
+// quote request (#1124). Gated by push_enabled. Includes deep-link payload for
+// mobile inbox detail (solennix://requests/{id}) and optional unread badge.
+func (s *NotificationService) SendPublicRequestCreated(ctx context.Context, organizerUserID uuid.UUID, req *models.PublicRequest) error {
+	if s.pushService == nil || !s.pushService.IsEnabled() {
+		return nil
+	}
+	enabled, _, _ := s.getUserPushPrefs(ctx, organizerUserID)
+	if !enabled {
+		return nil
+	}
+	if s.publicRequestPushThrottled(ctx, organizerUserID) {
+		slog.Info("public_request push throttled",
+			"user_id", organizerUserID,
+			"request_id", req.ID,
+		)
+		return nil
+	}
+
+	tokens, err := s.deviceRepo.GetByUserID(ctx, organizerUserID)
+	if err != nil {
+		return err
+	}
+	if len(tokens) == 0 {
+		return nil
+	}
+
+	title := "Nueva solicitud de presupuesto"
+	body := publicRequestPushBody(req)
+	deeplink := fmt.Sprintf("solennix://requests/%s", req.ID.String())
+	data := map[string]string{
+		"type":       "public_request",
+		"request_id": req.ID.String(),
+		"deeplink":   deeplink,
+		"deep_link":  deeplink,
+	}
+
+	msg := PushMessage{
+		Title: title,
+		Body:  body,
+		Data:  data,
+	}
+	if badge, ok := s.countUnreadPublicRequests(ctx, organizerUserID); ok {
+		msg.Badge = &badge
+		data["badge"] = fmt.Sprintf("%d", badge)
+	}
+
+	failed := s.pushService.SendToTokens(ctx, tokens, msg)
+	s.cleanupFailedTokens(ctx, organizerUserID, failed)
+	s.logPublicRequestPush(ctx, organizerUserID)
+	return nil
+}
+
+func publicRequestPushBody(req *models.PublicRequest) string {
+	name := "Un cliente"
+	if req.ContactName != nil && strings.TrimSpace(*req.ContactName) != "" {
+		name = strings.TrimSpace(*req.ContactName)
+	}
+	if req.EventType != nil && strings.TrimSpace(*req.EventType) != "" {
+		return fmt.Sprintf("%s — %s. Revisá la solicitud.", name, strings.TrimSpace(*req.EventType))
+	}
+	return fmt.Sprintf("%s envió una solicitud de cotización.", name)
+}
+
+// publicRequestPushThrottled reports whether the organizer already received the
+// max number of public-request pushes inside the throttle window.
+func (s *NotificationService) publicRequestPushThrottled(ctx context.Context, userID uuid.UUID) bool {
+	if s.pool == nil {
+		return false
+	}
+	var n int
+	err := s.pool.QueryRow(ctx, `
+		SELECT count(*) FROM notification_log
+		WHERE user_id = $1
+		  AND notification_type = $2
+		  AND sent_at > NOW() - ($3 * INTERVAL '1 minute')`,
+		userID, publicRequestNotifType, int(publicRequestPushThrottleWindow.Minutes()),
+	).Scan(&n)
+	if err != nil {
+		slog.Error("Failed to check public_request push throttle", "error", err)
+		return false
+	}
+	return n >= publicRequestPushThrottleMax
+}
+
+// logPublicRequestPush records a throttle marker. event_id stays NULL because
+// public_requests are not events (FK on notification_log.event_id → events).
+func (s *NotificationService) logPublicRequestPush(ctx context.Context, userID uuid.UUID) {
+	if s.pool == nil {
+		return
+	}
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO notification_log (user_id, event_id, notification_type)
+		VALUES ($1, NULL, $2)`,
+		userID, publicRequestNotifType)
+	if err != nil {
+		slog.Error("Failed to log public_request push", "error", err)
+	}
+}
+
+// countUnreadPublicRequests returns the inbox badge count when the store is
+// available. ok=false skips setting Badge on the push payload.
+func (s *NotificationService) countUnreadPublicRequests(ctx context.Context, userID uuid.UUID) (int, bool) {
+	if s.pool == nil {
+		return 0, false
+	}
+	var n int
+	err := s.pool.QueryRow(ctx, `
+		SELECT count(*) FROM public_requests
+		WHERE organizer_user_id = $1 AND is_read = false`,
+		userID).Scan(&n)
+	if err != nil {
+		slog.Error("Failed to count unread public requests for badge", "error", err)
+		return 0, false
+	}
+	return n, true
 }
 
 // SendWeeklySummaryEmails sends a weekly summary to all users who enabled it.

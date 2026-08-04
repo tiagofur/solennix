@@ -23,6 +23,13 @@ import (
 //
 // NG1 ratified: the requester is a visitor with a contact email, not a Solennix
 // user. client_token lets them act on their own request without an account.
+// PublicRequestNotifier is optional push fan-out after a visitor submits a
+// request (#1124). Implementations must not block for long; the service fires
+// it asynchronously after a successful Create.
+type PublicRequestNotifier interface {
+	SendPublicRequestCreated(ctx context.Context, organizerUserID uuid.UUID, req *models.PublicRequest) error
+}
+
 type PublicRequestService struct {
 	requestRepo    PublicRequestStore
 	profileRepo    PublicProfileLookup
@@ -30,6 +37,7 @@ type PublicRequestService struct {
 	userSlugLookup PublicUserSlugLookup
 	pool           *pgxpool.Pool
 	pendingCap     int // max pending requests per organizer before 429 (PRD §3.4)
+	notifier       PublicRequestNotifier
 }
 
 // PublicRequestStore is the subset of *repository.PublicRequestRepo the service
@@ -83,6 +91,12 @@ func NewPublicRequestService(
 		pool:           pool,
 		pendingCap:     pendingCap,
 	}
+}
+
+// SetNotifier wires push notifications for new public requests (#1124).
+// Safe to call with nil (disables notify).
+func (s *PublicRequestService) SetNotifier(n PublicRequestNotifier) {
+	s.notifier = n
 }
 
 // DefaultPendingRequestCap is the soft cap of pending requests per organizer
@@ -181,6 +195,25 @@ func (s *PublicRequestService) CreatePublicRequest(ctx context.Context, in Creat
 	if err := s.requestRepo.Create(ctx, req); err != nil {
 		return nil, fmt.Errorf("create public request: %w", err)
 	}
+
+	// Fire-and-forget push so the public visitor is not blocked on FCM/APNs.
+	if s.notifier != nil {
+		organizerID := user.ID
+		// Snapshot fields used by the notifier (req is not mutated after Create).
+		created := *req
+		go func() {
+			nctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			defer cancel()
+			if err := s.notifier.SendPublicRequestCreated(nctx, organizerID, &created); err != nil {
+				slog.WarnContext(nctx, "public_request: push notify failed",
+					"error", err,
+					"request_id", created.ID,
+					"organizer_user_id", organizerID,
+				)
+			}
+		}()
+	}
+
 	return req, nil
 }
 

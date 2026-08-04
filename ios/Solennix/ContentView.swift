@@ -202,6 +202,10 @@ struct ContentView: View {
             // consumes it in its `.task` right after `loadData`.
             DeepLinkPendingAction.openPaymentEventId = id
             pendingSpotlightRoute = .eventDetail(id: id)
+        case .showPublicRequest(let id):
+            // #1124 — push / cold-start deep link into request detail (UI #1122).
+            guard authManager.isAuthenticated else { return }
+            pendingSpotlightRoute = .publicRequestDetail(id: id)
         }
     }
 }
