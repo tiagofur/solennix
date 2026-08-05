@@ -43,6 +43,8 @@ vi.mock("@/services/productService", () => ({
   productService: {
     getById: (id: string) => getProductByIdMock(id),
     update: (id: string, body: unknown) => updateProductMock(id, body),
+    getAll: () => Promise.resolve([]),
+    uploadImage: () => Promise.resolve({ url: "https://cdn.example/x.jpg" }),
   },
 }));
 
