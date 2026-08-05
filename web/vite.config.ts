@@ -31,7 +31,7 @@ export default defineConfig({
         // 'any' lets desktop installs resize freely instead of locking to
         // portrait (mobile-first constraint felt wrong on macOS Windows #888).
         orientation: 'any',
-        // Organizer default; inbound visitors install from /proveedores and still
+        // Organizer default; inbound visitors install from /providers and still
         // get standalone. Dashboard redirects unauthenticated users to login.
         start_url: '/dashboard',
         scope: '/',

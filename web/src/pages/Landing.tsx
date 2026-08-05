@@ -980,6 +980,12 @@ export const Landing: React.FC = () => {
                 FAQ
               </a>
               <Link
+                to="/providers"
+                className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
+              >
+                Buscar proveedores
+              </Link>
+              <Link
                 to="/help"
                 className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
               >
@@ -1075,6 +1081,13 @@ export const Landing: React.FC = () => {
               FAQ
             </a>
             <Link
+              to="/providers"
+              className="block text-sm text-text-secondary py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Buscar proveedores
+            </Link>
+            <Link
               to="/help"
               className="block text-sm text-text-secondary py-2"
               onClick={() => setMobileMenuOpen(false)}
@@ -1121,7 +1134,7 @@ export const Landing: React.FC = () => {
               inventario, staff y Portal del cliente. Todo desde un solo lugar.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-5 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-5 justify-center mb-6">
               <Link
                 to="/register"
                 className="premium-gradient text-white px-10 py-5 rounded-2xl font-black text-xl shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all hover:scale-[1.05] flex items-center justify-center gap-3"
@@ -1136,6 +1149,16 @@ export const Landing: React.FC = () => {
                 Ya tengo cuenta
               </Link>
             </div>
+
+            <p className="mb-12 text-center text-base sm:text-lg text-text-secondary">
+              ¿Buscás un proveedor para tu evento?{" "}
+              <Link
+                to="/providers"
+                className="font-bold text-primary hover:underline underline-offset-4"
+              >
+                Busco un proveedor
+              </Link>
+            </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-10 text-sm font-semibold text-text-secondary opacity-80">
               <div className="flex items-center gap-2">
@@ -1586,6 +1609,16 @@ export const Landing: React.FC = () => {
                   <span>Soporte en español</span>
                 </div>
               </div>
+
+              <p className="mt-8 text-sm sm:text-base text-white/85 font-medium normal-case tracking-normal">
+                ¿Buscás un proveedor?{" "}
+                <Link
+                  to="/providers"
+                  className="font-bold text-white underline underline-offset-4 hover:text-white/90"
+                >
+                  Explorá el directorio
+                </Link>
+              </p>
             </div>
           </div>
         </div>
@@ -1633,6 +1666,14 @@ export const Landing: React.FC = () => {
                   <a href="#faq" className="hover:text-text transition-colors">
                     FAQ
                   </a>
+                </li>
+                <li>
+                  <Link
+                    to="/providers"
+                    className="hover:text-text transition-colors"
+                  >
+                    Buscar proveedores
+                  </Link>
                 </li>
               </ul>
             </div>

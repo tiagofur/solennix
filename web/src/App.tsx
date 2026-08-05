@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { Routes, Route, Navigate, useParams } from "react-router-dom";
+import { Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { queryClient } from "@/lib/queryClient";
@@ -115,6 +115,12 @@ function LegacyFormTokenRedirect() {
   return <Navigate to={`/s/${token ?? ""}`} replace />;
 }
 
+/** Legacy `/proveedores` → `/providers` (preserves filters in the query string). */
+function LegacyProveedoresRedirect() {
+  const location = useLocation();
+  return <Navigate to={{ pathname: "/providers", search: location.search }} replace />;
+}
+
 function App() {
   return (
     <ThemeProvider>
@@ -144,7 +150,9 @@ function App() {
               <Route path="/client/:token" element={<ClientPortalPage />} />
               <Route path="/organizer/review/:token" element={<PublicReviewPage />} />
               {/* v2.0 public directory (#1117) — inbound tooling, NG1 ratified */}
-              <Route path="/proveedores" element={<ProveedoresPage />} />
+              <Route path="/providers" element={<ProveedoresPage />} />
+              {/* Legacy path: SPA fallback (nginx 301 in production preserves query string) */}
+              <Route path="/proveedores" element={<LegacyProveedoresRedirect />} />
               <Route path="/u/:slug" element={<PublicProfilePage />} />
               <Route path="/solicitud/:id" element={<PublicRequestStatusPage />} />
 

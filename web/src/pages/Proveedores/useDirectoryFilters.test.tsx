@@ -12,7 +12,7 @@ function wrapper(initialEntries: string[]) {
 describe("useDirectoryFilters", () => {
   it("reads initial filters from URL", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
-      wrapper: wrapper(["/proveedores?city=CDMX&event_type=boda&page=2"]),
+      wrapper: wrapper(["/providers?city=CDMX&event_type=boda&page=2"]),
     });
     expect(result.current.eventType).toBe("boda");
     expect(result.current.page).toBe(2);
@@ -21,7 +21,7 @@ describe("useDirectoryFilters", () => {
 
   it("setCity updates inputValues immediately", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
-      wrapper: wrapper(["/proveedores"]),
+      wrapper: wrapper(["/providers"]),
     });
     act(() => result.current.setCity("GDL"));
     expect(result.current.inputValues.city).toBe("GDL");
@@ -29,7 +29,7 @@ describe("useDirectoryFilters", () => {
 
   it("setEventType updates eventType immediately (no debounce)", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
-      wrapper: wrapper(["/proveedores"]),
+      wrapper: wrapper(["/providers"]),
     });
     act(() => result.current.setEventType("xv"));
     expect(result.current.eventType).toBe("xv");
@@ -37,7 +37,7 @@ describe("useDirectoryFilters", () => {
 
   it("setPage updates page", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
-      wrapper: wrapper(["/proveedores"]),
+      wrapper: wrapper(["/providers"]),
     });
     act(() => result.current.setPage(3));
     expect(result.current.page).toBe(3);
@@ -45,7 +45,7 @@ describe("useDirectoryFilters", () => {
 
   it("changing a filter resets page to 1", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
-      wrapper: wrapper(["/proveedores?page=3"]),
+      wrapper: wrapper(["/providers?page=3"]),
     });
     expect(result.current.page).toBe(3);
     act(() => result.current.setEventType("boda"));
@@ -54,7 +54,7 @@ describe("useDirectoryFilters", () => {
 
   it("clear resets everything", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
-      wrapper: wrapper(["/proveedores?city=CDMX&q=catering&page=2"]),
+      wrapper: wrapper(["/providers?city=CDMX&q=catering&page=2"]),
     });
     act(() => result.current.clear());
     expect(result.current.inputValues.city).toBe("");
@@ -64,7 +64,7 @@ describe("useDirectoryFilters", () => {
 
   it("debounced filters lag behind inputValues for text inputs", async () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
-      wrapper: wrapper(["/proveedores"]),
+      wrapper: wrapper(["/providers"]),
     });
     act(() => result.current.setCity("Mex"));
     // Immediately, the debounced filter is still undefined.
@@ -78,7 +78,7 @@ describe("useDirectoryFilters", () => {
 
   it("reads lat/lng/radius_km from URL into filters", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
-      wrapper: wrapper(["/proveedores?lat=19.4326&lng=-99.1332&radius_km=50&sort=distance"]),
+      wrapper: wrapper(["/providers?lat=19.4326&lng=-99.1332&radius_km=50&sort=distance"]),
     });
     expect(result.current.filters.lat).toBeCloseTo(19.4326);
     expect(result.current.filters.lng).toBeCloseTo(-99.1332);
@@ -89,7 +89,7 @@ describe("useDirectoryFilters", () => {
 
   it("clearGeo removes lat/lng/radius_km and distance sort", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
-      wrapper: wrapper(["/proveedores?lat=19.4&lng=-99.1&radius_km=50&sort=distance&city=CDMX"]),
+      wrapper: wrapper(["/providers?lat=19.4&lng=-99.1&radius_km=50&sort=distance&city=CDMX"]),
     });
     expect(result.current.isGeoActive).toBe(true);
     act(() => result.current.clearGeo());
@@ -104,7 +104,7 @@ describe("useDirectoryFilters", () => {
 
   it("setSort updates sort immediately", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
-      wrapper: wrapper(["/proveedores"]),
+      wrapper: wrapper(["/providers"]),
     });
     act(() => result.current.setSort("rating"));
     expect(result.current.sort).toBe("rating");
@@ -114,7 +114,7 @@ describe("useDirectoryFilters", () => {
   it("reads advanced filters from URL (#1128)", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
       wrapper: wrapper([
-        "/proveedores?budget=1k_5k&min_budget=1000&max_budget=5000&service_category=catering&available_on=2026-09-15",
+        "/providers?budget=1k_5k&min_budget=1000&max_budget=5000&service_category=catering&available_on=2026-09-15",
       ]),
     });
     expect(result.current.budgetBucket).toBe("1k_5k");
@@ -126,7 +126,7 @@ describe("useDirectoryFilters", () => {
 
   it("setBudgetBucket writes min/max_budget params", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
-      wrapper: wrapper(["/proveedores"]),
+      wrapper: wrapper(["/providers"]),
     });
     act(() => result.current.setBudgetBucket("under_1k"));
     expect(result.current.budgetBucket).toBe("under_1k");
@@ -137,7 +137,7 @@ describe("useDirectoryFilters", () => {
   it("clearFilter removes a single advanced filter", () => {
     const { result } = renderHook(() => useDirectoryFilters(), {
       wrapper: wrapper([
-        "/proveedores?service_category=dj&available_on=2026-09-15&city=CDMX",
+        "/providers?service_category=dj&available_on=2026-09-15&city=CDMX",
       ]),
     });
     act(() => result.current.clearFilter("service_category"));

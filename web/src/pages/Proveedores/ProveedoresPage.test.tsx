@@ -1,10 +1,18 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { screen, waitFor, fireEvent } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter } from "react-router-dom";
 import { render } from "@tests/customRender";
 import { server } from "../../../tests/mocks/server";
 import { ProveedoresPage } from "./ProveedoresPage";
+
+vi.mock("@/hooks/useTheme", () => ({
+  useTheme: () => ({ theme: "light", toggleTheme: vi.fn() }),
+}));
+
+vi.mock("@/services/pageViewService", () => ({
+  recordPageView: vi.fn().mockResolvedValue(undefined),
+}));
 
 const API_BASE = "http://localhost:8080/api";
 
@@ -30,7 +38,7 @@ function makeResponse(cards: unknown[], total: number, page = 1, limit = 20) {
   return { data: cards, total, page, limit, total_pages: Math.ceil(total / limit) || 0 };
 }
 
-function renderPage(initialPath = "/proveedores") {
+function renderPage(initialPath = "/providers") {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <ProveedoresPage />
@@ -139,7 +147,7 @@ describe("ProveedoresPage", () => {
         return HttpResponse.json(makeResponse([], 0));
       }),
     );
-    renderPage("/proveedores?city=Nowhere&q=ghost");
+    renderPage("/providers?city=Nowhere&q=ghost");
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /limpiar filtros/i })).toBeInTheDocument();
     });

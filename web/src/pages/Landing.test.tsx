@@ -299,6 +299,16 @@ describe('Landing', () => {
     ).toBeInTheDocument();
   });
 
+  it('links to the public providers directory', () => {
+    renderLanding();
+    const directoryLinks = screen.getAllByRole('link', { name: /buscar proveedores/i });
+    expect(directoryLinks.length).toBeGreaterThanOrEqual(1);
+    expect(directoryLinks[0]).toHaveAttribute('href', '/providers');
+    expect(
+      screen.getByRole('link', { name: /busco un proveedor/i })
+    ).toHaveAttribute('href', '/providers');
+  });
+
   it('renders footer with copyright and links', () => {
     renderLanding();
     expect(
