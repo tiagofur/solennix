@@ -27,6 +27,8 @@ describe("ManualIndex", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Crear un producto")).toBeInTheDocument();
     expect(screen.getByText("Crear un ítem de inventario")).toBeInTheDocument();
+    expect(screen.getByText("Registrar un pago")).toBeInTheDocument();
+    expect(screen.getByText("Cobros y operación")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Crear un cliente/i })
     ).toHaveAttribute("href", "/help/manual/crear-cliente");

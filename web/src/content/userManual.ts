@@ -29,10 +29,14 @@ export interface ManualLocalizedArticle {
   why?: string;
 }
 
+export type ManualJourneyId = "first-quote" | "day-to-day";
+
 export interface ManualArticle {
   slug: string;
-  /** Order inside the main journey (1-based). */
+  /** Global reading order across journeys (1-based). */
   order: number;
+  /** Which journey group this article belongs to. */
+  journey: ManualJourneyId;
   durationMin: number;
   /** Platforms that already have real screenshots committed. */
   screenshotsReady: Partial<Record<ManualPlatform, boolean>>;
@@ -44,8 +48,9 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
   {
     slug: "que-es-solennix",
     order: 1,
+    journey: "first-quote",
     durationMin: 2,
-    screenshotsReady: { web: true, ios: true },
+    screenshotsReady: { web: true, ios: true, android: true },
     es: {
       title: "Qué es Solennix",
       description: "Para qué sirve la app y qué vas a lograr con ella.",
@@ -100,8 +105,9 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
   {
     slug: "cuenta-y-acceso",
     order: 2,
+    journey: "first-quote",
     durationMin: 3,
-    screenshotsReady: { web: true, ios: true },
+    screenshotsReady: { web: true, ios: true, android: true },
     es: {
       title: "Cuenta y acceso",
       description: "Crear tu cuenta, iniciar sesión y entrar al panel.",
@@ -158,8 +164,9 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
   {
     slug: "crear-cliente",
     order: 3,
+    journey: "first-quote",
     durationMin: 3,
-    screenshotsReady: { web: true, ios: true },
+    screenshotsReady: { web: true, ios: true, android: true },
     es: {
       title: "Crear un cliente",
       description: "Alta del contacto que contratará el evento.",
@@ -224,8 +231,9 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
   {
     slug: "crear-producto",
     order: 4,
+    journey: "first-quote",
     durationMin: 4,
-    screenshotsReady: { web: true, ios: true },
+    screenshotsReady: { web: true, ios: true, android: true },
     es: {
       title: "Crear un producto",
       description: "Armá el catálogo de lo que vendés y cotizás.",
@@ -290,8 +298,9 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
   {
     slug: "crear-inventario",
     order: 5,
+    journey: "first-quote",
     durationMin: 4,
-    screenshotsReady: { web: true, ios: true },
+    screenshotsReady: { web: true, ios: true, android: true },
     es: {
       title: "Crear un ítem de inventario",
       description: "Equipos e insumos con control de stock.",
@@ -356,8 +365,9 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
   {
     slug: "crear-evento",
     order: 6,
+    journey: "first-quote",
     durationMin: 5,
-    screenshotsReady: { web: true, ios: true },
+    screenshotsReady: { web: true, ios: true, android: true },
     es: {
       title: "Crear un evento",
       description: "Fecha, cliente y el contenedor de la operación.",
@@ -422,8 +432,9 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
   {
     slug: "armar-cotizacion",
     order: 7,
+    journey: "first-quote",
     durationMin: 6,
-    screenshotsReady: { web: true, ios: true },
+    screenshotsReady: { web: true, ios: true, android: true },
     es: {
       title: "Armar una cotización",
       description: "Sumá productos del catálogo y calculá el total.",
@@ -488,8 +499,9 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
   {
     slug: "compartir-cotizacion",
     order: 8,
+    journey: "first-quote",
     durationMin: 4,
-    screenshotsReady: { web: true, ios: true },
+    screenshotsReady: { web: true, ios: true, android: true },
     es: {
       title: "Compartir la cotización",
       description: "PDF o enlace profesional para el cliente.",
@@ -543,6 +555,68 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       tip: "First loop done! Next come contract, payments, and the day-of checklist — that’s everyday Solennix.",
     },
   },
+  {
+    slug: "registrar-pago",
+    order: 9,
+    journey: "day-to-day",
+    durationMin: 4,
+    // Web payment UI capture still pending; mobile uses store/marketing shots.
+    screenshotsReady: { web: false, ios: true, android: true },
+    es: {
+      title: "Registrar un pago",
+      description: "Cobrás seña o saldo y dejás el historial claro.",
+      intro:
+        "Después de la cotización aceptada, el dinero entra por el evento: seña, cuotas o liquidación. Registrar cada pago evita discusiones y te da un panel de cobros confiable.",
+      why: "Un organizador profesional no “recuerda” en WhatsApp cuánto le falta cobrar: lo ve en Solennix.",
+      steps: [
+        {
+          text: "Abrí el evento del cliente (o la sección Cobros del menú).",
+          image: "registrar-pago-1.png",
+          callouts: {
+            web: "Eventos → detalle del evento → pestaña/bloque de pagos, o menú Cobros.",
+            ios: "Detalle del evento → Pagos, o acceso desde Más.",
+            android: "Detalle del evento → Pagos, o acceso desde el menú inferior/Más.",
+          },
+        },
+        {
+          text: "Tocá Registrar pago (o equivalente) e ingresá el monto, método y fecha.",
+          image: "registrar-pago-2.png",
+        },
+        {
+          text: "Guardá. Revisá el saldo pendiente y el total cobrado en el resumen del evento.",
+          image: "registrar-pago-3.png",
+        },
+      ],
+      tip: "Si el cliente te manda comprobante, podés adjuntarlo o anotar la referencia del transfer en las notas del pago.",
+    },
+    en: {
+      title: "Record a payment",
+      description: "Collect a deposit or balance and keep a clear history.",
+      intro:
+        "After a quote is accepted, money is tracked on the event: deposit, installments, or final settlement. Recording each payment avoids disputes and keeps your cashboard trustworthy.",
+      why: "A professional organizer doesn’t “remember” outstanding balances in WhatsApp — they see them in Solennix.",
+      steps: [
+        {
+          text: "Open the client’s event (or Payments in the menu).",
+          image: "registrar-pago-1.png",
+          callouts: {
+            web: "Events → event detail → payments tab/section, or Payments in the menu.",
+            ios: "Event detail → Payments, or via More.",
+            android: "Event detail → Payments, or via bottom nav / More.",
+          },
+        },
+        {
+          text: "Tap Record payment (or equivalent) and enter amount, method, and date.",
+          image: "registrar-pago-2.png",
+        },
+        {
+          text: "Save. Check remaining balance and total collected on the event summary.",
+          image: "registrar-pago-3.png",
+        },
+      ],
+      tip: "If the client sends a receipt, attach it or note the transfer reference on the payment.",
+    },
+  },
 ];
 
 export function getManualArticle(slug: string): ManualArticle | undefined {
@@ -563,6 +637,12 @@ export function manualImageSrc(
   return `/help/manual/${platform}/${filename}`;
 }
 
+export function articlesByJourney(journey: ManualJourneyId): ManualArticle[] {
+  return MANUAL_ARTICLES.filter((a) => a.journey === journey).sort(
+    (a, b) => a.order - b.order
+  );
+}
+
 export function nextArticleSlug(slug: string): string | undefined {
   const sorted = [...MANUAL_ARTICLES].sort((a, b) => a.order - b.order);
   const idx = sorted.findIndex((a) => a.slug === slug);
@@ -577,11 +657,41 @@ export function prevArticleSlug(slug: string): string | undefined {
   return sorted[idx - 1]?.slug;
 }
 
+export const MANUAL_JOURNEYS: Record<
+  ManualJourneyId,
+  { es: { title: string; name: string; desc: string }; en: { title: string; name: string; desc: string } }
+> = {
+  "first-quote": {
+    es: {
+      title: "Viaje principal",
+      name: "De cero a tu primera cotización",
+      desc: "Cuenta, cliente, producto, inventario, evento, cotización y cómo compartirla.",
+    },
+    en: {
+      title: "Main journey",
+      name: "From zero to your first quote",
+      desc: "Account, client, product, inventory, event, quote, and how to share it.",
+    },
+  },
+  "day-to-day": {
+    es: {
+      title: "Día a día",
+      name: "Cobros y operación",
+      desc: "Después del primer win: registrar pagos y llevar el evento hasta el cobro total.",
+    },
+    en: {
+      title: "Day to day",
+      name: "Collections & operations",
+      desc: "After the first win: record payments and run the event through full collection.",
+    },
+  },
+};
+
 export const MANUAL_UI = {
   es: {
     hubTitle: "Manual de uso",
     hubSubtitle:
-      "Aprendé Solennix paso a paso: de cero a tu primera cotización profesional.",
+      "Aprendé Solennix paso a paso: de cero a tu primera cotización y el día a día.",
     journeyTitle: "Viaje principal",
     journeyName: "De cero a tu primera cotización",
     journeyDesc:
@@ -589,7 +699,7 @@ export const MANUAL_UI = {
     startCta: "Empezar el viaje",
     allSteps: "Todos los pasos",
     platformLabel: "Estoy usando",
-    platformHint: "Las capturas y tips se adaptan a tu plataforma.",
+    platformHint: "Las capturas y tips se adaptan a tu plataforma (Web, iOS y Android).",
     minutes: "min",
     stepOf: "Paso {n} de {total}",
     next: "Siguiente",
@@ -600,7 +710,7 @@ export const MANUAL_UI = {
     why: "Por qué importa",
     screenshotPending: "Captura en camino",
     screenshotPendingBody:
-      "El texto ya está listo. Las capturas de {platform} se publican por fases (Web primero).",
+      "El texto ya está listo. Las capturas de {platform} para este paso se publican por fases.",
     platforms: {
       web: "Web",
       ios: "iOS",
@@ -611,7 +721,7 @@ export const MANUAL_UI = {
   en: {
     hubTitle: "User manual",
     hubSubtitle:
-      "Learn Solennix step by step: from zero to your first professional quote.",
+      "Learn Solennix step by step: from zero to your first quote and everyday ops.",
     journeyTitle: "Main journey",
     journeyName: "From zero to your first quote",
     journeyDesc:
@@ -619,7 +729,7 @@ export const MANUAL_UI = {
     startCta: "Start the journey",
     allSteps: "All steps",
     platformLabel: "I’m using",
-    platformHint: "Screenshots and tips adapt to your platform.",
+    platformHint: "Screenshots and tips adapt to your platform (Web, iOS, and Android).",
     minutes: "min",
     stepOf: "Step {n} of {total}",
     next: "Next",
@@ -630,7 +740,7 @@ export const MANUAL_UI = {
     why: "Why it matters",
     screenshotPending: "Screenshot coming soon",
     screenshotPendingBody:
-      "The guide text is ready. {platform} screenshots ship in phases (Web first).",
+      "The guide text is ready. {platform} screenshots for this step ship in phases.",
     platforms: {
       web: "Web",
       ios: "iOS",
