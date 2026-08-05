@@ -104,8 +104,8 @@ func deriveTrafficSource(referer, srcQuery, utmSource string) string {
 		s = strings.ToLower(strings.TrimSpace(utmSource))
 	}
 	switch s {
-	case "directory", "proveedores", "share", "direct", "other":
-		if s == "proveedores" {
+	case "directory", "proveedores", "providers", "share", "direct", "other":
+		if s == "proveedores" || s == "providers" {
 			return "directory"
 		}
 		return s
@@ -116,7 +116,7 @@ func deriveTrafficSource(referer, srcQuery, utmSource string) string {
 	// Parse path when possible.
 	if u, err := url.Parse(referer); err == nil {
 		path := strings.ToLower(u.Path)
-		if strings.Contains(path, "/proveedores") {
+		if strings.Contains(path, "/proveedores") || strings.Contains(path, "/providers") {
 			return "directory"
 		}
 		if strings.Contains(path, "/u/") {
@@ -124,7 +124,7 @@ func deriveTrafficSource(referer, srcQuery, utmSource string) string {
 		}
 	}
 	low := strings.ToLower(referer)
-	if strings.Contains(low, "proveedores") {
+	if strings.Contains(low, "proveedores") || strings.Contains(low, "providers") {
 		return "directory"
 	}
 	return "other"

@@ -1,10 +1,24 @@
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Search as SearchIcon, MapPin, Calendar, Loader2, AlertCircle, Crosshair, X } from "lucide-react";
+import {
+  Search as SearchIcon,
+  MapPin,
+  Calendar,
+  Loader2,
+  AlertCircle,
+  Crosshair,
+  X,
+  Moon,
+  Sun,
+} from "lucide-react";
 import Empty from "@/components/Empty";
+import { Logo } from "@/components/Logo";
 import { Pagination } from "@/components/Pagination";
 import { PwaInstallBanner } from "@/components/PwaInstallBanner";
+import { useTheme } from "@/hooks/useTheme";
 import { upsertMeta, setDocumentTitle } from "@/lib/seo";
+import { recordPageView } from "@/services/pageViewService";
 import { useDirectoryFilters } from "./useDirectoryFilters";
 import { useSearchOrganizers } from "./useSearchOrganizers";
 import { OrganizerCard } from "./OrganizerCard";
@@ -31,12 +45,14 @@ const BUDGET_BUCKETS = ["under_1k", "1k_5k", "over_5k"] as const;
 const RADIUS_OPTIONS = ["25", "50", "100"] as const;
 
 /**
- * Public directory page /proveedores (#1117 / #1128). Unauthenticated (NG1).
+ * Public directory page /providers (#1117 / #1128). Unauthenticated (NG1).
  * Hero + search + advanced filters (geo, budget, service, availability) + grid.
  * Filters live in the URL (design D3); text inputs are debounced (D4).
+ * Legacy /proveedores redirects here (SPA + nginx 301).
  */
 export const ProveedoresPage: React.FC = () => {
   const { t } = useTranslation("public");
+  const { theme, toggleTheme } = useTheme();
   const {
     inputValues, eventType, sort, page, filters,
     serviceCategory, availableOn, budgetBucket, radiusKm,
@@ -55,6 +71,10 @@ export const ProveedoresPage: React.FC = () => {
     page === 1
       ? items.filter((o) => o.is_featured).slice(0, 6)
       : [];
+
+  useEffect(() => {
+    void recordPageView("directory");
+  }, []);
 
   // Scroll to top on page change for predictable navigation.
   useEffect(() => {
@@ -75,6 +95,30 @@ export const ProveedoresPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-bg animate-fade-in">
+      <header className="sticky top-0 z-40 bg-bg/80 backdrop-blur-md border-b border-border">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2" aria-label="Solennix">
+            <Logo size={32} />
+          </Link>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-2.5 rounded-xl text-text-secondary hover:bg-surface-alt transition-colors border border-transparent hover:border-border"
+            aria-label={
+              theme === "dark"
+                ? t("public:directory.theme_light", { defaultValue: "Switch to light mode" })
+                : t("public:directory.theme_dark", { defaultValue: "Switch to dark mode" })
+            }
+          >
+            {theme === "dark" ? (
+              <Sun className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <Moon className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
+        </div>
+      </header>
+
       {/* Hero */}
       <div className="border-b border-border bg-gradient-to-b from-primary/5 to-transparent">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">

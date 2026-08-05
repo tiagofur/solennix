@@ -76,7 +76,7 @@ export const PublicRequestStatusPage: React.FC = () => {
         <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-center space-y-3">
           <AlertCircle className="mx-auto h-10 w-10 text-error" aria-hidden="true" />
           <p className="text-sm text-text-secondary">{t("request_status.not_found")}</p>
-          <Link to="/proveedores" className="text-sm font-semibold text-primary hover:underline">
+          <Link to="/providers" className="text-sm font-semibold text-primary hover:underline">
             Solennix
           </Link>
         </div>

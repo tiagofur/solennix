@@ -20,7 +20,7 @@
   },
   "sources": {
     "title": "Traffic sources",
-    "directory": "Directory /proveedores",
+    "directory": "Directory /providers",
     "share": "Shared link",
     "direct": "Direct",
     "other": "Other"

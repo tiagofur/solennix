@@ -20,7 +20,7 @@
   },
   "sources": {
     "title": "Fuente de tráfico",
-    "directory": "Directorio /proveedores",
+    "directory": "Directorio /providers",
     "share": "Link compartido",
     "direct": "Directo",
     "other": "Otro"

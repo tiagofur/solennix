@@ -56,7 +56,7 @@ export const AdminListingModeration: React.FC = () => {
         </h1>
         <p className="mt-1 text-sm text-text-secondary">
           {t("admin:moderation.subtitle", {
-            defaultValue: "Review profiles before they appear in /proveedores",
+            defaultValue: "Review profiles before they appear in /providers",
           })}
         </p>
       </div>

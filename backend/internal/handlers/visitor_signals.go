@@ -93,7 +93,7 @@ func NormalizeMarketingPageKey(raw string) string {
 		return "pricing"
 	case "about", "/about":
 		return "about"
-	case "proveedores", "directory", "/proveedores":
+	case "proveedores", "providers", "directory", "/proveedores", "/providers":
 		return "directory"
 	default:
 		if k == "" {

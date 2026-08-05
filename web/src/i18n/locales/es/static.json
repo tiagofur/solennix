@@ -353,7 +353,7 @@
       },
       "10": {
         "title": "10. Perfil público, directorio y solicitudes de cotización",
-        "content": "Solennix ofrece a los organizadores herramientas opcionales de promoción: un perfil público en `/u/:tu-slug`, la posibilidad de aparecer en el directorio `/proveedores`, y un formulario público para recibir solicitudes de cotización de visitantes. Estas herramientas son parte del servicio SaaS contratado por el organizador, no un servicio de intermediación.",
+        "content": "Solennix ofrece a los organizadores herramientas opcionales de promoción: un perfil público en `/u/:tu-slug`, la posibilidad de aparecer en el directorio `/providers`, y un formulario público para recibir solicitudes de cotización de visitantes. Estas herramientas son parte del servicio SaaS contratado por el organizador, no un servicio de intermediación.",
         "list_header": "En relación con estas herramientas, queda expresamente establecido que:",
         "items": [
           "El perfil público, el directorio y el formulario de solicitud son herramientas de marketing e inbound del organizador, no un servicio de intermediación de Solennix",
