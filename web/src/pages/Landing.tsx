@@ -30,6 +30,8 @@ import {
   ClipboardList,
   FileText,
   UsersRound,
+  Search,
+  Link2,
 } from "lucide-react";
 
 const APP_STORE_URL =
@@ -291,6 +293,39 @@ const TESTIMONIALS_EN = [
   },
 ];
 
+const DIRECTORY_FROM_LANDING = "/providers?from=landing";
+
+/** Seeker category chips → pre-filtered directory (static, no live API). */
+const DIRECTORY_CATEGORY_CHIPS = [
+  { label: "Catering", serviceCategory: "catering" },
+  { label: "Decoración", serviceCategory: "decoracion" },
+  { label: "Música / DJ", serviceCategory: "dj" },
+  { label: "Fotografía", serviceCategory: "fotografia" },
+  { label: "Flores", serviceCategory: "flores" },
+  { label: "Mobiliario", serviceCategory: "mobiliario" },
+] as const;
+
+const INBOUND_PILLARS = [
+  {
+    icon: Link2,
+    title: "Perfil público",
+    description:
+      "Tu página profesional en /u/tu-negocio: portfolio, servicios y branding para compartir por WhatsApp o Instagram.",
+  },
+  {
+    icon: Send,
+    title: "Solicitudes de cotización",
+    description:
+      "Visitantes te piden presupuesto sin crear cuenta. Vos respondés desde Solennix; el acuerdo sigue siendo tuyo.",
+  },
+  {
+    icon: Search,
+    title: "Directorio de proveedores",
+    description:
+      "Aparecé en el directorio público para que te encuentren por ciudad, tipo de evento y servicio.",
+  },
+] as const;
+
 const PLANS = [
   {
     name: "Básico",
@@ -305,6 +340,7 @@ const PLANS = [
       "Hasta 20 ítems en catálogo",
       "Gestión básica de clientes",
       "Calendario de eventos",
+      "Perfil público básico (opcional)",
     ],
     cta: "Comenzar Gratis",
     href: "/register",
@@ -322,6 +358,7 @@ const PLANS = [
       "Generación de cotizaciones PDF",
       "Control de pagos en múltiples plazos",
       "Reportes y analíticas avanzadas",
+      "Perfil público + directorio + solicitudes",
       "Soporte prioritario",
     ],
     cta: "Comenzar Ahora",
@@ -376,6 +413,11 @@ const FAQS = [
     question: "¿Necesito tarjeta de crédito para registrarme?",
     answer:
       "No. El plan Básico es completamente gratuito y no requiere tarjeta de crédito. Solo necesitas un correo electrónico.",
+  },
+  {
+    question: "¿Cómo me encuentran clientes nuevos?",
+    answer:
+      "Activá tu perfil público, compartí el link /u/tu-negocio y, si cumplís los criterios de publicabilidad, podés aparecer en el directorio /providers. Los visitantes envían solicitudes de cotización; Solennix facilita el contacto — no intermedia el servicio ni los pagos del evento.",
   },
   {
     question: "¿Puedo importar mis datos existentes?",
@@ -980,7 +1022,7 @@ export const Landing: React.FC = () => {
                 FAQ
               </a>
               <Link
-                to="/providers"
+                to={DIRECTORY_FROM_LANDING}
                 className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
               >
                 Buscar proveedores
@@ -1081,7 +1123,7 @@ export const Landing: React.FC = () => {
               FAQ
             </a>
             <Link
-              to="/providers"
+              to={DIRECTORY_FROM_LANDING}
               className="block text-sm text-text-secondary py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
@@ -1153,7 +1195,7 @@ export const Landing: React.FC = () => {
             <p className="mb-12 text-center text-base sm:text-lg text-text-secondary">
               ¿Buscás un proveedor para tu evento?{" "}
               <Link
-                to="/providers"
+                to={DIRECTORY_FROM_LANDING}
                 className="font-bold text-primary hover:underline underline-offset-4"
               >
                 Busco un proveedor
@@ -1262,6 +1304,75 @@ export const Landing: React.FC = () => {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── INBOUND / GROWTH ── */}
+      <section id="inbound" className="py-24 bg-surface-grouped relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-sm font-bold px-5 py-2 rounded-full mb-6 uppercase tracking-wider">
+              <span>📈 Conseguí clientes</span>
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-black text-text mb-6 tracking-tight">
+              Operá… y también crecé
+            </h2>
+            <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed">
+              Además de gestionar eventos, Solennix te da herramientas de inbound:
+              perfil público, solicitudes de cotización y visibilidad en el directorio.
+              Facilitamos el contacto; el servicio y el pago del evento siguen siendo tuyos.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            {INBOUND_PILLARS.map((pillar) => (
+              <div
+                key={pillar.title}
+                className="p-6 rounded-2xl border border-border bg-card shadow-sm"
+              >
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
+                  <pillar.icon className="h-6 w-6 text-primary" aria-hidden="true" />
+                </div>
+                <h3 className="text-lg font-bold text-text mb-2">{pillar.title}</h3>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  {pillar.description}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mb-10">
+            <p className="text-center text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">
+              ¿Qué buscan los clientes?
+            </p>
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+              {DIRECTORY_CATEGORY_CHIPS.map((chip) => (
+                <Link
+                  key={chip.serviceCategory}
+                  to={`/providers?service_category=${chip.serviceCategory}&from=landing`}
+                  className="inline-flex items-center rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-text hover:border-primary/40 hover:text-primary transition-colors"
+                >
+                  {chip.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              to="/register"
+              className="premium-gradient text-white px-8 py-4 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all inline-flex items-center gap-2"
+            >
+              Probar gratis
+              <ArrowRight className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <Link
+              to={DIRECTORY_FROM_LANDING}
+              className="bg-card border border-border text-text px-8 py-4 rounded-2xl font-bold text-lg hover:bg-surface-alt transition-colors"
+            >
+              Ver el directorio
+            </Link>
           </div>
         </div>
       </section>
@@ -1613,7 +1724,7 @@ export const Landing: React.FC = () => {
               <p className="mt-8 text-sm sm:text-base text-white/85 font-medium normal-case tracking-normal">
                 ¿Buscás un proveedor?{" "}
                 <Link
-                  to="/providers"
+                  to={DIRECTORY_FROM_LANDING}
                   className="font-bold text-white underline underline-offset-4 hover:text-white/90"
                 >
                   Explorá el directorio
@@ -1669,11 +1780,19 @@ export const Landing: React.FC = () => {
                 </li>
                 <li>
                   <Link
-                    to="/providers"
+                    to={DIRECTORY_FROM_LANDING}
                     className="hover:text-text transition-colors"
                   >
                     Buscar proveedores
                   </Link>
+                </li>
+                <li>
+                  <a
+                    href="#inbound"
+                    className="hover:text-text transition-colors"
+                  >
+                    Conseguí clientes
+                  </a>
                 </li>
               </ul>
             </div>

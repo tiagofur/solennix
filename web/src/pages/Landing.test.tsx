@@ -303,10 +303,36 @@ describe('Landing', () => {
     renderLanding();
     const directoryLinks = screen.getAllByRole('link', { name: /buscar proveedores/i });
     expect(directoryLinks.length).toBeGreaterThanOrEqual(1);
-    expect(directoryLinks[0]).toHaveAttribute('href', '/providers');
+    expect(directoryLinks[0]).toHaveAttribute('href', '/providers?from=landing');
     expect(
       screen.getByRole('link', { name: /busco un proveedor/i })
-    ).toHaveAttribute('href', '/providers');
+    ).toHaveAttribute('href', '/providers?from=landing');
+  });
+
+  it('renders inbound growth section with directory chips', () => {
+    renderLanding();
+    expect(screen.getByRole('heading', { name: /operá… y también crecé/i })).toBeInTheDocument();
+    expect(screen.getByText('Perfil público')).toBeInTheDocument();
+    expect(screen.getByText('Solicitudes de cotización')).toBeInTheDocument();
+    expect(screen.getByText('Directorio de proveedores')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /ver el directorio/i })).toHaveAttribute(
+      'href',
+      '/providers?from=landing',
+    );
+    expect(screen.getByRole('link', { name: 'Catering' })).toHaveAttribute(
+      'href',
+      '/providers?service_category=catering&from=landing',
+    );
+  });
+
+  it('mentions inbound discovery in FAQ and pricing', () => {
+    renderLanding();
+    expect(
+      screen.getByText('¿Cómo me encuentran clientes nuevos?'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Perfil público \+ directorio \+ solicitudes/i),
+    ).toBeInTheDocument();
   });
 
   it('renders footer with copyright and links', () => {
