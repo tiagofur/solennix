@@ -84,6 +84,10 @@ type mockProfileLookup struct {
 	err     error
 }
 
+func (m *mockProfileLookup) ListPackagesByUserID(_ context.Context, _ uuid.UUID) ([]models.OrganizerPublicPackage, error) {
+	return nil, nil
+}
+
 func (m *mockProfileLookup) GetByUserID(_ context.Context, _ uuid.UUID) (*models.OrganizerPublicProfile, error) {
 	return m.profile, m.err
 }

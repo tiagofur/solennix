@@ -675,31 +675,106 @@ type PublicPortfolioItem struct {
 	SortOrder    int       `json:"sort_order"`
 }
 
+// PackagePricingUnit multiplies a package line by guests or once per event.
+type PackagePricingUnit string
+
+const (
+	PackagePricingPerGuest PackagePricingUnit = "per_guest"
+	PackagePricingPerEvent PackagePricingUnit = "per_event"
+)
+
+// OrganizerPublicPackageItem links a catalog product into a package.
+type OrganizerPublicPackageItem struct {
+	ID          uuid.UUID          `json:"id"`
+	PackageID   uuid.UUID          `json:"package_id"`
+	ProductID   uuid.UUID          `json:"product_id"`
+	PricingUnit PackagePricingUnit `json:"pricing_unit"`
+	SortOrder   int                `json:"sort_order"`
+	// Name/UnitPrice filled when joined to products for API responses.
+	Name      string   `json:"name,omitempty"`
+	UnitPrice *float64 `json:"unit_price,omitempty"`
+}
+
+// OrganizerPublicPackageDiscountTier is a guest-count % discount tier (max 3 per package).
+type OrganizerPublicPackageDiscountTier struct {
+	ID              uuid.UUID `json:"id"`
+	PackageID       uuid.UUID `json:"package_id"`
+	FromGuests      int       `json:"from_guests"`
+	DiscountPercent float64   `json:"discount_percent"`
+}
+
 // OrganizerPublicPackage is a curated package/combo for the public profile.
 type OrganizerPublicPackage struct {
-	ID          uuid.UUID `json:"id"`
-	UserID      uuid.UUID `json:"-"`
-	Title       string    `json:"title"`
-	Description *string   `json:"description,omitempty"`
-	FromPrice   *float64  `json:"from_price,omitempty"`
-	Inclusions  []string  `json:"inclusions,omitempty"`
-	ImageURL    *string   `json:"image_url,omitempty"`
-	IsFeatured  bool      `json:"is_featured"`
-	SortOrder   int       `json:"sort_order"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID             uuid.UUID                             `json:"id"`
+	UserID         uuid.UUID                             `json:"-"`
+	Title          string                                `json:"title"`
+	Description    *string                               `json:"description,omitempty"`
+	FromPrice      *float64                              `json:"from_price,omitempty"` // legacy manual floor; optional when items present
+	Inclusions     []string                              `json:"inclusions,omitempty"` // legacy free-text; optional when items present
+	ImageURL       *string                               `json:"image_url,omitempty"`
+	IsFeatured     bool                                  `json:"is_featured"`
+	SortOrder      int                                   `json:"sort_order"`
+	MinGuests      *int                                  `json:"min_guests,omitempty"`
+	Items          []OrganizerPublicPackageItem          `json:"items,omitempty"`
+	DiscountTiers  []OrganizerPublicPackageDiscountTier `json:"discount_tiers,omitempty"`
+	CreatedAt      time.Time                             `json:"created_at"`
+	UpdatedAt      time.Time                             `json:"updated_at"`
+}
+
+// PublicPackageItem is the public-safe package line with live unit price.
+type PublicPackageItem struct {
+	ProductID   uuid.UUID          `json:"product_id"`
+	Name        string             `json:"name"`
+	UnitPrice   float64            `json:"unit_price"`
+	PricingUnit PackagePricingUnit `json:"pricing_unit"`
+	SortOrder   int                `json:"sort_order"`
+}
+
+// PublicPackageDiscountTier is a public guest-count discount tier.
+type PublicPackageDiscountTier struct {
+	FromGuests      int     `json:"from_guests"`
+	DiscountPercent float64 `json:"discount_percent"`
 }
 
 // PublicPackage is the public-safe package projection (no user_id).
+// When Items is non-empty, clients recalculate totals from catalog unit prices.
 type PublicPackage struct {
-	ID          uuid.UUID `json:"id"`
-	Title       string    `json:"title"`
-	Description *string   `json:"description,omitempty"`
-	FromPrice   *float64  `json:"from_price,omitempty"`
-	Inclusions  []string  `json:"inclusions,omitempty"`
-	ImageURL    *string   `json:"image_url,omitempty"`
-	IsFeatured  bool      `json:"is_featured"`
-	SortOrder   int       `json:"sort_order"`
+	ID            uuid.UUID                     `json:"id"`
+	Title         string                        `json:"title"`
+	Description   *string                       `json:"description,omitempty"`
+	FromPrice     *float64                      `json:"from_price,omitempty"`
+	Inclusions    []string                      `json:"inclusions,omitempty"`
+	ImageURL      *string                       `json:"image_url,omitempty"`
+	IsFeatured    bool                          `json:"is_featured"`
+	SortOrder     int                           `json:"sort_order"`
+	MinGuests     *int                          `json:"min_guests,omitempty"`
+	Items         []PublicPackageItem           `json:"items,omitempty"`
+	DiscountTiers []PublicPackageDiscountTier   `json:"discount_tiers,omitempty"`
+}
+
+// PackageQuoteSnapshot is frozen at public request submit (convert-to-event fidelity).
+type PackageQuoteSnapshot struct {
+	PackageID         string  `json:"package_id"`
+	PackageTitle      string  `json:"package_title"`
+	GuestCount        int     `json:"guest_count"`
+	MinGuests         *int    `json:"min_guests,omitempty"`
+	Lines             []PackageQuoteSnapshotLine `json:"lines"`
+	Subtotal          float64 `json:"subtotal"`
+	DiscountPercent   float64 `json:"discount_percent"`
+	DiscountAmount    float64 `json:"discount_amount"`
+	Total             float64 `json:"total"`
+	AppliedFromGuests *int    `json:"applied_from_guests,omitempty"`
+	Currency          string  `json:"currency"`
+}
+
+// PackageQuoteSnapshotLine is one frozen line of a package quote.
+type PackageQuoteSnapshotLine struct {
+	ProductID   string  `json:"product_id"`
+	Name        string  `json:"name"`
+	UnitPrice   float64 `json:"unit_price"`
+	PricingUnit string  `json:"pricing_unit"`
+	Quantity    int     `json:"quantity"`
+	LineTotal   float64 `json:"line_total"`
 }
 
 // OrganizerPublicFaqItem is an organizer-authored FAQ entry.
@@ -914,6 +989,8 @@ type PublicRequest struct {
 	Currency         string                         `json:"currency"`
 	Services         []PublicRequestServiceSnapshot `json:"services"`
 	Message          *string                        `json:"message,omitempty"`
+	// PackageQuote is set when the visitor requested a structured package quote.
+	PackageQuote     *PackageQuoteSnapshot          `json:"package_quote,omitempty"`
 	Status           RequestStatus                  `json:"status"`
 	Source           RequestSource                  `json:"source"`
 	LinkID           *uuid.UUID                     `json:"link_id,omitempty"`

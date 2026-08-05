@@ -60,6 +60,8 @@ type PublicRequestLinkStore interface {
 
 type PublicProfileLookup interface {
 	GetByUserID(ctx context.Context, userID uuid.UUID) (*models.OrganizerPublicProfile, error)
+	// ListPackagesByUserID is optional for package quote snapshots (may be unimplemented in mocks).
+	ListPackagesByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicPackage, error)
 }
 
 type PublicProductLookup interface {
@@ -151,6 +153,8 @@ type CreatePublicRequestInput struct {
 	// Services carries product_id + qty (unified form body).
 	Services []ServiceSelection
 	Message  *string
+	// PackageID when set builds a live quote and freezes package_quote on the request.
+	PackageID *uuid.UUID
 }
 
 // selectionsFromInput merges Services and ServiceIDs into ServiceSelection list.
@@ -207,6 +211,19 @@ func (s *PublicRequestService) CreateFromProfile(ctx context.Context, in CreateP
 		return nil, err
 	}
 
+	var packageQuote *models.PackageQuoteSnapshot
+	if in.PackageID != nil && s.profileRepo != nil {
+		pkgSnap, svcSnap, err := s.buildPackageQuoteSnapshot(ctx, user.ID, *in.PackageID, in.GuestCount, in.Currency)
+		if err != nil {
+			return nil, err
+		}
+		packageQuote = pkgSnap
+		// Prefer package line items as the services snapshot for convert-to-event.
+		if len(svcSnap) > 0 {
+			snapshot = svcSnap
+		}
+	}
+
 	if err := s.enforcePendingCap(ctx, user.ID); err != nil {
 		return nil, err
 	}
@@ -229,6 +246,7 @@ func (s *PublicRequestService) CreateFromProfile(ctx context.Context, in CreateP
 		Currency:        currency,
 		Services:        snapshot,
 		Message:         in.Message,
+		PackageQuote:    packageQuote,
 		Status:          models.RequestStatusPending,
 		Source:          models.RequestSourcePublicProfile,
 		SubmitMode:      models.SubmitModeStandard,
@@ -239,6 +257,102 @@ func (s *PublicRequestService) CreateFromProfile(ctx context.Context, in CreateP
 
 	s.notifyAsync(user.ID, req)
 	return req, nil
+}
+
+// buildPackageQuoteSnapshot loads the package with live catalog prices and freezes a quote.
+func (s *PublicRequestService) buildPackageQuoteSnapshot(
+	ctx context.Context,
+	organizerUserID, packageID uuid.UUID,
+	guestCount *int,
+	currency string,
+) (*models.PackageQuoteSnapshot, []models.PublicRequestServiceSnapshot, error) {
+	pkgs, err := s.profileRepo.ListPackagesByUserID(ctx, organizerUserID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("list packages for quote: %w", err)
+	}
+	var pkg *models.OrganizerPublicPackage
+	for i := range pkgs {
+		if pkgs[i].ID == packageID {
+			pkg = &pkgs[i]
+			break
+		}
+	}
+	if pkg == nil {
+		return nil, nil, fmt.Errorf("%w: package not found", ErrValidation)
+	}
+	if len(pkg.Items) == 0 {
+		return nil, nil, fmt.Errorf("%w: package has no catalog items", ErrValidation)
+	}
+	guests := 1
+	if guestCount != nil && *guestCount > 0 {
+		guests = *guestCount
+	}
+
+	lines := make([]PackageQuoteLineInput, 0, len(pkg.Items))
+	for _, it := range pkg.Items {
+		price := 0.0
+		if it.UnitPrice != nil {
+			price = *it.UnitPrice
+		}
+		name := it.Name
+		if name == "" {
+			name = "Item"
+		}
+		lines = append(lines, PackageQuoteLineInput{
+			ProductID:   it.ProductID.String(),
+			Name:        name,
+			UnitPrice:   price,
+			PricingUnit: PricingUnit(it.PricingUnit),
+		})
+	}
+	tiers := make([]PackageDiscountTierInput, 0, len(pkg.DiscountTiers))
+	for _, t := range pkg.DiscountTiers {
+		tiers = append(tiers, PackageDiscountTierInput{
+			FromGuests:      t.FromGuests,
+			DiscountPercent: t.DiscountPercent,
+		})
+	}
+
+	quote, ok := CalculatePackageQuote(pkg.ID.String(), pkg.Title, currency, guests, pkg.MinGuests, lines, tiers)
+	if !ok {
+		return nil, nil, fmt.Errorf("%w: guest count below package minimum", ErrValidation)
+	}
+
+	snap := &models.PackageQuoteSnapshot{
+		PackageID:         quote.PackageID,
+		PackageTitle:      quote.PackageTitle,
+		GuestCount:        quote.GuestCount,
+		MinGuests:         quote.MinGuests,
+		Subtotal:          quote.Subtotal,
+		DiscountPercent:   quote.DiscountPercent,
+		DiscountAmount:    quote.DiscountAmount,
+		Total:             quote.Total,
+		AppliedFromGuests: quote.AppliedFromGuests,
+		Currency:          quote.Currency,
+	}
+	svcSnap := make([]models.PublicRequestServiceSnapshot, 0, len(quote.Lines))
+	for _, ln := range quote.Lines {
+		snap.Lines = append(snap.Lines, models.PackageQuoteSnapshotLine{
+			ProductID:   ln.ProductID,
+			Name:        ln.Name,
+			UnitPrice:   ln.UnitPrice,
+			PricingUnit: ln.PricingUnit,
+			Quantity:    ln.Quantity,
+			LineTotal:   ln.LineTotal,
+		})
+		pid, err := uuid.Parse(ln.ProductID)
+		if err != nil {
+			continue
+		}
+		price := ln.UnitPrice
+		svcSnap = append(svcSnap, models.PublicRequestServiceSnapshot{
+			ProductID: pid,
+			Name:      ln.Name,
+			Price:     &price,
+			Qty:       ln.Quantity,
+		})
+	}
+	return snap, svcSnap, nil
 }
 
 // CreateFromLink resolves a shared link token and creates a request applying

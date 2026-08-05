@@ -91,6 +91,8 @@ type CreatePublicRequestRequest struct {
 	// Website is a honeypot anti-spam field. Real browsers leave it empty;
 	// bots that autofill hidden fields get a fake 201 without persisting.
 	Website string `json:"website,omitempty"`
+	// PackageID when set freezes a live package quote snapshot on the request.
+	PackageID *string `json:"package_id,omitempty"`
 }
 
 // createPublicRequestResponse is the create-only DTO. client_token is returned
@@ -111,6 +113,7 @@ type createPublicRequestResponse struct {
 	Currency         string                               `json:"currency"`
 	Services         []models.PublicRequestServiceSnapshot `json:"services"`
 	Message          *string                              `json:"message,omitempty"`
+	PackageQuote     *models.PackageQuoteSnapshot         `json:"package_quote,omitempty"`
 	Status           models.RequestStatus                 `json:"status"`
 	Source           models.RequestSource                 `json:"source"`
 	SubmitMode       models.SubmitMode                    `json:"submit_mode"`
@@ -201,6 +204,16 @@ func buildCreateInputFromRequest(w http.ResponseWriter, slug string, req CreateP
 		}
 	}
 
+	var packageID *uuid.UUID
+	if req.PackageID != nil && strings.TrimSpace(*req.PackageID) != "" {
+		pid, err := uuid.Parse(strings.TrimSpace(*req.PackageID))
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "Invalid package_id")
+			return services.CreatePublicRequestInput{}, false
+		}
+		packageID = &pid
+	}
+
 	return services.CreatePublicRequestInput{
 		OrganizerSlug: slug,
 		ContactEmail:  email,
@@ -216,6 +229,7 @@ func buildCreateInputFromRequest(w http.ResponseWriter, slug string, req CreateP
 		ServiceIDs:    serviceIDs,
 		Services:      selections,
 		Message:       trimStrPtr(req.Message),
+		PackageID:     packageID,
 	}, true
 }
 
@@ -247,6 +261,7 @@ func toCreatePublicRequestResponse(created *models.PublicRequest) createPublicRe
 		Currency:         created.Currency,
 		Services:         servicesSnap,
 		Message:          created.Message,
+		PackageQuote:     created.PackageQuote,
 		Status:           created.Status,
 		Source:           source,
 		SubmitMode:       mode,

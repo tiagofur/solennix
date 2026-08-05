@@ -23,6 +23,10 @@ interface PublicLeadModalProps {
   initialMessage?: string;
   /** Prefill selected catalog product ids (qty 1 each). */
   initialServiceIds?: string[];
+  /** When set, server freezes package_quote on create. */
+  packageId?: string;
+  /** Guest count for package pricing / form. */
+  guestCount?: number;
 }
 
 export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
@@ -34,6 +38,8 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
   services = [],
   initialMessage,
   initialServiceIds = [],
+  packageId,
+  guestCount,
 }) => {
   const { t } = useTranslation("public");
 
@@ -69,7 +75,14 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
     setError(null);
     setSubmitting(true);
     try {
-      const result = await publicRequestService.submit(slug, payload);
+      const body: CreatePublicRequestRequest = {
+        ...payload,
+        ...(packageId ? { package_id: packageId } : {}),
+        ...(guestCount != null && guestCount > 0
+          ? { guest_count: guestCount }
+          : {}),
+      };
+      const result = await publicRequestService.submit(slug, body);
       if (result.id && result.client_token) {
         try {
           sessionStorage.setItem(
@@ -251,6 +264,10 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
               error={error}
               initialValues={{
                 message: initialMessage ?? "",
+                numGuests:
+                  guestCount != null && guestCount > 0
+                    ? String(guestCount)
+                    : "",
                 selectedServices: Object.fromEntries(
                   initialServiceIds.map((id) => [id, 1]),
                 ),

@@ -133,7 +133,7 @@ describe("PublicProfilePage", () => {
           sort_order: 0,
         },
       ],
-    });
+    } as never);
 
     renderAt("wa-biz");
 
