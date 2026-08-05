@@ -3127,8 +3127,8 @@ export interface components {
             currency?: string;
             services?: components["schemas"]["PublicRequestServiceSnapshot"][];
             message?: string | null;
-            /** @description Frozen package quote when visitor requested a structured package */
-            package_quote?: components["schemas"]["PackageQuoteSnapshot"] | null;
+            /** @description Frozen package quote when visitor requested a structured package (omitted when not a package request) */
+            package_quote?: components["schemas"]["PackageQuoteSnapshot"];
             status?: components["schemas"]["PublicRequestStatus"];
             source?: components["schemas"]["RequestSource"];
             submit_mode?: components["schemas"]["SubmitMode"];

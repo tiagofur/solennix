@@ -2947,10 +2947,8 @@ components:
           type: string
           nullable: true
         package_quote:
-          allOf:
-            - $ref: "#/components/schemas/PackageQuoteSnapshot"
-          nullable: true
-          description: Frozen package quote when visitor requested a structured package
+          $ref: "#/components/schemas/PackageQuoteSnapshot"
+          description: Frozen package quote when visitor requested a structured package (omitted when not a package request)
         status:
           $ref: "#/components/schemas/PublicRequestStatus"
         source:
