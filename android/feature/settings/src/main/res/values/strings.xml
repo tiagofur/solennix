@@ -378,9 +378,9 @@ hola@creapolis.dev</string>
     <string name="settings_subscription_price_free">Gratis</string>
     <string name="settings_subscription_fallback_price_monthly">US$ 6.99</string>
     <string name="settings_subscription_fallback_price_yearly">US$ 49.99</string>
-    <string name="settings_subscription_basic_feature_events">3 eventos por mes</string>
-    <string name="settings_subscription_basic_feature_clients">50 clientes</string>
-    <string name="settings_subscription_basic_feature_products">20 productos</string>
+    <string name="settings_subscription_basic_feature_events">4 eventos por mes</string>
+    <string name="settings_subscription_basic_feature_clients">20 clientes</string>
+    <string name="settings_subscription_basic_feature_products">15 productos / 30 inventario</string>
     <string name="settings_subscription_basic_feature_reports">Reportes básicos</string>
     <string name="settings_subscription_basic_feature_branding">Marca personalizada</string>
     <string name="settings_subscription_basic_feature_support">Soporte prioritario</string>

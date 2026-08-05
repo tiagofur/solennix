@@ -341,10 +341,10 @@
         "price": "Free",
         "desc": "Perfect to get started",
         "features": [
-          "Up to 3 events per month",
-          "Up to 50 registered clients",
-          "Up to 20 catalog items",
-          "Basic client management",
+          "Up to 4 events per month",
+          "Up to 20 registered clients",
+          "Up to 15 products and 30 inventory items",
+          "Basic client portal and public profile",
           "Event calendar"
         ],
         "cta": "Start Free"

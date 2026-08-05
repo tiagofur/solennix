@@ -12,17 +12,17 @@ const renderBanner = (props: Parameters<typeof UpgradeBanner>[0]) =>
 describe('UpgradeBanner', () => {
   describe('limit-reached type', () => {
     it('renders limit reached heading and description', () => {
-      renderBanner({ type: 'limit-reached', resource: 'events', currentUsage: 3, limit: 3 });
+      renderBanner({ type: 'limit-reached', resource: 'events', currentUsage: 4, limit: 4 });
 
       expect(screen.getByText('Límite de Eventos Alcanzado')).toBeInTheDocument();
-      expect(screen.getByText(/Has alcanzado el límite de 3 eventos mensuales/i)).toBeInTheDocument();
+      expect(screen.getByText(/Has alcanzado el límite de 4 eventos mensuales/i)).toBeInTheDocument();
     });
 
     it('shows usage metric and progress bar', () => {
-      renderBanner({ type: 'limit-reached', resource: 'events', currentUsage: 3, limit: 3 });
+      renderBanner({ type: 'limit-reached', resource: 'events', currentUsage: 4, limit: 4 });
 
       expect(screen.getByText('Eventos este mes')).toBeInTheDocument();
-      expect(screen.getByText('3 / 3')).toBeInTheDocument();
+      expect(screen.getByText('4 / 4')).toBeInTheDocument();
       expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
     });
 
@@ -34,11 +34,11 @@ describe('UpgradeBanner', () => {
     });
 
     it('renders clients resource correctly', () => {
-      renderBanner({ type: 'limit-reached', resource: 'clients', currentUsage: 50, limit: 50 });
+      renderBanner({ type: 'limit-reached', resource: 'clients', currentUsage: 20, limit: 20 });
 
       expect(screen.getByText('Límite de Clientes Alcanzado')).toBeInTheDocument();
       expect(screen.getByText('Clientes registrados')).toBeInTheDocument();
-      expect(screen.getByText('50 / 50')).toBeInTheDocument();
+      expect(screen.getByText('20 / 20')).toBeInTheDocument();
     });
 
     it('renders catalog resource correctly', () => {
@@ -51,7 +51,7 @@ describe('UpgradeBanner', () => {
     it('uses default values for currentUsage and limit', () => {
       renderBanner({ type: 'limit-reached' });
 
-      expect(screen.getByText('0 / 3')).toBeInTheDocument();
+      expect(screen.getByText('0 / 4')).toBeInTheDocument();
     });
   });
 
@@ -64,9 +64,9 @@ describe('UpgradeBanner', () => {
     });
 
     it('shows current usage info', () => {
-      renderBanner({ type: 'upsell', currentUsage: 2, limit: 3 });
+      renderBanner({ type: 'upsell', currentUsage: 2, limit: 4 });
 
-      expect(screen.getByText(/En Plan Gratis: 2 de 3 eventos mensuales usados/i)).toBeInTheDocument();
+      expect(screen.getByText(/En Plan Gratis: 2 de 4 eventos mensuales usados/i)).toBeInTheDocument();
     });
 
     it('renders View Plans link', () => {

@@ -14,7 +14,7 @@ interface UpgradeBannerProps {
 export const UpgradeBanner: React.FC<UpgradeBannerProps> = ({ 
   type, 
   currentUsage = 0, 
-  limit = 3,
+  limit = 4,
   resource = 'events',
   className = ''
 }) => {

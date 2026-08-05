@@ -63,13 +63,12 @@ describe('Pricing', () => {
       expect(screen.getByText('$0')).toBeInTheDocument();
       expect(screen.getByText('/mes')).toBeInTheDocument();
 
-      // Free features
-      expect(screen.getByText('Hasta 3 eventos por mes')).toBeInTheDocument();
-      expect(screen.getByText('Hasta 50 clientes registrados')).toBeInTheDocument();
-      expect(screen.getByText('Hasta 20 ítems en catálogo')).toBeInTheDocument();
-      expect(screen.getByText('Gestión básica de clientes')).toBeInTheDocument();
-      expect(screen.getByText('Calendario de eventos')).toBeInTheDocument();
-      expect(screen.getByText('Generación de PDFs (cotizaciones, contratos y más)')).toBeInTheDocument();
+      // Free features (aligned to monetization v3 / backend limits)
+      expect(screen.getByText('Hasta 4 eventos por mes')).toBeInTheDocument();
+      expect(screen.getByText('Hasta 20 clientes registrados')).toBeInTheDocument();
+      expect(screen.getByText(/15 productos y 30 de inventario/i)).toBeInTheDocument();
+      expect(screen.getByText(/3 enlaces de solicitud activos/i)).toBeInTheDocument();
+      expect(screen.getByText(/Portal cliente y perfil público básicos/i)).toBeInTheDocument();
     });
 
     it('renders the Pro plan card with features', () => {
@@ -86,12 +85,10 @@ describe('Pricing', () => {
       expect(screen.getByText('Recomendado')).toBeInTheDocument();
 
       // Pro features
-      expect(screen.getByText('Eventos ilimitados')).toBeInTheDocument();
-      expect(screen.getByText('Clientes y catálogo ilimitados')).toBeInTheDocument();
-      expect(screen.getByText('Control de pagos e ingresos en múltiples plazos')).toBeInTheDocument();
-      expect(screen.getByText('Reportes y analíticas avanzadas')).toBeInTheDocument();
-      expect(screen.getByText('Portal del cliente con tu marca')).toBeInTheDocument();
-      expect(screen.getByText('Soporte prioritario')).toBeInTheDocument();
+      expect(screen.getByText(/Eventos, clientes, catálogo y links de solicitud ilimitados/i)).toBeInTheDocument();
+      expect(screen.getByText(/2 seats de personal/i)).toBeInTheDocument();
+      expect(screen.getByText(/Perfil público full/i)).toBeInTheDocument();
+      expect(screen.getByText(/Inbound analytics/i)).toBeInTheDocument();
       expect(screen.getByText('Todo lo anterior, y además:')).toBeInTheDocument();
     });
 
@@ -109,12 +106,9 @@ describe('Pricing', () => {
 
       // Business features
       expect(screen.getByText('Todo lo de Pro, sin excepción')).toBeInTheDocument();
-      expect(
-        screen.getByText('Hasta 3 usuarios del equipo con roles'),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText('WhatsApp Business API para notificaciones al cliente'),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Staff seats ilimitados|portal de colaboradores/i)).toBeInTheDocument();
+      expect(screen.getByText(/Destacado en el directorio/i)).toBeInTheDocument();
+      expect(screen.getByText(/WhatsApp Business API \(roadmap\)/i)).toBeInTheDocument();
     });
 
     it('shows the disabled "Plan Actual" button for Basico plan', () => {

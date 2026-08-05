@@ -23129,13 +23129,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to 20 products"
+            "value": "Up to 15 products and 30 inventory items"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hasta 20 productos"
+            "value": "Hasta 15 productos y 30 de inventario"
           }
         }
       }
@@ -23145,13 +23145,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to 3 events per month"
+            "value": "Up to 4 events per month"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hasta 3 eventos por mes"
+            "value": "Hasta 4 eventos por mes"
           }
         }
       }
@@ -23161,13 +23161,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to 50 clients"
+            "value": "Up to 20 clients"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hasta 50 clientes"
+            "value": "Hasta 20 clientes"
           }
         }
       }
@@ -27050,6 +27050,102 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "settings.subscription.feature.up_to_4_events": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to 4 events per month"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta 4 eventos por mes"
+          }
+        }
+      }
+    },
+    "settings.subscription.feature.up_to_20_clients": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to 20 clients"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta 20 clientes"
+          }
+        }
+      }
+    },
+    "settings.subscription.feature.up_to_catalog": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to 15 products and 30 inventory items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta 15 productos y 30 de inventario"
+          }
+        }
+      }
+    },
+    "settings.pricing.features.basic.events": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to 4 events per month"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta 4 eventos por mes"
+          }
+        }
+      }
+    },
+    "settings.pricing.features.basic.clients": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to 20 clients"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta 20 clientes"
+          }
+        }
+      }
+    },
+    "settings.pricing.features.basic.products": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to 15 products and 30 inventory items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta 15 productos y 30 de inventario"
           }
         }
       }
