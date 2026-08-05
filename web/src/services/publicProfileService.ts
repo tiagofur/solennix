@@ -14,6 +14,7 @@ export type PublicPortfolioItem =
 export type PublicReview = components["schemas"]["PublicReview"];
 export type PublicContact = components["schemas"]["PublicContact"];
 export type PublicLocation = components["schemas"]["PublicLocation"];
+export type PublicPackage = components["schemas"]["PublicPackage"];
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 

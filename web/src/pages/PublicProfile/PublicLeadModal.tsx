@@ -19,6 +19,10 @@ interface PublicLeadModalProps {
   brandColor?: string | null;
   /** Public services of the organizer, for the multi-select (D4). */
   services?: PublicProfileServiceItem[];
+  /** Prefill message (e.g. package or service interest). */
+  initialMessage?: string;
+  /** Prefill selected catalog product ids (qty 1 each). */
+  initialServiceIds?: string[];
 }
 
 export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
@@ -28,6 +32,8 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
   businessName,
   brandColor,
   services = [],
+  initialMessage,
+  initialServiceIds = [],
 }) => {
   const { t } = useTranslation("public");
 
@@ -243,6 +249,12 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
               brandColor={brandColor}
               submitting={submitting}
               error={error}
+              initialValues={{
+                message: initialMessage ?? "",
+                selectedServices: Object.fromEntries(
+                  initialServiceIds.map((id) => [id, 1]),
+                ),
+              }}
               onSubmit={handleSubmit}
               footerSecondary={
                 <button
