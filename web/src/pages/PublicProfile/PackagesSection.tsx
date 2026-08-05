@@ -10,31 +10,10 @@ import {
   type PackageDiscountTierInput,
   type PricingUnit,
 } from "@/lib/packageQuote";
+import type { components } from "@/types/api";
 import type { PublicOrganizerProfile } from "@/services/publicProfileService";
 
-/** Extended package shape until OpenAPI types are regenerated. */
-export type PublicPackageView = {
-  id?: string;
-  title?: string;
-  description?: string | null;
-  from_price?: number | null;
-  inclusions?: string[];
-  image_url?: string | null;
-  is_featured?: boolean;
-  sort_order?: number;
-  min_guests?: number | null;
-  items?: Array<{
-    product_id: string;
-    name: string;
-    unit_price: number;
-    pricing_unit: PricingUnit;
-    sort_order?: number;
-  }>;
-  discount_tiers?: Array<{
-    from_guests: number;
-    discount_percent: number;
-  }>;
-};
+export type PublicPackageView = components["schemas"]["PublicPackage"];
 
 interface PackagesSectionProps {
   profile: PublicOrganizerProfile;
@@ -99,7 +78,7 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
               productId: it.product_id,
               name: it.name,
               unitPrice: it.unit_price,
-              pricingUnit: it.pricing_unit,
+              pricingUnit: (it.pricing_unit ?? "per_event") as PricingUnit,
             }),
           );
           const tierInputs: PackageDiscountTierInput[] = (

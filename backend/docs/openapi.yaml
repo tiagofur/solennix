@@ -2331,6 +2331,39 @@ components:
           type: integer
           minimum: 0
           maximum: 5
+    PackagePricingUnit:
+      type: string
+      description: How a package line multiplies in the quote
+      enum: [per_guest, per_event]
+    PublicPackageItem:
+      type: object
+      required: [product_id, name, unit_price, pricing_unit]
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        unit_price:
+          type: number
+          format: double
+          description: Live unit price from catalog at read time
+        pricing_unit:
+          $ref: "#/components/schemas/PackagePricingUnit"
+        sort_order:
+          type: integer
+    PublicPackageDiscountTier:
+      type: object
+      required: [from_guests, discount_percent]
+      properties:
+        from_guests:
+          type: integer
+          minimum: 1
+        discount_percent:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
     PublicPackage:
       type: object
       properties:
@@ -2346,10 +2379,12 @@ components:
           type: number
           format: double
           nullable: true
+          description: Legacy manual floor when items are empty
         inclusions:
           type: array
           items:
             type: string
+          description: Legacy free-text bullets when items are empty
         image_url:
           type: string
           nullable: true
@@ -2357,6 +2392,71 @@ components:
           type: boolean
         sort_order:
           type: integer
+        min_guests:
+          type: integer
+          nullable: true
+          minimum: 1
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicPackageItem"
+          description: Catalog-linked lines; client recalculates totals with guest count
+        discount_tiers:
+          type: array
+          maxItems: 3
+          items:
+            $ref: "#/components/schemas/PublicPackageDiscountTier"
+    PackageQuoteSnapshotLine:
+      type: object
+      properties:
+        product_id:
+          type: string
+        name:
+          type: string
+        unit_price:
+          type: number
+          format: double
+        pricing_unit:
+          type: string
+        quantity:
+          type: integer
+        line_total:
+          type: number
+          format: double
+    PackageQuoteSnapshot:
+      type: object
+      description: Frozen package quote at request submit (convert-to-event fidelity)
+      properties:
+        package_id:
+          type: string
+        package_title:
+          type: string
+        guest_count:
+          type: integer
+        min_guests:
+          type: integer
+          nullable: true
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackageQuoteSnapshotLine"
+        subtotal:
+          type: number
+          format: double
+        discount_percent:
+          type: number
+          format: double
+        discount_amount:
+          type: number
+          format: double
+        total:
+          type: number
+          format: double
+        applied_from_guests:
+          type: integer
+          nullable: true
+        currency:
+          type: string
     PublicFaqItem:
       type: object
       properties:
@@ -2782,6 +2882,12 @@ components:
             Honeypot anti-spam field. Must be empty. Bots that fill hidden fields
             receive a fake 201 without creating a request.
           maxLength: 200
+        package_id:
+          type: string
+          format: uuid
+          description: >
+            When set, server builds a live package quote and freezes package_quote
+            on the request (guest_count drives per_guest lines and discount tiers).
     PublicRequestCreateResponse:
       allOf:
         - $ref: "#/components/schemas/PublicRequest"
@@ -2840,6 +2946,11 @@ components:
         message:
           type: string
           nullable: true
+        package_quote:
+          allOf:
+            - $ref: "#/components/schemas/PackageQuoteSnapshot"
+          nullable: true
+          description: Frozen package quote when visitor requested a structured package
         status:
           $ref: "#/components/schemas/PublicRequestStatus"
         source:
@@ -3185,6 +3296,47 @@ components:
         updated_at:
           type: string
           format: date-time
+    OrganizerPublicPackageItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        package_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        pricing_unit:
+          $ref: "#/components/schemas/PackagePricingUnit"
+        sort_order:
+          type: integer
+        name:
+          type: string
+          description: Product name when joined from catalog
+        unit_price:
+          type: number
+          format: double
+          nullable: true
+          description: Live base_price from catalog when joined
+    OrganizerPublicPackageDiscountTier:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        package_id:
+          type: string
+          format: uuid
+        from_guests:
+          type: integer
+          minimum: 1
+        discount_percent:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
     OrganizerPublicPackage:
       type: object
       properties:
@@ -3212,12 +3364,141 @@ components:
           type: boolean
         sort_order:
           type: integer
+        min_guests:
+          type: integer
+          nullable: true
+          minimum: 1
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizerPublicPackageItem"
+        discount_tiers:
+          type: array
+          maxItems: 3
+          items:
+            $ref: "#/components/schemas/OrganizerPublicPackageDiscountTier"
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
+    PackageCreateRequest:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          maxLength: 160
+        description:
+          type: string
+          nullable: true
+        from_price:
+          type: number
+          format: double
+          nullable: true
+        inclusions:
+          type: array
+          items:
+            type: string
+        image_url:
+          type: string
+          nullable: true
+        is_featured:
+          type: boolean
+        sort_order:
+          type: integer
+        min_guests:
+          type: integer
+          nullable: true
+          minimum: 1
+        items:
+          type: array
+          description: Catalog products (min 2 when non-empty)
+          items:
+            type: object
+            required: [product_id, pricing_unit]
+            properties:
+              product_id:
+                type: string
+                format: uuid
+              pricing_unit:
+                $ref: "#/components/schemas/PackagePricingUnit"
+        discount_tiers:
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            required: [from_guests, discount_percent]
+            properties:
+              from_guests:
+                type: integer
+                minimum: 1
+              discount_percent:
+                type: number
+                format: double
+                minimum: 0
+                maximum: 100
+    PackageUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 160
+        description:
+          type: string
+          nullable: true
+        from_price:
+          type: number
+          format: double
+          nullable: true
+        inclusions:
+          type: array
+          items:
+            type: string
+        image_url:
+          type: string
+          nullable: true
+        is_featured:
+          type: boolean
+        sort_order:
+          type: integer
+        min_guests:
+          type: integer
+          nullable: true
+          minimum: 1
+        clear_min_guests:
+          type: boolean
+          description: When true, clears min_guests
+        replace_details:
+          type: boolean
+          description: When true, rewrites items and discount_tiers (even if empty)
+        items:
+          type: array
+          items:
+            type: object
+            required: [product_id, pricing_unit]
+            properties:
+              product_id:
+                type: string
+                format: uuid
+              pricing_unit:
+                $ref: "#/components/schemas/PackagePricingUnit"
+        discount_tiers:
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            required: [from_guests, discount_percent]
+            properties:
+              from_guests:
+                type: integer
+                minimum: 1
+              discount_percent:
+                type: number
+                format: double
+                minimum: 0
+                maximum: 100
     OrganizerPublicFaqItem:
       type: object
       properties:
@@ -6979,33 +7260,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [title]
-              properties:
-                title:
-                  type: string
-                  maxLength: 160
-                description:
-                  type: string
-                  nullable: true
-                from_price:
-                  type: number
-                  format: double
-                  nullable: true
-                inclusions:
-                  type: array
-                  items:
-                    type: string
-                image_url:
-                  type: string
-                  nullable: true
-                is_featured:
-                  type: boolean
-                sort_order:
-                  type: integer
+              $ref: "#/components/schemas/PackageCreateRequest"
       responses:
         "201":
           description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizerPublicPackage"
         "403":
           description: Requires Pro+ plan
         "400":
@@ -7021,9 +7283,19 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackageUpdateRequest"
       responses:
         "200":
           description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizerPublicPackage"
         "404":
           description: Package not found
     delete:

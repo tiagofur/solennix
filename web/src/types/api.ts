@@ -1145,31 +1145,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/event-forms": {
+    "/api/organizers/me/request-links": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List all shareable event form links for the authenticated user */
-        get: operations["listEventFormLinks"];
+        /** List shareable Solicitudes links for the authenticated organizer */
+        get: operations["listPublicRequestLinks"];
         put?: never;
         /**
-         * Create a new shareable event form link
-         * @description Generates a cryptographically random token link that a prospective client
-         *     opens in a browser to fill out event details and select products (without prices).
-         *     On submission it creates a draft Event + Client for the organizer.
-         *     Basic plan users are limited to 3 active links.
+         * Create a shareable Solicitudes link
+         * @description Basic/free plans are limited to 3 active links. Default submit_mode is auto_event.
          */
-        post: operations["generateEventFormLink"];
+        post: operations["createPublicRequestLink"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/event-forms/{id}": {
+    "/api/organizers/me/request-links/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1179,8 +1176,59 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Revoke (delete) a shareable event form link */
-        delete: operations["deleteEventFormLink"];
+        /** Revoke a request link */
+        delete: operations["revokePublicRequestLink"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizers/me/request-links/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke a request link (POST alias) */
+        post: operations["revokePublicRequestLinkPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/request-links/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve a shareable Solicitudes link (branding + catalog) */
+        get: operations["getPublicRequestLink"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/request-links/{token}/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a quote request via shared link */
+        post: operations["submitPublicRequestViaLink"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1204,34 +1252,6 @@ export interface paths {
         post: operations["createOrRotateEventPublicLink"];
         /** Revoke the active client-portal link for an event */
         delete: operations["revokeEventPublicLink"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/public/event-forms/{token}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get organizer branding and product catalog for a shareable event form
-         * @description Public endpoint (no auth). Rate-limited to 10 requests/minute.
-         *     Returns organizer branding and active products (without prices) for the form.
-         *     Responds 410 Gone when the link has been used or expired.
-         */
-        get: operations["getEventFormData"];
-        put?: never;
-        /**
-         * Submit a public event form
-         * @description Public endpoint (no auth). Rate-limited to 10 requests/minute.
-         *     Creates a Client + Event + EventProducts in a single transaction, then marks
-         *     the link as used. Links can only be submitted once.
-         */
-        post: operations["submitEventForm"];
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1308,7 +1328,7 @@ export interface paths {
         };
         /**
          * Search the public organizers directory (paginated, unauthenticated, v2.0
-         * @description Returns a paginated slice of PublicOrganizerCard with plan-aware ranking (Business first). Only "publicable" profiles appear (cover/logo, headline/ about, city+country, ≥1 visible service). Free plan cards omit rating/ reviews (social-proof gating). NG1: visitor has no account.
+         * @description Returns a paginated slice of PublicOrganizerCard with plan-aware ranking (#1129): default relevance = Business featured first, then avg_rating * ln(reviews+2), then recency. Distance sort keeps Business first then proximity. Only publicable profiles appear (cover, headline/ about, city+country, ≥1 visible service). Free plan cards omit rating/ reviews. NG1: visitor has no account.
          */
         get: operations["searchPublicOrganizers"];
         put?: never;
@@ -1366,27 +1386,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** XML sitemap of enabled public profiles */
+        /** XML sitemap of directory-publicable public profiles */
         get: operations["getPublicProfilesSitemap"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/public/organizers/{slug}/leads": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Submit an inquiry to an organizer's public profile (rate-limited, unauthenticated) */
-        post: operations["submitPublicLead"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1440,7 +1443,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List the organizer's quote-request inbox (paginated, v2.0) */
+        /**
+         * List the organizer's quote-request inbox (paginated, v2.0)
+         * @description Dual pagination. Web uses `page` (offset + total). Mobile uses `cursor` (keyset, no total) — pass empty `cursor` on the first page and `next_cursor` thereafter (#1121). Also accepts `pagination=cursor`.
+         */
         get: operations["listOrganizerPublicRequests"];
         put?: never;
         post?: never;
@@ -1563,7 +1569,7 @@ export interface paths {
         put?: never;
         /**
          * Convert an accepted/responded request into an Event (status=quoted, v2.0)
-         * @description Idempotent: returns 409 already_converted with the existing event_id if the request was already converted. Reuses the EventFormLink flow.
+         * @description Idempotent: returns 409 already_converted with the existing event_id if the request was already converted.
          */
         post: operations["convertPublicRequestToEvent"];
         delete?: never;
@@ -1584,6 +1590,26 @@ export interface paths {
          * @description Always returns PublicReview[]. Free plan or reviews feature off yields an empty list.
          */
         get: operations["listPublicOrganizerReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/inbound-analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inbound analytics for the authenticated organizer (v2.0
+         * @description Aggregated public profile views + PublicRequest funnel for the selected period (7, 30, or 90 days). Free plans receive a teaser (views only, limited=true). Pro+ receive full funnel metrics. Views are privacy-safe (hashed visitor id, no PII).
+         */
+        get: operations["getMyInboundAnalytics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2601,88 +2627,6 @@ export interface components {
             /** @description Human-readable error message */
             message?: string;
         };
-        EventFormLink: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            user_id: string;
-            /** @description 64-character hex token (256 bits of entropy) */
-            token: string;
-            /** @description Optional human-readable label for the link */
-            label?: string | null;
-            /** @enum {string} */
-            status: "active" | "used" | "expired";
-            /** Format: uuid */
-            submitted_event_id?: string | null;
-            /** Format: uuid */
-            submitted_client_id?: string | null;
-            /** Format: date-time */
-            expires_at: string;
-            /** Format: date-time */
-            used_at?: string | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-            /** @description Computed shareable URL (not stored in DB) */
-            url?: string;
-        };
-        EventFormLinkGenerateRequest: {
-            /** @description Optional human-readable label */
-            label?: string | null;
-            /** @description Link validity in days (default 7) */
-            ttl_days?: number;
-        };
-        PublicProduct: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            category: string;
-            image_url?: string | null;
-        };
-        PublicOrganizer: {
-            business_name?: string | null;
-            logo_url?: string | null;
-            /** @description Public profile hero cover image URL */
-            cover_url?: string | null;
-            brand_color?: string | null;
-        };
-        EventFormDataResponse: {
-            organizer: components["schemas"]["PublicOrganizer"];
-            products: components["schemas"]["PublicProduct"][];
-            /** Format: uuid */
-            link_id: string;
-            /** Format: date-time */
-            expires_at: string;
-        };
-        EventFormSubmissionProduct: {
-            /** Format: uuid */
-            product_id: string;
-            /** Format: double */
-            quantity: number;
-        };
-        EventFormSubmission: {
-            client_name: string;
-            client_phone: string;
-            /** Format: email */
-            client_email?: string | null;
-            /** @description Date in YYYY-MM-DD format */
-            event_date: string;
-            service_type: string;
-            num_people: number;
-            location?: string | null;
-            city?: string | null;
-            notes?: string | null;
-            products?: components["schemas"]["EventFormSubmissionProduct"][];
-        };
-        EventFormSubmitResponse: {
-            success: boolean;
-            message: string;
-            /** Format: uuid */
-            event_id: string;
-            /** Format: uuid */
-            client_id: string;
-        };
         EventPublicLink: {
             /** Format: uuid */
             id: string;
@@ -2706,7 +2650,7 @@ export interface components {
             url?: string;
         };
         EventPublicLinkCreateRequest: {
-            /** @description Link validity in days (1–730, up to 2 years). Omit or null for no expiry. Higher limit than EventFormLink because client-portal links are long-lived. */
+            /** @description Link validity in days (1–730, up to 2 years). Omit or null for no expiry. Higher limit because client-portal links are long-lived. */
             ttl_days?: number | null;
         };
         PublicEventDetails: {
@@ -2722,6 +2666,20 @@ export interface components {
             num_people: number;
             /** @enum {string} */
             status: "quoted" | "confirmed" | "completed" | "cancelled";
+        };
+        PublicProduct: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            category: string;
+            image_url?: string | null;
+        };
+        PublicOrganizer: {
+            business_name?: string | null;
+            logo_url?: string | null;
+            /** @description Public profile hero cover image URL */
+            cover_url?: string | null;
+            brand_color?: string | null;
         };
         PublicOrganizerBrand: {
             business_name?: string | null;
@@ -2857,17 +2815,75 @@ export interface components {
             thumbnail_url?: string | null;
             sort_order: number;
         };
+        /**
+         * @description How a package line multiplies in the quote
+         * @enum {string}
+         */
+        PackagePricingUnit: "per_guest" | "per_event";
+        PublicPackageItem: {
+            /** Format: uuid */
+            product_id: string;
+            name: string;
+            /**
+             * Format: double
+             * @description Live unit price from catalog at read time
+             */
+            unit_price: number;
+            pricing_unit: components["schemas"]["PackagePricingUnit"];
+            sort_order?: number;
+        };
+        PublicPackageDiscountTier: {
+            from_guests: number;
+            /** Format: double */
+            discount_percent: number;
+        };
         PublicPackage: {
             /** Format: uuid */
             id?: string;
             title?: string;
             description?: string | null;
-            /** Format: double */
+            /**
+             * Format: double
+             * @description Legacy manual floor when items are empty
+             */
             from_price?: number | null;
+            /** @description Legacy free-text bullets when items are empty */
             inclusions?: string[];
             image_url?: string | null;
             is_featured?: boolean;
             sort_order?: number;
+            min_guests?: number | null;
+            /** @description Catalog-linked lines; client recalculates totals with guest count */
+            items?: components["schemas"]["PublicPackageItem"][];
+            discount_tiers?: components["schemas"]["PublicPackageDiscountTier"][];
+        };
+        PackageQuoteSnapshotLine: {
+            product_id?: string;
+            name?: string;
+            /** Format: double */
+            unit_price?: number;
+            pricing_unit?: string;
+            quantity?: number;
+            /** Format: double */
+            line_total?: number;
+        };
+        /** @description Frozen package quote at request submit (convert-to-event fidelity) */
+        PackageQuoteSnapshot: {
+            package_id?: string;
+            package_title?: string;
+            guest_count?: number;
+            min_guests?: number | null;
+            lines?: components["schemas"]["PackageQuoteSnapshotLine"][];
+            /** Format: double */
+            subtotal?: number;
+            /** Format: double */
+            discount_percent?: number;
+            /** Format: double */
+            discount_amount?: number;
+            /** Format: double */
+            total?: number;
+            applied_from_guests?: number | null;
+            currency?: string;
         };
         PublicFaqItem: {
             /** Format: uuid */
@@ -2957,32 +2973,35 @@ export interface components {
             limit: number;
             total_pages: number;
         };
-        SubmitPublicLeadRequest: {
-            name: string;
-            /** @description How the organizer should reach back (email, phone, WhatsApp) */
-            contact: string;
+        InboundDayCount: {
             /** Format: date */
-            event_date?: string | null;
-            event_type?: string | null;
-            num_guests?: number | null;
-            message?: string | null;
-            /** @default form */
-            source: string;
+            date?: string;
+            count?: number;
         };
-        PublicLead: {
-            /** Format: uuid */
-            id?: string;
-            name?: string;
-            contact?: string;
-            /** Format: date */
-            event_date?: string | null;
-            event_type?: string | null;
-            num_guests?: number | null;
-            message?: string | null;
-            source?: string;
-            is_read?: boolean;
-            /** Format: date-time */
-            created_at?: string;
+        /** @description Aggregated inbound funnel metrics for an organizer (#1131). */
+        InboundAnalytics: {
+            period_days?: number;
+            views?: number;
+            unique_visitors?: number;
+            previous_views?: number;
+            /** Format: double */
+            views_change_pct?: number | null;
+            requests?: number;
+            responded?: number;
+            /** Format: double */
+            response_rate?: number;
+            converted?: number;
+            /** Format: double */
+            conversion_rate?: number;
+            requests_by_status?: {
+                [key: string]: number;
+            };
+            sources?: {
+                [key: string]: number;
+            };
+            views_by_day?: components["schemas"]["InboundDayCount"][];
+            /** @description True when Free plan teaser (views only). */
+            limited?: boolean;
         };
         /**
          * @description Lifecycle state of a public quote request (v2.0,
@@ -2994,46 +3013,127 @@ export interface components {
             /** Format: uuid */
             product_id?: string;
             name?: string;
-            /** Format: double */
+            /**
+             * Format: double
+             * @description Unit price at snapshot time
+             */
             price?: number | null;
+            /**
+             * @description Quantity selected (defaults to 1 for legacy rows)
+             * @default 1
+             */
+            qty: number;
             is_featured?: boolean;
         };
-        /** @description Unauthenticated visitor payload submitting a structured quote request. */
+        /**
+         * @description Outcome applied when a visitor submits a request (link mode; profile is always standard).
+         * @enum {string}
+         */
+        SubmitMode: "standard" | "auto_quote" | "auto_event";
+        /**
+         * @description How the visitor entered the quote-request flow.
+         * @enum {string}
+         */
+        RequestSource: "public_profile" | "shared_link";
+        /** @enum {string} */
+        PublicRequestLinkStatus: "active" | "used" | "expired" | "revoked";
+        /** @description Shareable link for unified Solicitudes / quote requests. */
+        PublicRequestLink: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            organizer_user_id?: string;
+            token?: string;
+            label?: string | null;
+            status?: components["schemas"]["PublicRequestLinkStatus"];
+            submit_mode?: components["schemas"]["SubmitMode"];
+            /** @description null = unlimited uses */
+            max_uses?: number | null;
+            use_count?: number;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            /** @description Computed absolute URL (/s/{token}); not stored */
+            url?: string;
+        };
+        CreatePublicRequestLinkRequest: {
+            label?: string | null;
+            /** @default 7 */
+            ttl_days: number;
+            max_uses?: number | null;
+            /** @default auto_event */
+            submit_mode: components["schemas"]["SubmitMode"];
+        };
+        /** @description Unauthenticated visitor payload submitting a structured quote request (profile CTA or shared link). Profile path requires contact_email; shared link requires email or phone (auto_event also requires name, phone, event_date, event_type, guest_count >= 1). */
         CreatePublicRequestRequest: {
             /** Format: email */
-            contact_email: string;
+            contact_email?: string;
             contact_name?: string | null;
+            contact_phone?: string | null;
             event_type?: string | null;
             /** Format: date */
             event_date?: string | null;
             location?: string | null;
+            city?: string | null;
             guest_count?: number | null;
             /** Format: double */
             budget?: number | null;
             /** @default MXN */
             currency: string;
-            /** @description IDs of the organizer's public services to quote. Validated against the catalog. */
+            /** @description Legacy flat list of product IDs (qty defaults to 1). Prefer services[]. */
             service_ids?: string[];
+            /** @description Selected catalog line items with quantity (prices set server-side). */
+            services?: {
+                /** Format: uuid */
+                product_id: string;
+                /** @default 1 */
+                qty: number;
+            }[];
             message?: string | null;
+            /** @description Honeypot anti-spam field. Must be empty. Bots that fill hidden fields receive a fake 201 without creating a request. */
+            website?: string;
+            /**
+             * Format: uuid
+             * @description When set, server builds a live package quote and freezes package_quote on the request (guest_count drives per_guest lines and discount tiers).
+             */
+            package_id?: string;
         };
-        /** @description A structured quote request from a visitor to an organizer's public profile. */
+        PublicRequestCreateResponse: components["schemas"]["PublicRequest"] & {
+            /**
+             * Format: uuid
+             * @description Issued once on create. Visitor uses it as X-Request-Token for subsequent actions. Never returned on organizer inbox endpoints.
+             */
+            client_token: string;
+        };
+        /** @description A structured quote request from a visitor (profile CTA or shared link). */
         PublicRequest: {
             /** Format: uuid */
             id?: string;
             /** Format: email */
             contact_email?: string;
             contact_name?: string | null;
+            contact_phone?: string | null;
             event_type?: string | null;
             /** Format: date */
             event_date?: string | null;
             location?: string | null;
+            city?: string | null;
             guest_count?: number | null;
             /** Format: double */
             budget?: number | null;
             currency?: string;
             services?: components["schemas"]["PublicRequestServiceSnapshot"][];
             message?: string | null;
+            /** @description Frozen package quote when visitor requested a structured package */
+            package_quote?: components["schemas"]["PackageQuoteSnapshot"] | null;
             status?: components["schemas"]["PublicRequestStatus"];
+            source?: components["schemas"]["RequestSource"];
+            submit_mode?: components["schemas"]["SubmitMode"];
+            /** Format: uuid */
+            link_id?: string | null;
             is_read?: boolean;
             /**
              * Format: uuid
@@ -3065,6 +3165,14 @@ export interface components {
             page: number;
             limit: number;
             total_pages: number;
+        };
+        /** @description Keyset (cursor) pagination envelope for mobile inbox (#1121). Prefer over offset when scrolling large lists; no total count. */
+        CursorPaginatedPublicRequestsResponse: {
+            data: components["schemas"]["PublicRequest"][];
+            /** @description Opaque cursor for the next page; null when has_more is false */
+            next_cursor?: string | null;
+            has_more: boolean;
+            limit: number;
         };
         PublicResponse: {
             /** Format: uuid */
@@ -3175,6 +3283,32 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        OrganizerPublicPackageItem: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            package_id?: string;
+            /** Format: uuid */
+            product_id?: string;
+            pricing_unit?: components["schemas"]["PackagePricingUnit"];
+            sort_order?: number;
+            /** @description Product name when joined from catalog */
+            name?: string;
+            /**
+             * Format: double
+             * @description Live base_price from catalog when joined
+             */
+            unit_price?: number | null;
+        };
+        OrganizerPublicPackageDiscountTier: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            package_id?: string;
+            from_guests?: number;
+            /** Format: double */
+            discount_percent?: number;
+        };
         OrganizerPublicPackage: {
             /** Format: uuid */
             id?: string;
@@ -3186,10 +3320,60 @@ export interface components {
             image_url?: string | null;
             is_featured?: boolean;
             sort_order?: number;
+            min_guests?: number | null;
+            items?: components["schemas"]["OrganizerPublicPackageItem"][];
+            discount_tiers?: components["schemas"]["OrganizerPublicPackageDiscountTier"][];
             /** Format: date-time */
             created_at?: string;
             /** Format: date-time */
             updated_at?: string;
+        };
+        PackageCreateRequest: {
+            title: string;
+            description?: string | null;
+            /** Format: double */
+            from_price?: number | null;
+            inclusions?: string[];
+            image_url?: string | null;
+            is_featured?: boolean;
+            sort_order?: number;
+            min_guests?: number | null;
+            /** @description Catalog products (min 2 when non-empty) */
+            items?: {
+                /** Format: uuid */
+                product_id: string;
+                pricing_unit: components["schemas"]["PackagePricingUnit"];
+            }[];
+            discount_tiers?: {
+                from_guests: number;
+                /** Format: double */
+                discount_percent: number;
+            }[];
+        };
+        PackageUpdateRequest: {
+            title?: string;
+            description?: string | null;
+            /** Format: double */
+            from_price?: number | null;
+            inclusions?: string[];
+            image_url?: string | null;
+            is_featured?: boolean;
+            sort_order?: number;
+            min_guests?: number | null;
+            /** @description When true, clears min_guests */
+            clear_min_guests?: boolean;
+            /** @description When true, rewrites items and discount_tiers (even if empty) */
+            replace_details?: boolean;
+            items?: {
+                /** Format: uuid */
+                product_id: string;
+                pricing_unit: components["schemas"]["PackagePricingUnit"];
+            }[];
+            discount_tiers?: {
+                from_guests: number;
+                /** Format: double */
+                discount_percent: number;
+            }[];
         };
         OrganizerPublicFaqItem: {
             /** Format: uuid */
@@ -6561,7 +6745,7 @@ export interface operations {
             };
         };
     };
-    listEventFormLinks: {
+    listPublicRequestLinks: {
         parameters: {
             query?: never;
             header?: never;
@@ -6570,13 +6754,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description List of event form links */
+            /** @description List of request links */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EventFormLink"][];
+                    "application/json": {
+                        data?: components["schemas"]["PublicRequestLink"][];
+                    };
                 };
             };
             /** @description Unauthorized */
@@ -6586,18 +6772,9 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Failed to list links */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
         };
     };
-    generateEventFormLink: {
+    createPublicRequestLink: {
         parameters: {
             query?: never;
             header?: never;
@@ -6606,27 +6783,27 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["EventFormLinkGenerateRequest"];
+                "application/json": components["schemas"]["CreatePublicRequestLinkRequest"];
             };
         };
         responses: {
-            /** @description Event form link created */
+            /** @description Link created */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EventFormLink"];
+                    "application/json": {
+                        data?: components["schemas"]["PublicRequestLink"];
+                    };
                 };
             };
-            /** @description Validation error (e.g. ttl_days out of range or label too long) */
+            /** @description Validation error */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
@@ -6635,27 +6812,16 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Plan limit reached (basic plan allows max 3 active links) */
+            /** @description Plan limit reached (basic/free max 3 active links) */
             402: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Failed to create link */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
+                content?: never;
             };
         };
     };
-    deleteEventFormLink: {
+    revokePublicRequestLink: {
         parameters: {
             query?: never;
             header?: never;
@@ -6666,24 +6832,8 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Link revoked */
+            /** @description Revoked */
             204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid link ID */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6694,18 +6844,136 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
+                content?: never;
             };
-            /** @description Failed to delete link */
-            500: {
+        };
+    };
+    revokePublicRequestLinkPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revoked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Link not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicRequestLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Link data */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token never existed */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Link invalid (expired, used, revoked, max uses) */
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": {
+                        /** @example link_invalid */
+                        error?: string;
+                        message?: string;
+                    };
                 };
+            };
+        };
+    };
+    submitPublicRequestViaLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePublicRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description Request created (status depends on submit_mode) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["PublicRequestCreateResponse"];
+                    };
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Link not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Link invalid */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example link_invalid */
+                        error?: string;
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Rate limit or organizer inbox full */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -6869,134 +7137,6 @@ export interface operations {
                 };
             };
             /** @description Failed to revoke public link */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getEventFormData: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                token: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Form data including organizer branding and product catalog */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EventFormDataResponse"];
-                };
-            };
-            /** @description Token is required */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Link not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Link has been used or has expired */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example link_invalid */
-                        error?: string;
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Failed to load form data */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    submitEventForm: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                token: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["EventFormSubmission"];
-            };
-        };
-        responses: {
-            /** @description Form submitted successfully — draft event and client created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EventFormSubmitResponse"];
-                };
-            };
-            /** @description Validation error or invalid product ID */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Link not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Link has expired or is no longer valid */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example link_invalid */
-                        error?: string;
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Failed to process form submission */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -7337,6 +7477,14 @@ export interface operations {
                 lng?: number;
                 /** @description Bounding-box radius in km (default 50 when lat/lng present). */
                 radius_km?: number;
+                /** @description #1128 — match organizers with at least one public package/product price >= min_budget. */
+                min_budget?: number;
+                /** @description #1128 — match organizers with at least one public package/product price <= max_budget. */
+                max_budget?: number;
+                /** @description #1128 — case-insensitive partial match on active public product category. */
+                service_category?: string;
+                /** @description #1128 — YYYY-MM-DD; exclude organizers with unavailable_dates covering that day. */
+                available_on?: string;
                 order?: "asc" | "desc";
                 page?: number;
                 limit?: number;
@@ -7468,53 +7616,6 @@ export interface operations {
             };
         };
     };
-    submitPublicLead: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slug: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SubmitPublicLeadRequest"];
-            };
-        };
-        responses: {
-            /** @description Inquiry submitted */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PublicLead"];
-                };
-            };
-            /** @description Invalid request body */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Profile not found or disabled */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Rate limit exceeded (5 / minute) */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     createPublicRequest: {
         parameters: {
             query?: never;
@@ -7530,13 +7631,15 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Request submitted */
+            /** @description Request submitted (includes client_token once) */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicRequest"];
+                    "application/json": {
+                        data?: components["schemas"]["PublicRequestCreateResponse"];
+                    };
                 };
             };
             /** @description Invalid body or service_ids */
@@ -7629,11 +7732,17 @@ export interface operations {
     listOrganizerPublicRequests: {
         parameters: {
             query?: {
+                /** @description Offset page (web). Ignored when cursor mode is active. */
                 page?: number;
+                /** @description Opaque keyset cursor. Presence of this parameter (even empty) enables cursor mode for mobile clients. */
+                cursor?: string;
+                /** @description Set to `cursor` to force keyset mode without a cursor token. */
+                pagination?: "cursor";
                 limit?: number;
                 status?: components["schemas"]["PublicRequestStatus"];
                 from_date?: string;
                 to_date?: string;
+                /** @description Only applies to offset (page) mode. Cursor mode sorts by created_at+id. */
                 sort?: "created_at" | "event_date";
                 order?: "asc" | "desc";
             };
@@ -7643,14 +7752,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Paginated inbox */
+            /** @description Paginated inbox (offset or cursor envelope depending on query) */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedPublicRequestsResponse"];
+                    "application/json": components["schemas"]["PaginatedPublicRequestsResponse"] | components["schemas"]["CursorPaginatedPublicRequestsResponse"];
                 };
+            };
+            /** @description Invalid cursor token */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
@@ -7711,6 +7827,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: {
+                            request?: components["schemas"]["PublicRequest"];
                             responses?: components["schemas"]["PublicResponse"][];
                         };
                     };
@@ -7980,6 +8097,51 @@ export interface operations {
             };
             /** @description Rate limit exceeded */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMyInboundAnalytics: {
+        parameters: {
+            query?: {
+                days?: 7 | 30 | 90;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Inbound analytics payload */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["InboundAnalytics"];
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Failed to load analytics */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Analytics not configured */
+            501: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8308,16 +8470,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    title: string;
-                    description?: string | null;
-                    /** Format: double */
-                    from_price?: number | null;
-                    inclusions?: string[];
-                    image_url?: string | null;
-                    is_featured?: boolean;
-                    sort_order?: number;
-                };
+                "application/json": components["schemas"]["PackageCreateRequest"];
             };
         };
         responses: {
@@ -8326,7 +8479,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OrganizerPublicPackage"];
+                };
             };
             /** @description Invalid request or limit reached */
             400: {
@@ -8353,14 +8508,20 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PackageUpdateRequest"];
+            };
+        };
         responses: {
             /** @description Updated */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OrganizerPublicPackage"];
+                };
             };
             /** @description Package not found */
             404: {
