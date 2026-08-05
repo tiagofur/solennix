@@ -3,7 +3,7 @@
  * Keeps title/description/JSON-LD construction free of React for unit tests.
  */
 
-export const DIRECTORY_SITE_ORIGIN = "https://solennix.app";
+export const DIRECTORY_SITE_ORIGIN = "https://solennix.com";
 export const DIRECTORY_JSON_LD_ID = "providers-directory-jsonld";
 
 export type DirectorySeoInput = {

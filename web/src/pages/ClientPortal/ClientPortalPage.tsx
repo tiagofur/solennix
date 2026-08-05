@@ -341,7 +341,7 @@ export const ClientPortalPage: React.FC = () => {
                   {t("portal.upgrade.details_locked")}
                 </p>
                 <a
-                  href={`${import.meta.env.VITE_APP_URL || "https://solennix.app"}/pricing`}
+                  href={`${import.meta.env.VITE_APP_URL || "https://solennix.com"}/pricing`}
                   className="inline-block px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   {t("portal.upgrade.cta")}

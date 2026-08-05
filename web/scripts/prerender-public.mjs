@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.resolve(__dirname, "../dist");
-const SITE = "https://solennix.app";
+const SITE = "https://solennix.com";
 const PROVIDERS_PATH = "/providers";
 
 const SERVICE_CHIPS = [
