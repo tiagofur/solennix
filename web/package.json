@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc -b && vite build",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc -b && vite build && node scripts/prerender-public.mjs",
+    "prerender": "node scripts/prerender-public.mjs",
+    "test:prerender": "node scripts/prerender-public.test.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "check": "npm run openapi:types && cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc -b --noEmit",
