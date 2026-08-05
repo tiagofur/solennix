@@ -25,6 +25,12 @@ const Terms = React.lazy(() => import("@/pages/Terms").then((m) => ({ default: m
 const AccountDeletion = React.lazy(() => import("@/pages/AccountDeletion").then((m) => ({ default: m.AccountDeletion })));
 const Changelog = React.lazy(() => import("@/pages/Changelog").then((m) => ({ default: m.Changelog })));
 const Help = React.lazy(() => import("@/pages/Help").then((m) => ({ default: m.Help })));
+const ManualIndex = React.lazy(() =>
+  import("@/pages/Help/ManualIndex").then((m) => ({ default: m.ManualIndex })),
+);
+const ManualArticle = React.lazy(() =>
+  import("@/pages/Help/ManualArticle").then((m) => ({ default: m.ManualArticle })),
+);
 const NotFound = React.lazy(() => import("@/pages/NotFound").then((m) => ({ default: m.NotFound })));
 
 const Dashboard = React.lazy(() => import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard })));
@@ -142,6 +148,8 @@ function App() {
               <Route path="/terms" element={<Terms />} />
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/help/changelog" element={<Changelog />} />
+              <Route path="/help/manual/:slug" element={<ManualArticle />} />
+              <Route path="/help/manual" element={<ManualIndex />} />
               <Route path="/help" element={<Help />} />
               <Route path="/eliminar-cuenta" element={<AccountDeletion />} />
               {/* Legacy EFL URL → unified Solicitudes link form */}

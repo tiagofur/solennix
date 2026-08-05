@@ -16,10 +16,15 @@ describe("Help", () => {
     await i18n.changeLanguage("es");
   });
 
-  it("renders Spanish copy and changelog link", () => {
+  it("renders Spanish copy, manual and changelog links", () => {
     renderHelp();
 
     expect(screen.getByText("Centro de Ayuda")).toBeInTheDocument();
+    expect(screen.getByText("Manual de uso")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Abrir manual/i })).toHaveAttribute(
+      "href",
+      "/help/manual"
+    );
     expect(screen.getByText("Changelog — Qué hay de nuevo")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Ver Changelog/i })).toHaveAttribute(
       "href",
@@ -32,6 +37,7 @@ describe("Help", () => {
     renderHelp();
 
     expect(screen.getByText("Help Center")).toBeInTheDocument();
+    expect(screen.getByText("User manual")).toBeInTheDocument();
     expect(screen.getByText("Changelog — What's New")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /View Changelog/i })).toHaveAttribute(
       "href",

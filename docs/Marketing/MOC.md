@@ -43,6 +43,7 @@ updated: 2026-08-05
 - iOS store shots: `ios_screens/final/`
 - Smartphone finals: `smartphone/final/`
 - Aux icons: `aux-img/`
+- **User manual (in-app help):** [[user-manual/README]] · published under `web/public/help/manual/{web,ios,android}/` · routes `/help/manual`
 
 Screenshots crudos fuera de `final/` son material de trabajo; no linkearlos desde producto.
 

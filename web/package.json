@@ -17,6 +17,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install",
+    "manual:screenshots": "node scripts/capture-manual-screenshots.mjs",
     "openapi:types": "openapi-typescript ../backend/docs/openapi.yaml -o src/types/api.ts"
   },
   "dependencies": {

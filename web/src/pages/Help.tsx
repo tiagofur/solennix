@@ -28,6 +28,8 @@ interface GuideItem {
   title: string;
   description: string;
   topics: string[];
+  /** Deep link into the public user manual */
+  href: string;
 }
 
 const COPY = {
@@ -35,6 +37,10 @@ const COPY = {
     back: "Atrás",
     title: "Centro de Ayuda",
     subtitle: "Respuestas rápidas, guías y soporte.",
+    manualTitle: "Manual de uso",
+    manualDesc:
+      "De cero a tu primera cotización: cliente, producto, inventario, evento y cómo compartirla. Con capturas por plataforma.",
+    manualCta: "Abrir manual",
     changelogTitle: "Changelog — Qué hay de nuevo",
     changelogDesc:
       "Revisa las últimas versiones y cambios de Web, iOS, Android y Backend.",
@@ -56,18 +62,20 @@ const COPY = {
       {
         id: "getting-started",
         title: "Empezar",
-        description: "Crea tu primer evento y aprende los conceptos básicos.",
+        description: "Cuenta, cliente, catálogo y tu primera cotización.",
+        href: "/help/manual",
         topics: [
           "Crear una cuenta",
-          "Crear tu primer evento",
-          "Invitar clientes",
-          "Agregar productos",
+          "Crear un cliente",
+          "Producto e inventario",
+          "Evento y cotización",
         ],
       },
       {
         id: "events",
         title: "Gestión de eventos",
         description: "Organiza eventos desde la propuesta hasta la liquidación.",
+        href: "/help/manual/crear-evento",
         topics: [
           "Crear y editar eventos",
           "Presupuesto y cotizaciones",
@@ -77,19 +85,21 @@ const COPY = {
       },
       {
         id: "inventory",
-        title: "Inventario",
-        description: "Gestiona productos, equipamiento e insumos.",
+        title: "Inventario y productos",
+        description: "Catálogo para cotizar y stock físico.",
+        href: "/help/manual/crear-producto",
         topics: [
-          "Agregar productos",
-          "Categorizar equipamiento e insumos",
+          "Crear productos",
+          "Crear ítems de inventario",
           "Controlar stock",
-          "Alertas de disponibilidad",
+          "Usar productos en la cotización",
         ],
       },
       {
         id: "clients",
         title: "Clientes",
         description: "Administra contactos y el historial de cada cliente.",
+        href: "/help/manual/crear-cliente",
         topics: [
           "Crear perfiles de cliente",
           "Historial de eventos",
@@ -247,6 +257,10 @@ const COPY = {
     back: "Back",
     title: "Help Center",
     subtitle: "Quick answers, guides, and support.",
+    manualTitle: "User manual",
+    manualDesc:
+      "From zero to your first quote: client, product, inventory, event, and how to share it. Screenshots per platform.",
+    manualCta: "Open manual",
     changelogTitle: "Changelog — What's New",
     changelogDesc:
       "Review the latest versions and changes across Web, iOS, Android, and Backend.",
@@ -268,18 +282,20 @@ const COPY = {
       {
         id: "getting-started",
         title: "Getting Started",
-        description: "Create your first event and learn the basics.",
+        description: "Account, client, catalog, and your first quote.",
+        href: "/help/manual",
         topics: [
           "Create an account",
-          "Create your first event",
-          "Invite clients",
-          "Add products",
+          "Create a client",
+          "Product and inventory",
+          "Event and quote",
         ],
       },
       {
         id: "events",
         title: "Event Management",
         description: "Manage events from proposal to final settlement.",
+        href: "/help/manual/crear-evento",
         topics: [
           "Create and edit events",
           "Budgets and quotes",
@@ -289,19 +305,21 @@ const COPY = {
       },
       {
         id: "inventory",
-        title: "Inventory",
-        description: "Manage products, equipment, and supplies.",
+        title: "Inventory & products",
+        description: "Catalog to quote and physical stock.",
+        href: "/help/manual/crear-producto",
         topics: [
-          "Add products",
-          "Classify equipment and supplies",
+          "Create products",
+          "Create inventory items",
           "Track stock",
-          "Availability alerts",
+          "Use products on quotes",
         ],
       },
       {
         id: "clients",
         title: "Clients",
         description: "Manage contacts and each client's history.",
+        href: "/help/manual/crear-cliente",
         topics: [
           "Create client profiles",
           "Event history",
@@ -503,7 +521,29 @@ export function Help() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+        <Link
+          to="/help/manual"
+          className="block rounded-2xl border border-primary/25 bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6"
+        >
+          <div className="flex items-start gap-4">
+            <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-text">
+                {copy.manualTitle}
+              </h2>
+              <p className="mt-1 text-sm text-text-secondary">
+                {copy.manualDesc}
+              </p>
+              <span className="mt-3 inline-flex items-center gap-2 font-medium text-primary hover:underline">
+                {copy.manualCta} →
+              </span>
+            </div>
+          </div>
+        </Link>
+
         <Link
           to="/help/changelog"
           className="block rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6"
@@ -533,8 +573,9 @@ export function Help() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {copy.guides.map((guide) => (
-            <div
+            <Link
               key={guide.id}
+              to={guide.href}
               className="rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6"
             >
               <div className="flex items-start gap-3 mb-3">
@@ -557,7 +598,7 @@ export function Help() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
