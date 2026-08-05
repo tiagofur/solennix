@@ -4,10 +4,15 @@ import { useTranslation } from "react-i18next";
 import { Card } from "@/components/Card";
 import { localeFromLanguage } from "@/lib/finance";
 import { resolveMediaUrl } from "@/lib/api";
-import type { PublicOrganizerProfile } from "@/services/publicProfileService";
+import type {
+  PublicOrganizerProfile,
+  PublicPackage,
+} from "@/services/publicProfileService";
 
 interface PackagesSectionProps {
   profile: PublicOrganizerProfile;
+  /** Opens quote request prefilled for this package. */
+  onRequestPackage?: (pkg: PublicPackage) => void;
 }
 
 function formatPrice(amount: number, language: string): string {
@@ -22,7 +27,10 @@ function formatPrice(amount: number, language: string): string {
   }
 }
 
-export const PackagesSection: React.FC<PackagesSectionProps> = ({ profile }) => {
+export const PackagesSection: React.FC<PackagesSectionProps> = ({
+  profile,
+  onRequestPackage,
+}) => {
   const { t, i18n } = useTranslation("public");
   const packages = profile.packages ?? [];
 
@@ -100,6 +108,23 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({ profile }) => 
                         </li>
                       ))}
                     </ul>
+                  )}
+                  {onRequestPackage && (
+                    <button
+                      type="button"
+                      onClick={() => onRequestPackage(pkg)}
+                      data-testid={`package-request-${pkg.id}`}
+                      className="w-full inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary shadow-xs hover:opacity-90 transition-opacity cursor-pointer"
+                      style={
+                        profile.brand_color
+                          ? { backgroundColor: profile.brand_color }
+                          : undefined
+                      }
+                    >
+                      {t("profile.packages_request_cta", {
+                        defaultValue: "Request this package",
+                      })}
+                    </button>
                   )}
                 </div>
               </Card>

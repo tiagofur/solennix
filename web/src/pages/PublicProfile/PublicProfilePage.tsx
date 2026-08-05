@@ -182,7 +182,16 @@ export const PublicProfilePage: React.FC = () => {
   const [state, setState] = useState<PageState>("loading");
   const [profile, setProfile] = useState<PublicOrganizerProfile | null>(null);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [quotePreset, setQuotePreset] = useState<{
+    message?: string;
+    serviceIds?: string[];
+  }>({});
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const openQuoteModal = (preset?: { message?: string; serviceIds?: string[] }) => {
+    setQuotePreset(preset ?? {});
+    setIsQuoteModalOpen(true);
+  };
 
   useEffect(() => {
     if (!slug?.trim()) {
@@ -394,9 +403,17 @@ export const PublicProfilePage: React.FC = () => {
   const heroFallbackColor = profile.brand_color || "var(--color-primary, #C4A265)";
   const contactOpenExternal =
     profile.contact?.type === "url" || profile.contact?.type === "whatsapp";
+  const whatsappContact =
+    profile.contact?.type === "whatsapp" ? profile.contact : null;
+  const whatsappHref = whatsappContact
+    ? contactHref(whatsappContact)
+    : null;
+  const brandBtnStyle = profile.brand_color
+    ? { backgroundColor: profile.brand_color }
+    : undefined;
 
   return (
-    <div className="min-h-screen bg-bg transition-colors animate-fade-in" style={brandStyle}>
+    <div className="min-h-screen bg-bg transition-colors animate-fade-in pb-24 md:pb-0" style={brandStyle}>
       <header className="sticky top-0 z-40 bg-bg/80 backdrop-blur-md border-b border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2" aria-label="Solennix">
@@ -514,29 +531,38 @@ export const PublicProfilePage: React.FC = () => {
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={() => setIsQuoteModalOpen(true)}
+              onClick={() => openQuoteModal()}
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-xs hover:opacity-90 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer"
-              style={
-                profile.brand_color
-                  ? { backgroundColor: profile.brand_color }
-                  : undefined
-              }
+              style={brandBtnStyle}
               data-testid="public-request-quote-button"
             >
               <Calendar className="h-4 w-4" aria-hidden="true" />
               {t("profile.request_quote_cta")}
             </button>
 
-            {profile.contact && (
+            {whatsappHref ? (
               <a
-                href={contactHref(profile.contact)}
-                target={contactOpenExternal ? "_blank" : undefined}
-                rel={contactOpenExternal ? "noopener noreferrer" : undefined}
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-alt/70 px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface-alt transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl border border-emerald-600/40 bg-emerald-600/10 px-4 py-2.5 text-sm font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600/15 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                data-testid="public-whatsapp-button"
               >
-                <ContactIcon type={profile.contact.type} />
-                {t("profile.contact_cta")}
+                <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                {t("profile.whatsapp_cta", { defaultValue: "WhatsApp" })}
               </a>
+            ) : (
+              profile.contact && (
+                <a
+                  href={contactHref(profile.contact)}
+                  target={contactOpenExternal ? "_blank" : undefined}
+                  rel={contactOpenExternal ? "noopener noreferrer" : undefined}
+                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-alt/70 px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface-alt transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  <ContactIcon type={profile.contact.type} />
+                  {t("profile.contact_cta")}
+                </a>
+              )
             )}
           </div>
 
@@ -574,7 +600,17 @@ export const PublicProfilePage: React.FC = () => {
 
         {/* Packages (combos) — shown above services for visual hierarchy */}
         <Reveal delay={120}>
-          <PackagesSection profile={profile} />
+          <PackagesSection
+            profile={profile}
+            onRequestPackage={(pkg) =>
+              openQuoteModal({
+                message: t("profile.packages_request_message", {
+                  title: pkg.title ?? "",
+                  defaultValue: `Me interesa el paquete "${pkg.title ?? ""}".`,
+                }),
+              })
+            }
+          />
         </Reveal>
 
         {/* Services */}
@@ -614,34 +650,54 @@ export const PublicProfilePage: React.FC = () => {
                 const img = svc.image_url ? resolveMediaUrl(svc.image_url) : null;
                 return (
                   <li key={svc.id}>
-                    <Card
-                      variant="default"
-                      padding="sm"
-                      className="h-full flex gap-3 !p-4"
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openQuoteModal({
+                          message: t("profile.service_request_message", {
+                            name: svc.name,
+                            defaultValue: `Me interesa el servicio "${svc.name}".`,
+                          }),
+                          serviceIds: svc.id ? [svc.id] : [],
+                        })
+                      }
+                      className="w-full text-left rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer"
+                      data-testid={`service-request-${svc.id}`}
                     >
-                      {img ? (
-                        <img
-                          src={img}
-                          alt=""
-                          className="h-14 w-14 rounded-xl object-cover border border-border shrink-0"
-                        />
-                      ) : (
-                        <div className="h-14 w-14 rounded-xl bg-primary/10 shrink-0" />
-                      )}
-                      <div className="min-w-0">
-                        <p className="font-bold text-text truncate">{svc.name}</p>
-                        {svc.category && (
-                          <p className="text-xs text-text-tertiary mt-0.5 capitalize">
-                            {svc.category}
-                          </p>
+                      <Card
+                        variant="default"
+                        padding="sm"
+                        className="h-full flex gap-3 !p-4 transition-shadow hover:shadow-md hover:border-primary/30"
+                      >
+                        {img ? (
+                          <img
+                            src={img}
+                            alt=""
+                            className="h-14 w-14 rounded-xl object-cover border border-border shrink-0"
+                          />
+                        ) : (
+                          <div className="h-14 w-14 rounded-xl bg-primary/10 shrink-0" />
                         )}
-                        {svc.base_price != null && (
-                          <p className="text-sm text-primary font-semibold mt-1">
-                            {formatPrice(svc.base_price, i18n.language)}
+                        <div className="min-w-0">
+                          <p className="font-bold text-text truncate">{svc.name}</p>
+                          {svc.category && (
+                            <p className="text-xs text-text-tertiary mt-0.5 capitalize">
+                              {svc.category}
+                            </p>
+                          )}
+                          {svc.base_price != null && (
+                            <p className="text-sm text-primary font-semibold mt-1">
+                              {formatPrice(svc.base_price, i18n.language)}
+                            </p>
+                          )}
+                          <p className="text-xs font-semibold text-primary mt-1.5">
+                            {t("profile.service_request_hint", {
+                              defaultValue: "Request quote",
+                            })}
                           </p>
-                        )}
-                      </div>
-                    </Card>
+                        </div>
+                      </Card>
+                    </button>
                   </li>
                 );
               })}
@@ -870,11 +926,16 @@ export const PublicProfilePage: React.FC = () => {
 
       <PublicLeadModal
         isOpen={isQuoteModalOpen}
-        onClose={() => setIsQuoteModalOpen(false)}
+        onClose={() => {
+          setIsQuoteModalOpen(false);
+          setQuotePreset({});
+        }}
         slug={profile.slug || slug || ""}
         businessName={displayName}
         brandColor={profile.brand_color}
         services={profile.services ?? []}
+        initialMessage={quotePreset.message}
+        initialServiceIds={quotePreset.serviceIds}
       />
 
       {lightboxIndex !== null && (
@@ -885,6 +946,40 @@ export const PublicProfilePage: React.FC = () => {
           onIndexChange={setLightboxIndex}
         />
       )}
+
+      {/* Mobile sticky conversion bar */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
+        data-testid="public-profile-sticky-cta"
+      >
+        <div className="mx-auto max-w-3xl flex items-center gap-2">
+          {whatsappHref && (
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-600/40 bg-emerald-600/10 px-3 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-400 shrink-0"
+              data-testid="sticky-whatsapp-button"
+              aria-label={t("profile.whatsapp_cta", { defaultValue: "WhatsApp" })}
+            >
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />
+              <span className="sr-only sm:not-sr-only sm:inline">
+                {t("profile.whatsapp_cta", { defaultValue: "WhatsApp" })}
+              </span>
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() => openQuoteModal()}
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-on-primary shadow-lg shadow-primary/20"
+            style={brandBtnStyle}
+            data-testid="sticky-request-quote-button"
+          >
+            <Calendar className="h-4 w-4" aria-hidden="true" />
+            {t("profile.request_quote_cta")}
+          </button>
+        </div>
+      </div>
 
       <footer className="border-t border-border py-6 mt-4">
         <p className="text-center text-xs text-text-tertiary">

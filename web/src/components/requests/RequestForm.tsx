@@ -31,6 +31,8 @@ export type RequestFormProps = {
   error?: string | null;
   /** Hide budget fields on link when not relevant; default true for profile. */
   showBudget?: boolean;
+  /** Prefill fields (e.g. package interest message from public profile). */
+  initialValues?: Partial<RequestFormValues>;
   onSubmit: (payload: CreatePublicRequestRequest) => void | Promise<void>;
   /** Optional extra footer (e.g. cancel button in modal). */
   footerSecondary?: React.ReactNode;
@@ -160,12 +162,20 @@ export const RequestForm: React.FC<RequestFormProps> = ({
   submitting = false,
   error = null,
   showBudget = true,
+  initialValues,
   onSubmit,
   footerSecondary,
   testIdPrefix = "lead",
 }) => {
   const { t } = useTranslation("public");
-  const [values, setValues] = useState<RequestFormValues>(defaultValues);
+  const [values, setValues] = useState<RequestFormValues>(() => ({
+    ...defaultValues(),
+    ...initialValues,
+    selectedServices: {
+      ...defaultValues().selectedServices,
+      ...(initialValues?.selectedServices ?? {}),
+    },
+  }));
   const [localError, setLocalError] = useState<string | null>(null);
 
   const effectiveSubmitMode: SubmitMode =
@@ -177,7 +187,10 @@ export const RequestForm: React.FC<RequestFormProps> = ({
 
   const displayError = localError || error;
 
-  const catalogExpandedDefault = mode === "link" && catalog.length > 0;
+  const hasInitialServices =
+    Object.keys(initialValues?.selectedServices ?? {}).length > 0;
+  const catalogExpandedDefault =
+    (mode === "link" && catalog.length > 0) || hasInitialServices;
   const [catalogOpen, setCatalogOpen] = useState(catalogExpandedDefault);
 
   const setField = <K extends keyof RequestFormValues>(
