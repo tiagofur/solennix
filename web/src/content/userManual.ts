@@ -697,6 +697,67 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       tip: "If you suspect the link leaked, use Rotate: the old URL stops working and you get a new one immediately.",
     },
   },
+  {
+    slug: "checklist-del-evento",
+    order: 11,
+    journey: "day-to-day",
+    durationMin: 4,
+    screenshotsReady: { web: true, ios: false, android: false },
+    es: {
+      title: "Checklist del evento",
+      description: "Tareas del día del evento generadas desde productos, equipo e insumos.",
+      intro:
+        "El checklist junta lo que hay que preparar y llevar: se arma solo a partir de lo que cargaste en el evento (productos, equipo, insumos y extras marcados).",
+      why: "El día del evento no es momento de improvisar: marcar tareas evita olvidos y alinea al equipo.",
+      steps: [
+        {
+          text: "Abrí el evento y tocá Ver checklist del evento en la barra de secciones.",
+          image: "checklist-del-evento-1.png",
+          callouts: {
+            web: "En el resumen del evento: pestaña Checklist (muestra el % completado).",
+            ios: "Detalle del evento → Checklist.",
+            android: "Detalle del evento → Checklist.",
+          },
+        },
+        {
+          text: "Revisá las tareas autogeneradas. Marcá las que ya estén listas (setup, carga, montaje, etc.).",
+          image: "checklist-del-evento-2.png",
+        },
+        {
+          text: "Seguí el avance (por ejemplo 50% completado). Si falta algo, volvé al evento y sumá productos/equipo/insumos.",
+          image: "checklist-del-evento-3.png",
+        },
+      ],
+      tip: "Si el checklist está vacío, agregá productos, equipo o extras con “incluir en checklist” en el formulario del evento.",
+    },
+    en: {
+      title: "Event checklist",
+      description: "Day-of tasks generated from products, equipment, and supplies.",
+      intro:
+        "The checklist pulls together what you need to prepare and bring — built automatically from what you loaded on the event (products, equipment, supplies, and flagged extras).",
+      why: "Event day is not the time to improvise: checking off tasks prevents misses and aligns the team.",
+      steps: [
+        {
+          text: "Open the event and tap View event checklist in the section bar.",
+          image: "checklist-del-evento-1.png",
+          callouts: {
+            web: "On the event summary: Checklist tab (shows % complete).",
+            ios: "Event detail → Checklist.",
+            android: "Event detail → Checklist.",
+          },
+        },
+        {
+          text: "Review auto-generated tasks. Check off what is already done (setup, load-in, install, etc.).",
+          image: "checklist-del-evento-2.png",
+        },
+        {
+          text: "Track progress (e.g. 50% complete). If something is missing, return to the event and add products/equipment/supplies.",
+          image: "checklist-del-evento-3.png",
+        },
+      ],
+      tip: "If the checklist is empty, add products, equipment, or extras with “include in checklist” on the event form.",
+    },
+  },
 ];
 
 export function getManualArticle(slug: string): ManualArticle | undefined {
