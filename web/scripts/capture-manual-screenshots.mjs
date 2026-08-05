@@ -163,6 +163,64 @@ const AUTH_SHOTS = [
     path: "/events",
     auth: true,
   },
+  // Payment guide — requires MANUAL_EVENT_ID with total_amount > 0
+  {
+    file: "registrar-pago-1.png",
+    auth: true,
+    after: async (page) => {
+      const eventId = process.env.MANUAL_EVENT_ID;
+      if (!eventId) {
+        console.warn("skip registrar-pago-*: set MANUAL_EVENT_ID");
+        return;
+      }
+      await page.goto(`${BASE}/events/${eventId}/summary`, {
+        waitUntil: "networkidle",
+      });
+      await page.waitForTimeout(800);
+      const tab = page.getByText(/Ver pagos del evento/i);
+      if (await tab.count()) {
+        await tab.first().click();
+        await page.waitForTimeout(700);
+      }
+    },
+  },
+  {
+    file: "registrar-pago-2.png",
+    auth: true,
+    after: async (page) => {
+      const eventId = process.env.MANUAL_EVENT_ID;
+      if (!eventId) return;
+      await page.goto(`${BASE}/events/${eventId}/summary`, {
+        waitUntil: "networkidle",
+      });
+      await page.waitForTimeout(600);
+      const tab = page.getByText(/Ver pagos del evento/i);
+      if (await tab.count()) await tab.first().click();
+      await page.waitForTimeout(500);
+      const add = page.locator("button").filter({ hasText: /\$ Pago/i });
+      if (await add.count()) await add.first().click();
+      await page.waitForTimeout(500);
+      const nums = page.locator(
+        '[role="dialog"] input[type="number"], form input[type="number"]',
+      );
+      if (await nums.count()) await nums.first().fill("5000");
+    },
+  },
+  {
+    file: "registrar-pago-3.png",
+    auth: true,
+    after: async (page) => {
+      const eventId = process.env.MANUAL_EVENT_ID;
+      if (!eventId) return;
+      await page.goto(`${BASE}/events/${eventId}/summary`, {
+        waitUntil: "networkidle",
+      });
+      await page.waitForTimeout(600);
+      const tab = page.getByText(/Ver pagos del evento/i);
+      if (await tab.count()) await tab.first().click();
+      await page.waitForTimeout(700);
+    },
+  },
 ];
 
 async function backendOk() {

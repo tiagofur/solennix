@@ -560,8 +560,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
     order: 9,
     journey: "day-to-day",
     durationMin: 4,
-    // Web payment UI capture still pending; mobile uses store/marketing shots.
-    screenshotsReady: { web: false, ios: true, android: true },
+    screenshotsReady: { web: true, ios: true, android: true },
     es: {
       title: "Registrar un pago",
       description: "Cobrás seña o saldo y dejás el historial claro.",
@@ -570,24 +569,29 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       why: "Un organizador profesional no “recuerda” en WhatsApp cuánto le falta cobrar: lo ve en Solennix.",
       steps: [
         {
-          text: "Abrí el evento del cliente (o la sección Cobros del menú).",
+          text: "Abrí el evento y entrá a Pagos y saldo (control de ingresos del evento).",
           image: "registrar-pago-1.png",
           callouts: {
-            web: "Eventos → detalle del evento → pestaña/bloque de pagos, o menú Cobros.",
+            web: "Eventos → abrí el evento → Ver pagos del evento. Ahí ves total, pagado y saldo pendiente.",
             ios: "Detalle del evento → Pagos, o acceso desde Más.",
             android: "Detalle del evento → Pagos, o acceso desde el menú inferior/Más.",
           },
         },
         {
-          text: "Tocá Registrar pago (o equivalente) e ingresá el monto, método y fecha.",
+          text: "Tocá $ Pago (o Registrar pago), completá monto, fecha y método, y confirmá.",
           image: "registrar-pago-2.png",
+          callouts: {
+            web: "En el modal podés usar el atajo SALDO para cobar el pendiente completo.",
+            ios: "Completá monto y método en el formulario de pago.",
+            android: "Completá monto y método en el formulario de pago.",
+          },
         },
         {
-          text: "Guardá. Revisá el saldo pendiente y el total cobrado en el resumen del evento.",
+          text: "Revisá el historial: total pagado, saldo pendiente y el avance (por ejemplo 33% completado).",
           image: "registrar-pago-3.png",
         },
       ],
-      tip: "Si el cliente te manda comprobante, podés adjuntarlo o anotar la referencia del transfer en las notas del pago.",
+      tip: "Si el cliente te manda comprobante, anotá la referencia del transfer en la nota del pago. El menú Cobros también lista comprobantes pendientes de revisión.",
     },
     en: {
       title: "Record a payment",
@@ -597,24 +601,29 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       why: "A professional organizer doesn’t “remember” outstanding balances in WhatsApp — they see them in Solennix.",
       steps: [
         {
-          text: "Open the client’s event (or Payments in the menu).",
+          text: "Open the event and go to Payments & balance (event cash control).",
           image: "registrar-pago-1.png",
           callouts: {
-            web: "Events → event detail → payments tab/section, or Payments in the menu.",
+            web: "Events → open the event → View event payments. You’ll see total, paid, and remaining balance.",
             ios: "Event detail → Payments, or via More.",
             android: "Event detail → Payments, or via bottom nav / More.",
           },
         },
         {
-          text: "Tap Record payment (or equivalent) and enter amount, method, and date.",
+          text: "Tap $ Payment (or Record payment), enter amount, date, and method, then confirm.",
           image: "registrar-pago-2.png",
+          callouts: {
+            web: "In the modal, use the BALANCE shortcut to collect the full remaining amount.",
+            ios: "Fill amount and method on the payment form.",
+            android: "Fill amount and method on the payment form.",
+          },
         },
         {
-          text: "Save. Check remaining balance and total collected on the event summary.",
+          text: "Review the history: total paid, remaining balance, and progress (e.g. 33% complete).",
           image: "registrar-pago-3.png",
         },
       ],
-      tip: "If the client sends a receipt, attach it or note the transfer reference on the payment.",
+      tip: "If the client sends a receipt, note the transfer reference on the payment. The Payments inbox also lists receipts pending review.",
     },
   },
 ];

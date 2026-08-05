@@ -66,4 +66,11 @@ Maps:
 8. Compartir cotización  
 
 ### Journey B — day to day
-9. Registrar un pago (Web screenshot pending; iOS/Android marketing ready)  
+9. Registrar un pago (Web real screenshots; mobile marketing)
+
+For re-capturing Web payments, pass an event with `total_amount > 0`:
+
+```bash
+MANUAL_EVENT_ID=<uuid> MANUAL_BASE_URL=http://localhost:5175 \
+PLAYWRIGHT_BACKEND_URL=http://localhost:8081 npm run manual:screenshots
+```  
