@@ -15,7 +15,7 @@ export interface ManualLocalizedStep {
   callouts?: Partial<Record<ManualPlatform, string>>;
   /**
    * Image basename under /help/manual/{platform}/
-   * e.g. "crear-cliente-1.svg" → /help/manual/web/crear-cliente-1.svg
+   * e.g. "crear-cliente-1.png" → /help/manual/web/crear-cliente-1.png
    */
   image?: string;
 }
@@ -123,7 +123,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Al entrar vas al Dashboard: resumen de eventos, pagos y accesos rápidos.",
-          image: "cuenta-y-acceso-3.svg",
+          image: "cuenta-y-acceso-3.png",
         },
       ],
       tip: "Usá el mismo correo en todas las plataformas. Si no ves datos en el celular, cerrá sesión y volvé a entrar.",
@@ -149,7 +149,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "After sign-in you land on the Dashboard: events, payments, and quick actions.",
-          image: "cuenta-y-acceso-3.svg",
+          image: "cuenta-y-acceso-3.png",
         },
       ],
       tip: "Use the same email on every platform. If mobile looks empty, sign out and sign back in.",
@@ -168,7 +168,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "Andá a Clientes en el menú principal.",
-          image: "crear-cliente-1.svg",
+          image: "crear-cliente-1.png",
           callouts: {
             web: "Barra lateral → Clientes.",
             ios: "Pestaña o sección Clientes.",
@@ -177,15 +177,15 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Tocá Nuevo cliente (o el botón +).",
-          image: "crear-cliente-2.svg",
+          image: "crear-cliente-2.png",
         },
         {
           text: "Completá al menos nombre y un medio de contacto. Guardá.",
-          image: "crear-cliente-3.svg",
+          image: "crear-cliente-3.png",
         },
         {
           text: "En el detalle del cliente vas a ver su historial de eventos cuando los crees.",
-          image: "crear-cliente-4.svg",
+          image: "crear-cliente-4.png",
         },
       ],
       tip: "Para practicar usá un cliente de prueba, por ejemplo “Sofía & Martín — Demo”. Después podés archivarlo o borrarlo.",
@@ -198,7 +198,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "Go to Clients in the main menu.",
-          image: "crear-cliente-1.svg",
+          image: "crear-cliente-1.png",
           callouts: {
             web: "Sidebar → Clients.",
             ios: "Clients tab or section.",
@@ -207,15 +207,15 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Tap New client (or the + button).",
-          image: "crear-cliente-2.svg",
+          image: "crear-cliente-2.png",
         },
         {
           text: "Fill in at least a name and one contact method. Save.",
-          image: "crear-cliente-3.svg",
+          image: "crear-cliente-3.png",
         },
         {
           text: "On the client detail you’ll see their event history once you create events.",
-          image: "crear-cliente-4.svg",
+          image: "crear-cliente-4.png",
         },
       ],
       tip: "Practice with a sample client such as “Sofia & Martin — Demo”. You can archive or delete it later.",
@@ -234,7 +234,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "Andá a Productos en el menú.",
-          image: "crear-producto-1.svg",
+          image: "crear-producto-1.png",
           callouts: {
             web: "Barra lateral → Productos.",
             ios: "Sección Productos.",
@@ -243,15 +243,15 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Tocá Nuevo producto.",
-          image: "crear-producto-2.svg",
+          image: "crear-producto-2.png",
         },
         {
           text: "Definí nombre, precio y una descripción clara (lo que el cliente va a leer en la cotización).",
-          image: "crear-producto-3.svg",
+          image: "crear-producto-3.png",
         },
         {
           text: "Guardá. Ya podés sumarlo a un evento o a una cotización rápida.",
-          image: "crear-producto-4.svg",
+          image: "crear-producto-4.png",
         },
       ],
       tip: "Empezá con 1–3 productos estrella. No hace falta el catálogo completo el primer día. Las recetas (ingredientes de inventario) las podés sumar después.",
@@ -264,7 +264,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "Go to Products in the menu.",
-          image: "crear-producto-1.svg",
+          image: "crear-producto-1.png",
           callouts: {
             web: "Sidebar → Products.",
             ios: "Products section.",
@@ -273,15 +273,15 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Tap New product.",
-          image: "crear-producto-2.svg",
+          image: "crear-producto-2.png",
         },
         {
           text: "Set name, price, and a clear description (what the client will read on the quote).",
-          image: "crear-producto-3.svg",
+          image: "crear-producto-3.png",
         },
         {
           text: "Save. You can now add it to an event or a quick quote.",
-          image: "crear-producto-4.svg",
+          image: "crear-producto-4.png",
         },
       ],
       tip: "Start with 1–3 flagship products. You don’t need a full catalog on day one. Recipes (inventory ingredients) can come later.",
@@ -300,7 +300,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "Andá a Inventario en el menú.",
-          image: "crear-inventario-1.svg",
+          image: "crear-inventario-1.png",
           callouts: {
             web: "Barra lateral → Inventario.",
             ios: "Sección Inventario.",
@@ -309,15 +309,15 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Tocá Nuevo ítem (equipo o insumo, según corresponda).",
-          image: "crear-inventario-2.svg",
+          image: "crear-inventario-2.png",
         },
         {
           text: "Completá nombre, cantidad disponible y unidad si aplica. Guardá.",
-          image: "crear-inventario-3.svg",
+          image: "crear-inventario-3.png",
         },
         {
           text: "Con el stock cargado, al armar eventos podés ver qué tenés disponible.",
-          image: "crear-inventario-4.svg",
+          image: "crear-inventario-4.png",
         },
       ],
       tip: "Producto = lo que cobrás. Inventario = lo que usás. En el onboarding alcanza con un ítem demo (por ejemplo “Sillas Tiffany × 20”).",
@@ -330,7 +330,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "Go to Inventory in the menu.",
-          image: "crear-inventario-1.svg",
+          image: "crear-inventario-1.png",
           callouts: {
             web: "Sidebar → Inventory.",
             ios: "Inventory section.",
@@ -339,15 +339,15 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Tap New item (equipment or supply, as appropriate).",
-          image: "crear-inventario-2.svg",
+          image: "crear-inventario-2.png",
         },
         {
           text: "Enter name, available quantity, and unit if needed. Save.",
-          image: "crear-inventario-3.svg",
+          image: "crear-inventario-3.png",
         },
         {
           text: "With stock loaded, you can see what’s available when you plan events.",
-          image: "crear-inventario-4.svg",
+          image: "crear-inventario-4.png",
         },
       ],
       tip: "Product = what you charge for. Inventory = what you use. For onboarding, one demo item is enough (e.g. “Tiffany chairs × 20”).",
@@ -366,7 +366,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "Andá a Eventos y tocá Nuevo evento.",
-          image: "crear-evento-1.svg",
+          image: "crear-evento-1.png",
           callouts: {
             web: "Barra lateral → Eventos → Nuevo.",
             ios: "Pestaña Eventos → Nuevo.",
@@ -375,15 +375,15 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Elegí el cliente (el que creaste antes), nombre del evento y fecha.",
-          image: "crear-evento-2.svg",
+          image: "crear-evento-2.png",
         },
         {
           text: "Completá ubicación y tipo si los tenés. Guardá el borrador.",
-          image: "crear-evento-3.svg",
+          image: "crear-evento-3.png",
         },
         {
           text: "En el detalle del evento vas a sumar productos y armar la cotización.",
-          image: "crear-evento-4.svg",
+          image: "crear-evento-4.png",
         },
       ],
       tip: "Si aún no sabés la fecha exacta, usá una tentativa: lo importante es tener el contenedor ligado al cliente.",
@@ -396,7 +396,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "Go to Events and tap New event.",
-          image: "crear-evento-1.svg",
+          image: "crear-evento-1.png",
           callouts: {
             web: "Sidebar → Events → New.",
             ios: "Events tab → New.",
@@ -405,15 +405,15 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Pick the client (the one you created), event name, and date.",
-          image: "crear-evento-2.svg",
+          image: "crear-evento-2.png",
         },
         {
           text: "Add location and type if you have them. Save the draft.",
-          image: "crear-evento-3.svg",
+          image: "crear-evento-3.png",
         },
         {
           text: "On the event detail you’ll add products and build the quote.",
-          image: "crear-evento-4.svg",
+          image: "crear-evento-4.png",
         },
       ],
       tip: "If the exact date isn’t final, use a tentative one — what matters is the container linked to the client.",
@@ -432,7 +432,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "Abrí el evento y entrá a la sección de productos / cotización.",
-          image: "armar-cotizacion-1.svg",
+          image: "armar-cotizacion-1.png",
           callouts: {
             web: "Detalle del evento → pestaña o bloque de productos y finanzas.",
             ios: "Detalle del evento → productos / presupuesto.",
@@ -441,15 +441,15 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Agregá uno o más productos del catálogo que creaste.",
-          image: "armar-cotizacion-2.svg",
+          image: "armar-cotizacion-2.png",
         },
         {
           text: "Ajustá cantidades y precios si el paquete es a medida.",
-          image: "armar-cotizacion-3.svg",
+          image: "armar-cotizacion-3.png",
         },
         {
           text: "Revisá el total. Si hace falta, sumá extras o notas visibles para el cliente.",
-          image: "armar-cotizacion-4.svg",
+          image: "armar-cotizacion-4.png",
         },
       ],
       tip: "También podés usar Cotización rápida desde el menú cuando querés un PDF sin armar todo el evento todavía — ideal para el primer contacto.",
@@ -462,7 +462,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "Open the event and go to products / quote.",
-          image: "armar-cotizacion-1.svg",
+          image: "armar-cotizacion-1.png",
           callouts: {
             web: "Event detail → products and finances tab or section.",
             ios: "Event detail → products / budget.",
@@ -471,15 +471,15 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Add one or more products from the catalog you created.",
-          image: "armar-cotizacion-2.svg",
+          image: "armar-cotizacion-2.png",
         },
         {
           text: "Adjust quantities and prices if the package is custom.",
-          image: "armar-cotizacion-3.svg",
+          image: "armar-cotizacion-3.png",
         },
         {
           text: "Review the total. Add extras or client-facing notes if needed.",
-          image: "armar-cotizacion-4.svg",
+          image: "armar-cotizacion-4.png",
         },
       ],
       tip: "You can also use Quick quote from the menu when you want a PDF before building a full event — great for first contact.",
@@ -498,7 +498,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "Desde el evento o cotización rápida, generá el PDF de cotización.",
-          image: "compartir-cotizacion-1.svg",
+          image: "compartir-cotizacion-1.png",
           callouts: {
             web: "Botón de exportar / PDF en el flujo de cotización del evento o en Cotización rápida.",
             ios: "Acción de compartir / PDF en el detalle.",
@@ -507,11 +507,11 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Revisá que nombre del cliente, ítems y total se vean correctos.",
-          image: "compartir-cotizacion-2.svg",
+          image: "compartir-cotizacion-2.png",
         },
         {
           text: "Enviá el PDF por el canal que uses (WhatsApp, mail) o compartí el enlace del portal si está habilitado.",
-          image: "compartir-cotizacion-3.svg",
+          image: "compartir-cotizacion-3.png",
         },
       ],
       tip: "¡Listo el primer circuito! Después podés seguir con contrato, pagos y checklist del día del evento — eso ya es el día a día en Solennix.",
@@ -524,7 +524,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       steps: [
         {
           text: "From the event or quick quote, generate the quote PDF.",
-          image: "compartir-cotizacion-1.svg",
+          image: "compartir-cotizacion-1.png",
           callouts: {
             web: "Export / PDF on the event quote flow or Quick quote.",
             ios: "Share / PDF action on the detail screen.",
@@ -533,11 +533,11 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
         },
         {
           text: "Check that client name, line items, and total look right.",
-          image: "compartir-cotizacion-2.svg",
+          image: "compartir-cotizacion-2.png",
         },
         {
           text: "Send the PDF on your usual channel (WhatsApp, email) or share the client portal link if enabled.",
-          image: "compartir-cotizacion-3.svg",
+          image: "compartir-cotizacion-3.png",
         },
       ],
       tip: "First loop done! Next come contract, payments, and the day-of checklist — that’s everyday Solennix.",

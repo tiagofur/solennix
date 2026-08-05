@@ -14,23 +14,33 @@ Public manual lives on the web app: `/help/manual`.
 ## Capture Web screenshots
 
 ```bash
-# terminal 1 — API
-cd backend && # start server on :8080
+# terminal 1 — API (example against local docker DB on :5433)
+cd backend
+# PORT=8081 DATABASE_URL=postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable
+# go run ./cmd/server
 
-# terminal 2 — web
-cd web && npm run dev
+# terminal 2 — web pointed at that API
+cd web
+VITE_API_URL=http://localhost:8081/api npm run dev -- --port 5174
 
-# terminal 3 — capture
-cd web && npm run manual:screenshots
+# terminal 3 — capture (demo user must exist + email verified)
+cd web
+MANUAL_BASE_URL=http://localhost:5174 \
+PLAYWRIGHT_BACKEND_URL=http://localhost:8081 \
+MANUAL_EMAIL=manual-demo@solennix.test \
+MANUAL_PASSWORD='ManualDemo123!' \
+npm run manual:screenshots
 ```
 
 Script: `web/scripts/capture-manual-screenshots.mjs`.
+
+Demo user (local only, not production): `manual-demo@solennix.test` — set `email_verified_at` in DB if register flow requires verification.
 
 Rules:
 
 - Demo / fictional names only (no real client PII)
 - Prefer light mode, 1440×900, deviceScaleFactor 2
-- After capture, switch article `image` fields from `.svg` to `.png` for shots that look good
+- Web journey images are PNG under `web/public/help/manual/web/`
 - Keep iOS/Android empty until platform phase; UI shows “screenshot coming soon”
 
 ## Content order (first journey)
