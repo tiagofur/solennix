@@ -626,6 +626,77 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
       tip: "If the client sends a receipt, note the transfer reference on the payment. The Payments inbox also lists receipts pending review.",
     },
   },
+  {
+    slug: "portal-del-cliente",
+    order: 10,
+    journey: "day-to-day",
+    durationMin: 5,
+    screenshotsReady: { web: true, ios: false, android: false },
+    es: {
+      title: "Portal del cliente",
+      description: "Compartí un enlace privado para que el cliente vea y pague con profesionalismo.",
+      intro:
+        "El portal es la cara prolija de tu operación: el cliente ve su evento, el estado de pagos y puede subir comprobantes sin perseguirte por WhatsApp.",
+      why: "Es lo que más genera recomendación: se siente como una agencia, no como un chat desordenado.",
+      steps: [
+        {
+          text: "Abrí el resumen del evento. En la tarjeta Portal del cliente tocá Generar enlace.",
+          image: "portal-del-cliente-1.png",
+          callouts: {
+            web: "Eventos → abrí el evento (resumen) → bloque Portal del cliente.",
+            ios: "Detalle del evento → sección de enlace / portal del cliente.",
+            android: "Detalle del evento → sección de enlace / portal del cliente.",
+          },
+        },
+        {
+          text: "Copiá el enlace o compartilo por WhatsApp. Podés rotarlo o revocarlo cuando quieras por seguridad.",
+          image: "portal-del-cliente-2.png",
+          callouts: {
+            web: "Botones Copiar, WhatsApp, Rotar y Revocar en la misma tarjeta.",
+            ios: "Acciones de compartir y gestionar el enlace en el detalle.",
+            android: "Acciones de compartir y gestionar el enlace en el detalle.",
+          },
+        },
+        {
+          text: "Abrí el enlace como lo vería tu cliente: resumen del evento, pagos y acciones disponibles.",
+          image: "portal-del-cliente-3.png",
+        },
+      ],
+      tip: "Si sospechás que el link se filtró, usá Rotar: el enlace viejo deja de funcionar y generás uno nuevo al instante.",
+    },
+    en: {
+      title: "Client portal",
+      description: "Share a private link so clients can view and pay professionally.",
+      intro:
+        "The portal is the polished face of your operation: clients see their event, payment status, and can upload receipts without chasing you on WhatsApp.",
+      why: "This is what drives referrals — it feels like an agency, not a messy chat.",
+      steps: [
+        {
+          text: "Open the event summary. On the Client portal card, tap Generate link.",
+          image: "portal-del-cliente-1.png",
+          callouts: {
+            web: "Events → open the event (summary) → Client portal card.",
+            ios: "Event detail → client portal / share link section.",
+            android: "Event detail → client portal / share link section.",
+          },
+        },
+        {
+          text: "Copy the link or share it via WhatsApp. You can rotate or revoke it anytime for security.",
+          image: "portal-del-cliente-2.png",
+          callouts: {
+            web: "Copy, WhatsApp, Rotate, and Revoke on the same card.",
+            ios: "Share and manage-link actions on the detail screen.",
+            android: "Share and manage-link actions on the detail screen.",
+          },
+        },
+        {
+          text: "Open the link as your client would: event summary, payments, and available actions.",
+          image: "portal-del-cliente-3.png",
+        },
+      ],
+      tip: "If you suspect the link leaked, use Rotate: the old URL stops working and you get a new one immediately.",
+    },
+  },
 ];
 
 export function getManualArticle(slug: string): ManualArticle | undefined {

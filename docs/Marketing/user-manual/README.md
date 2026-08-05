@@ -67,6 +67,7 @@ Maps:
 
 ### Journey B — day to day
 9. Registrar un pago (Web real screenshots; mobile marketing)
+10. Portal del cliente (Web real; mobile pending)
 
 For re-capturing Web payments, pass an event with `total_amount > 0`:
 
