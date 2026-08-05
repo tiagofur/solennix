@@ -107,37 +107,42 @@ const AUTH_SHOTS = [
     file: "armar-cotizacion-1.png",
     path: "/cotizacion-rapida",
     auth: true,
+    after: async (page) => {
+      await page.waitForTimeout(600);
+    },
   },
   {
     file: "armar-cotizacion-2.png",
     path: "/cotizacion-rapida",
     auth: true,
     after: async (page) => {
-      // Prefer adding catalog product if UI exposes it
-      const addBtn = page.getByRole("button", {
-        name: /agregar|añadir|producto|add/i,
-      }).first();
-      if (await addBtn.count()) {
-        await addBtn.click().catch(() => {});
-        await page.waitForTimeout(400);
-      }
+      await fillQuickQuote(page, { withProduct: true, withClient: false });
     },
   },
   {
     file: "armar-cotizacion-3.png",
     path: "/cotizacion-rapida",
     auth: true,
+    after: async (page) => {
+      await fillQuickQuote(page, { withProduct: true, withClient: false, quantity: 1 });
+    },
   },
   {
     file: "armar-cotizacion-4.png",
     path: "/cotizacion-rapida",
     auth: true,
+    after: async (page) => {
+      await fillQuickQuote(page, { withProduct: true, withClient: true, quantity: 1 });
+      // Focus summary panel
+      await page.getByText(/resumen|summary/i).first().scrollIntoViewIfNeeded().catch(() => {});
+    },
   },
   {
     file: "compartir-cotizacion-1.png",
     path: "/cotizacion-rapida",
     auth: true,
     after: async (page) => {
+      await fillQuickQuote(page, { withProduct: true, withClient: true, quantity: 1 });
       const pdf = page.getByRole("button", { name: /pdf|exportar|descargar|generar/i }).first();
       if (await pdf.count()) {
         await pdf.scrollIntoViewIfNeeded().catch(() => {});
@@ -148,6 +153,10 @@ const AUTH_SHOTS = [
     file: "compartir-cotizacion-2.png",
     path: "/cotizacion-rapida",
     auth: true,
+    after: async (page) => {
+      await fillQuickQuote(page, { withProduct: true, withClient: true, quantity: 1 });
+      await page.getByText(/resumen|métricas|summary|rentabilidad/i).first().scrollIntoViewIfNeeded().catch(() => {});
+    },
   },
   {
     file: "compartir-cotizacion-3.png",
@@ -184,14 +193,82 @@ async function fillIfVisible(page, label, value) {
 }
 
 /**
+ * Build a filled quick-quote screen: product line + optional client block.
+ * @param {import('@playwright/test').Page} page
+ * @param {{ withProduct?: boolean, withClient?: boolean, quantity?: number }} opts
+ */
+async function fillQuickQuote(page, opts = {}) {
+  const { withProduct = true, withClient = true, quantity = 1 } = opts;
+
+  // Wait for catalog to load
+  await page.waitForTimeout(800);
+
+  if (withClient) {
+    const clientToggle = page.getByRole("button", {
+      name: /datos del cliente|client info|cliente/i,
+    }).first();
+    if (await clientToggle.count()) {
+      const expanded = await clientToggle.getAttribute("aria-expanded");
+      if (expanded !== "true") {
+        await clientToggle.click().catch(() => {});
+        await page.waitForTimeout(200);
+      }
+    }
+    // Prefer explicit placeholders / labels in the client block
+    const name = page.locator('input[placeholder*="nombre" i], input[name*="client" i]').first();
+    if (await name.count()) await name.fill("Sofía & Martín — Demo").catch(() => {});
+    await fillIfVisible(page, /nombre/i, "Sofía & Martín — Demo");
+    await fillIfVisible(page, /tel[eé]fono|phone/i, "+52 55 1234 5678");
+    await fillIfVisible(page, /correo|email/i, "sofia.martin@example.com");
+  }
+
+  if (withProduct) {
+    // Wait until catalog finished loading (spinner gone / add button usable)
+    await page
+      .getByRole("button", { name: /agregar (un )?producto|add product/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 15_000 })
+      .catch(() => {});
+
+    const addBtn = page
+      .getByRole("button", { name: /agregar (un )?producto|add product/i })
+      .first();
+    if (await addBtn.count()) {
+      await addBtn.click();
+      await page.waitForTimeout(500);
+    }
+
+    const select = page.locator("select[id^='product-select-']").first();
+    if (await select.count()) {
+      const values = await select.locator("option").evaluateAll((os) =>
+        os.map((o) => /** @type {HTMLOptionElement} */ (o).value).filter(Boolean),
+      );
+      if (values[0]) {
+        await select.selectOption(values[0]);
+        await page.waitForTimeout(400);
+      }
+    }
+
+    const qty = page.locator("input[id^='quantity-']").first();
+    if (await qty.count()) {
+      await qty.fill(String(quantity));
+      await page.waitForTimeout(200);
+    }
+  }
+}
+
+/**
  * @param {import('@playwright/test').Page} page
  */
 async function login(page) {
-  await page.goto(`${BASE}/login`, { waitUntil: "domcontentloaded" });
-  await page.getByLabel(/correo electrónico|email/i).fill(EMAIL);
-  await page.getByLabel("Contraseña", { exact: true }).fill(PASSWORD);
-  await page.getByRole("button", { name: /iniciar sesión/i }).click();
-  await page.waitForURL(/dashboard/, { timeout: 20_000 });
+  await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
+  await page
+    .locator('#email, input[type="email"], input[name="email"]')
+    .first()
+    .fill(EMAIL);
+  await page.locator('#password, input[type="password"]').first().fill(PASSWORD);
+  await page.locator('button[type="submit"]').first().click();
+  await page.waitForURL(/dashboard/, { timeout: 25_000 });
   await page.waitForTimeout(800);
 }
 

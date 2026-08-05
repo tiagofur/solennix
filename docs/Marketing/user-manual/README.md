@@ -41,7 +41,8 @@ Rules:
 - Demo / fictional names only (no real client PII)
 - Prefer light mode, 1440×900, deviceScaleFactor 2
 - Web journey images are PNG under `web/public/help/manual/web/`
-- Keep iOS/Android empty until platform phase; UI shows “screenshot coming soon”
+- **iOS (phase 2 interim):** store/marketing finals from `docs/Marketing/ios_screens/final/iphone/` are copied into `web/public/help/manual/ios/` (mapped by screen). Replace with simulator captures when the iOS demo account flow is scripted.
+- Android still empty until phase 3; UI shows “screenshot coming soon” for that tab.
 
 ## Content order (first journey)
 

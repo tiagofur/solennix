@@ -45,7 +45,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
     slug: "que-es-solennix",
     order: 1,
     durationMin: 2,
-    screenshotsReady: { web: true },
+    screenshotsReady: { web: true, ios: true },
     es: {
       title: "Qué es Solennix",
       description: "Para qué sirve la app y qué vas a lograr con ella.",
@@ -101,7 +101,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
     slug: "cuenta-y-acceso",
     order: 2,
     durationMin: 3,
-    screenshotsReady: { web: true },
+    screenshotsReady: { web: true, ios: true },
     es: {
       title: "Cuenta y acceso",
       description: "Crear tu cuenta, iniciar sesión y entrar al panel.",
@@ -159,7 +159,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
     slug: "crear-cliente",
     order: 3,
     durationMin: 3,
-    screenshotsReady: { web: true },
+    screenshotsReady: { web: true, ios: true },
     es: {
       title: "Crear un cliente",
       description: "Alta del contacto que contratará el evento.",
@@ -225,7 +225,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
     slug: "crear-producto",
     order: 4,
     durationMin: 4,
-    screenshotsReady: { web: true },
+    screenshotsReady: { web: true, ios: true },
     es: {
       title: "Crear un producto",
       description: "Armá el catálogo de lo que vendés y cotizás.",
@@ -291,7 +291,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
     slug: "crear-inventario",
     order: 5,
     durationMin: 4,
-    screenshotsReady: { web: true },
+    screenshotsReady: { web: true, ios: true },
     es: {
       title: "Crear un ítem de inventario",
       description: "Equipos e insumos con control de stock.",
@@ -357,7 +357,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
     slug: "crear-evento",
     order: 6,
     durationMin: 5,
-    screenshotsReady: { web: true },
+    screenshotsReady: { web: true, ios: true },
     es: {
       title: "Crear un evento",
       description: "Fecha, cliente y el contenedor de la operación.",
@@ -423,7 +423,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
     slug: "armar-cotizacion",
     order: 7,
     durationMin: 6,
-    screenshotsReady: { web: true },
+    screenshotsReady: { web: true, ios: true },
     es: {
       title: "Armar una cotización",
       description: "Sumá productos del catálogo y calculá el total.",
@@ -489,7 +489,7 @@ export const MANUAL_ARTICLES: ManualArticle[] = [
     slug: "compartir-cotizacion",
     order: 8,
     durationMin: 4,
-    screenshotsReady: { web: true },
+    screenshotsReady: { web: true, ios: true },
     es: {
       title: "Compartir la cotización",
       description: "PDF o enlace profesional para el cliente.",
