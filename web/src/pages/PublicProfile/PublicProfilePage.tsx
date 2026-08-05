@@ -241,7 +241,7 @@ export const PublicProfilePage: React.FC = () => {
     setMetaDescription(description);
 
     // Social sharing + structured data (per-slug).
-    const appURL = (import.meta.env.VITE_APP_URL || "https://solennix.app").replace(/\/$/, "");
+    const appURL = (import.meta.env.VITE_APP_URL || "https://solennix.com").replace(/\/$/, "");
     const apiBase = (import.meta.env.VITE_API_URL || "http://localhost:8080/api").replace(/\/$/, "");
     const canonical = `${appURL}/u/${encodeURIComponent(profile.slug)}`;
     const ogImage = `${apiBase}/public/organizers/${encodeURIComponent(profile.slug)}/og-image`;

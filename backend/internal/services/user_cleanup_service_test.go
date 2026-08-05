@@ -54,11 +54,11 @@ func TestEmailService_SendInactivityWarning_NoApiKey(t *testing.T) {
 
 func TestInactivityWarningTemplates_ES(t *testing.T) {
 	cfg := &config.Config{
-		FrontendURL: "https://solennix.app",
+		FrontendURL: "https://solennix.com",
 	}
 	emailSvc := NewEmailService(cfg)
 
-	loginLink := "https://solennix.app/login"
+	loginLink := "https://solennix.com/login"
 	html := emailSvc.renderTemplate(inactivityWarningBodyForLocale("es"), map[string]any{
 		"UserName":  "María Pérez",
 		"Days":      90,
@@ -82,11 +82,11 @@ func TestInactivityWarningTemplates_ES(t *testing.T) {
 
 func TestInactivityWarningTemplates_EN(t *testing.T) {
 	cfg := &config.Config{
-		FrontendURL: "https://solennix.app",
+		FrontendURL: "https://solennix.com",
 	}
 	emailSvc := NewEmailService(cfg)
 
-	loginLink := "https://solennix.app/login"
+	loginLink := "https://solennix.com/login"
 	html := emailSvc.renderTemplate(inactivityWarningBodyForLocale("en"), map[string]any{
 		"UserName":  "Jane Smith",
 		"Days":      120,

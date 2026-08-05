@@ -95,8 +95,8 @@ func TestGetInboundAnalytics_FreeReturnsTeaserOnly(t *testing.T) {
 }
 
 func TestDeriveTrafficSource(t *testing.T) {
-	assert.Equal(t, "directory", deriveTrafficSource("https://solennix.app/proveedores?city=x", "", ""))
-	assert.Equal(t, "directory", deriveTrafficSource("https://solennix.app/providers?city=x", "", ""))
+	assert.Equal(t, "directory", deriveTrafficSource("https://solennix.com/proveedores?city=x", "", ""))
+	assert.Equal(t, "directory", deriveTrafficSource("https://solennix.com/providers?city=x", "", ""))
 	assert.Equal(t, "share", deriveTrafficSource("", "share", ""))
 	assert.Equal(t, "direct", deriveTrafficSource("", "", ""))
 	assert.Equal(t, "directory", deriveTrafficSource("", "proveedores", ""))
