@@ -555,6 +555,10 @@
   "directory": {
     "title": "Encontrá el proveedor perfecto para tu evento",
     "subtitle": "Organizadores verificados de eventos en LATAM",
+    "hub": {
+      "services_label": "Explorá por servicio",
+      "events_label": "Explorá por tipo de evento"
+    },
     "search": {
       "city_label": "Ciudad",
       "city_placeholder": "¿En qué ciudad?",

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Search as SearchIcon,
@@ -17,11 +17,18 @@ import { Logo } from "@/components/Logo";
 import { Pagination } from "@/components/Pagination";
 import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 import { useTheme } from "@/hooks/useTheme";
-import { upsertMeta, setDocumentTitle } from "@/lib/seo";
+import { upsertMeta, setDocumentTitle, setJsonLd, removeJsonLd } from "@/lib/seo";
 import { recordPageView } from "@/services/pageViewService";
 import { useDirectoryFilters } from "./useDirectoryFilters";
 import { useSearchOrganizers } from "./useSearchOrganizers";
 import { OrganizerCard } from "./OrganizerCard";
+import {
+  buildDirectoryDescription,
+  buildDirectoryItemListJsonLd,
+  buildDirectoryTitle,
+  DIRECTORY_JSON_LD_ID,
+  DIRECTORY_SITE_ORIGIN,
+} from "./directorySeo";
 
 const EVENT_TYPES = ["boda", "corporativo", "xv", "infantil", "baby_shower", "bautizo", "banquete", "social"];
 
@@ -52,6 +59,7 @@ const RADIUS_OPTIONS = ["25", "50", "100"] as const;
  */
 export const ProveedoresPage: React.FC = () => {
   const { t } = useTranslation("public");
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const {
     inputValues, eventType, sort, page, filters,
@@ -81,17 +89,60 @@ export const ProveedoresPage: React.FC = () => {
     if (page > 1) window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
 
-  // SEO meta tags (#1119) — title, description, Open Graph.
+  const serviceLabel = serviceCategory
+    ? t(`public:directory.filters.service_options.${serviceCategory}`, {
+        defaultValue: serviceCategory,
+      })
+    : undefined;
+  const eventTypeLabel = eventType
+    ? t(`public:directory.search.event_type_options.${eventType}`, {
+        defaultValue: eventType,
+      })
+    : undefined;
+  const cityForSeo = (filters.city || inputValues.city || "").trim() || undefined;
+
+  const pageUrl = `${location.pathname}${location.search}`;
+  const seoInput = {
+    baseTitle: t("public:directory.title"),
+    baseDescription: t("public:directory.subtitle"),
+    city: cityForSeo,
+    serviceLabel,
+    eventTypeLabel,
+    pageUrl,
+  };
+  const pageTitle = buildDirectoryTitle(seoInput);
+  const pageDescription = buildDirectoryDescription(seoInput);
+
+  // SEO meta + ItemList JSON-LD (filter-aware; cleanup on unmount).
   useEffect(() => {
-    const title = t("public:directory.title");
-    const subtitle = t("public:directory.subtitle");
-    setDocumentTitle(title);
-    upsertMeta("name", "description", subtitle);
-    upsertMeta("property", "og:title", title);
-    upsertMeta("property", "og:description", subtitle);
+    setDocumentTitle(pageTitle);
+    upsertMeta("name", "description", pageDescription);
+    upsertMeta("property", "og:title", pageTitle);
+    upsertMeta("property", "og:description", pageDescription);
     upsertMeta("property", "og:type", "website");
+    upsertMeta("property", "og:url", `${DIRECTORY_SITE_ORIGIN}${pageUrl}`);
     upsertMeta("name", "robots", "index, follow");
-  }, [t]);
+
+    const listItems = items
+      .filter((o) => o.slug)
+      .slice(0, 20)
+      .map((o) => ({
+        name: o.business_name || o.slug || "Provider",
+        url: `/u/${o.slug}`,
+        description: o.headline || undefined,
+      }));
+
+    setJsonLd(
+      DIRECTORY_JSON_LD_ID,
+      buildDirectoryItemListJsonLd({ ...seoInput, pageUrl }, listItems),
+    );
+
+    return () => {
+      removeJsonLd(DIRECTORY_JSON_LD_ID);
+    };
+    // items identity changes with query results; pageTitle/description encode filters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seo fields covered by pageTitle/pageDescription/pageUrl
+  }, [pageTitle, pageDescription, pageUrl, items]);
 
   return (
     <div className="min-h-screen bg-bg animate-fade-in">
@@ -123,9 +174,67 @@ export const ProveedoresPage: React.FC = () => {
       <div className="border-b border-border bg-gradient-to-b from-primary/5 to-transparent">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
           <h1 className="text-3xl font-black tracking-tight text-text sm:text-4xl">
-            {t("public:directory.title")}
+            {pageTitle.replace(/\s*\|\s*Solennix\s*$/, "")}
           </h1>
-          <p className="mt-2 text-text-secondary">{t("public:directory.subtitle")}</p>
+          <p className="mt-2 text-text-secondary">{pageDescription}</p>
+
+          {/* Hub entry chips — category + event type for discovery / internal linking */}
+          <div className="mt-6 space-y-4" data-testid="directory-hub-chips">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-2">
+                {t("public:directory.hub.services_label")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {SERVICE_CATEGORIES.map((cat) => {
+                  const active = serviceCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      data-testid={`hub-service-${cat}`}
+                      onClick={() => setServiceCategory(active ? "" : cat)}
+                      className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        active
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-card text-text hover:border-primary/40"
+                      }`}
+                    >
+                      {t(`public:directory.filters.service_options.${cat}`, {
+                        defaultValue: cat,
+                      })}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-2">
+                {t("public:directory.hub.events_label")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {EVENT_TYPES.map((type) => {
+                  const active = eventType === type;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      data-testid={`hub-event-${type}`}
+                      onClick={() => setEventType(active ? "" : type)}
+                      className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        active
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-card text-text hover:border-primary/40"
+                      }`}
+                    >
+                      {t(`public:directory.search.event_type_options.${type}`, {
+                        defaultValue: type,
+                      })}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
 
           {/* Inline search (no sidebar — MVP, sidebar deferred to #1128 S15) */}
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
