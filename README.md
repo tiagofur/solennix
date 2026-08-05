@@ -8,7 +8,7 @@ Plataforma integral para la gestión de eventos, cotizaciones, inventario y cont
 |-----------|-------|:------:|
 | **iOS** | SwiftUI · @Observable · SPM | ✅ Producción — App Store México |
 | **Android** | Kotlin · Jetpack Compose · Hilt · Ktor | ✅ Producción — Google Play |
-| **Web** | React 18 · TypeScript · Vite · Tailwind | ✅ Producción — solennix.com |
+| **Web** | React 19 · TypeScript · Vite · Tailwind | ✅ Producción — solennix.com |
 | **Backend** | Go · Chi · PostgreSQL · pgx | ✅ Producción — api.solennix.com |
 
 ## 📚 Documentación

@@ -341,10 +341,10 @@
         "price": "Gratis",
         "desc": "Perfecto para empezar",
         "features": [
-          "Hasta 3 eventos por mes",
-          "Hasta 50 clientes registrados",
-          "Hasta 20 ítems en catálogo",
-          "Gestión básica de clientes",
+          "Hasta 4 eventos por mes",
+          "Hasta 20 clientes registrados",
+          "Hasta 15 productos y 30 de inventario",
+          "Portal cliente y perfil público básicos",
           "Calendario de eventos"
         ],
         "cta": "Comenzar Gratis"

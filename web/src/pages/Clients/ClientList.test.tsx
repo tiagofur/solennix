@@ -48,7 +48,7 @@ vi.mock('../../hooks/usePlanLimits', () => ({
     isBasicPlan: false,
     canCreateClient: true,
     clientsCount: 0,
-    clientLimit: 50,
+    clientLimit: 20,
   }),
 }));
 

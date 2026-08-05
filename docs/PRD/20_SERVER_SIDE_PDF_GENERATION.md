@@ -11,20 +11,26 @@ aliases:
   - Generación PDF Backend
   - Contract Template Parity
 date: 2026-04-26
-updated: 2026-05-20
-status: proposed
-priority: high
+updated: 2026-08-05
+status: partial
+priority: medium
 ---
 
 # Server-Side PDF Generation + Contract Template Parity
 
-**Propuesta**: Mover TODA la generación de PDFs al backend (Go) y unificar la edición de plantillas de contrato en las 3 plataformas.
+> [!success] Estado 2026-08
+> La generación de PDFs en **backend (Go)** está implementada (`backend/internal/pdf/`, `handlers` PDF).
+> Este documento conserva el **diseño original y la matriz de paridad** como referencia.
+> Trabajo restante: retirar o alinear generadores locales residuales en iOS/Android/Web y cerrar gaps de branding/tokens.
+> Código de verdad: `backend/internal/pdf/` + OpenAPI. No tratar este doc como “proposed from zero”.
 
-**Motivación**: 5800 líneas duplicadas, paridad rota, logo solo en Web, `show_business_name_in_pdf` ignorado en móviles, contrato con bugs de tokens por platform drift.
+**Objetivo original**: Mover la generación de PDFs al backend (Go) y unificar plantillas de contrato en las 3 plataformas.
+
+**Motivación**: ~5800 líneas duplicadas, paridad rota, logo solo en Web, `show_business_name_in_pdf` ignorado en móviles, contrato con bugs de tokens por platform drift.
 
 ---
 
-## 1. Estado Actual — El Problema
+## 1. Problema original (contexto histórico)
 
 ### 1.1 PDFs Duplicados × 3
 
@@ -457,7 +463,7 @@ Estos son los tokens que el backend resuelve Y que todas las apps muestran:
 ### Fase 4 — Backend API Layer (2 días)
 
 - [ ] `internal/service/pdf_service.go` — orquesta datos + logo + generación
-- [ ] `internal/handler/pdf_handler.go` — 7 endpoints GET
+- [x] `internal/handlers/` + `internal/pdf/` — generación server-side (revisar paridad de endpoints)
 - [ ] Rate limiting por usuario (prevenir abuso)
 - [ ] Test de integración (handler → PDF response)
 

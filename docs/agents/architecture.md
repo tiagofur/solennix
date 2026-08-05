@@ -7,10 +7,12 @@
 ## 1. Backend (Go)
 
 Usa un diseño por capas desacopladas en `backend/internal/`:
-- **Handler (`internal/handler/`)**: Capa HTTP que procesa peticiones y formatea respuestas REST (usa Chi router).
-- **Service (`internal/service/`)**: Capa de lógica de negocio pura. Sin código de red o base de datos directo.
+- **Handler (`internal/handlers/`)**: Capa HTTP que procesa peticiones y formatea respuestas REST (usa Chi router).
+- **Service (`internal/services/`)**: Capa de lógica de negocio pura. Sin código de red o base de datos directo.
 - **Repository (`internal/repository/`)**: Capa de acceso a datos que ejecuta consultas Postgres usando el driver nativo `pgx`.
-- **Model (`internal/model/`)**: Estructuras de dominio compartidas de Go.
+- **Model (`internal/models/`)**: Estructuras de dominio compartidas de Go.
+
+Detalle por plataforma: `docs/{iOS,Android,Web,Backend}/Arquitectura General.md`. Contrato API: `backend/docs/openapi.yaml`.
 
 *Regla:* Todas las consultas a la base de datos deben filtrar obligatoriamente por `user_id` (arquitectura multi-tenant).
 

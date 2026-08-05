@@ -5,5 +5,30 @@ bin/
 tmp/
 uploads/
 .DS_Store
+
+# Built binaries
 /main
 /server
+/main.exe
+*.exe
+
+# Coverage & local test dumps (regenerable)
+*.out
+*.cover.out
+coverage
+coverage.out
+*_coverage.txt
+*cov
+handlerscov
+repocov
+svccov
+dbcov
+c
+test_output.txt
+tests_out.txt
+*_test_output.txt
+
+# Session cookies / local auth dumps — never commit
+cookies.txt
+login_cookies.txt
+*_cookies.txt

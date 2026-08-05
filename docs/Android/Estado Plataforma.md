@@ -6,37 +6,31 @@ tags:
 type: status
 status: active
 date: 2026-04-29
-updated: 2026-05-13
+updated: 2026-08-05
 ---
 
 # 🟢 Android — Estado Plataforma
 
-**Última actualización:** 2026-05-13
+**Última actualización:** 2026-08-05
 
-> [!info] Fuente viva de estado
-> Este documento se actualiza cada vez que hay cambios significativos en la plataforma Android.
+> [!info] Fuentes de verdad
+> - Estado producto cross-platform: [[../PRD/11_CURRENT_STATUS]]
+> - Versión publicada: `versioning/releases.json` (no duplicar números aquí)
+> - Detalle de tests: [[Testing]]
 
 ## Estado general
 
-Android está estable en producción a nivel funcional (MVP + features core + suscripciones), con foco actual en calidad de tests y hardening incremental.
+Android está en producción (MVP + features core + suscripciones + solicitudes). Paridad con iOS en releases móviles; gaps conocidos de v2 (perfil público / directorio) viven en el status PRD.
 
 ### Snapshot técnico
 
 - Arquitectura multi-módulo MVVM activa y estable.
 - Play Billing, SSO, SSL pinning y offline sync disponibles.
-- Riesgo principal actual: `baselineprofile` está cubierto solo en instrumentado (sin suite JVM) y falta gate de ejecución performance en CI.
-
-### Baseline de calidad (medido)
-
-- 88 tests unitarios debug.
-- 0 failures, 0 errors, 0 skipped.
-- 18/19 módulos Android con suites JVM (`src/test`/`src/androidTest`) + 1 módulo macrobenchmark instrumentado (`baselineprofile`).
-- 2 smoke tests instrumentados (`androidTest`) en verde (auth + dashboard).
-- Detalle completo en [[Testing]].
+- Calidad: suites JVM por módulo + instrumentados smoke; ver [[Testing]] para conteos actuales (no fijar números en este doc).
 
 ## Play Store
 
-- **Versión actual:** 1.2.0 (versionCode 6)
+- **Versión:** ver `versioning/releases.json` → `currentVersions.android`
 - **Status:** ✅ Activo
 - **Últimas novedades:** Fase 4.5 completada con gate de cobertura expandido a 13 módulos
 

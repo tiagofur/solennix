@@ -38,7 +38,7 @@ vi.mock('../../hooks/useToast', () => ({
 let mockPlanLimits = {
   canCreateClient: true,
   clientsCount: 5,
-  clientLimit: 50,
+  clientLimit: 20,
   loading: false,
 };
 
@@ -69,7 +69,7 @@ describe('ClientForm', () => {
     mockPlanLimits = {
       canCreateClient: true,
       clientsCount: 5,
-      clientLimit: 50,
+      clientLimit: 20,
       loading: false,
     };
     (clientService.getById as ReturnType<typeof vi.fn>).mockResolvedValue(null);
@@ -185,13 +185,13 @@ describe('ClientForm', () => {
   });
 
   it('shows UpgradeBanner when client limit is reached on new form', () => {
-    mockPlanLimits = { canCreateClient: false, clientsCount: 50, clientLimit: 50, loading: false };
+    mockPlanLimits = { canCreateClient: false, clientsCount: 50, clientLimit: 20, loading: false };
     renderForm();
     expect(screen.getByText(/Límite de Clientes Alcanzado/i)).toBeInTheDocument();
   });
 
   it('navigates back when clicking Regresar on limit-reached view', () => {
-    mockPlanLimits = { canCreateClient: false, clientsCount: 50, clientLimit: 50, loading: false };
+    mockPlanLimits = { canCreateClient: false, clientsCount: 50, clientLimit: 20, loading: false };
     renderForm();
     fireEvent.click(screen.getByRole('button', { name: /Regresar a la página anterior|Volver|action\.back/i }));
     expect(mockNavigate).toHaveBeenCalledWith(-1);
@@ -199,7 +199,7 @@ describe('ClientForm', () => {
 
   it('does not show UpgradeBanner when editing an existing client even if limit reached', async () => {
     mockParams = { id: 'client-1' };
-    mockPlanLimits = { canCreateClient: false, clientsCount: 50, clientLimit: 50, loading: false };
+    mockPlanLimits = { canCreateClient: false, clientsCount: 50, clientLimit: 20, loading: false };
     (clientService.getById as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'client-1',
       name: 'Ana Perez',

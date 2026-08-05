@@ -3,7 +3,7 @@
 > [!info] Plataforma
 > **Stack**: React 19 + TypeScript + Tailwind CSS 4 + Vite
 > **Estado**: Producción (MVP completo) — Google & Apple SSO ✅
-> **Última actualización**: 2026-04-29
+> **Última actualización**: 2026-08-05
 
 ---
 

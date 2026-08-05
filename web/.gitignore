@@ -18,6 +18,14 @@ coverage/
 web_coverage.txt
 test_results.txt
 lint_output.txt
+check_i18n_results.json
+pages_test_output.txt
+test_run.json
+test_run_output.txt
+*_test_output.txt
+test_run*.json
+test_run*.txt
+
 
 # Editor directories and files
 .vscode/*

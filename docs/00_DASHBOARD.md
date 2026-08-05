@@ -34,7 +34,7 @@ status: active
 
 > [!info] MOCs por plataforma
 > - 🍏 [[iOS/iOS MOC|iOS]] · 🤖 [[Android/Android MOC|Android]] · 🌐 [[Web/Web MOC|Web]] · ⚙️ [[Backend/Backend MOC|Backend]]
-> - 📋 [[PRD/PRD MOC|Producto (PRD)]] · 🎬 [[Marketing/videos/MOC|Marketing / Videos]]
+> - 📋 [[PRD/PRD MOC|Producto (PRD)]] · 📣 [[Marketing/MOC|Marketing]] · 🎬 [[Marketing/videos/MOC|Videos]]
 
 ---
 
@@ -50,7 +50,7 @@ Definido por el roadmap vivo en [[PRD/09_ROADMAP]] y la lista de tareas operativ
 > - **RevenueCat Dashboard** — entitlement `pro_access` + offerings + webhook.
 > - **Resend** — dominio verificado + DKIM/SPF + API key.
 >
-> Checklist de 13 items: [[PRD/04_MONETIZATION#Keys y secrets]]
+> Checklist keys: [[PRD/04_MONETIZATION#9. Keys y secrets — no confundir]]
 
 ---
 

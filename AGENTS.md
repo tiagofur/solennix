@@ -9,7 +9,7 @@
 
 1. Ejecutá `./init.sh` en la raíz y verificá que termine sin errores. Si falla, **pará** y resolvé el entorno antes de tocar código.
 2. Leé `progress/current.md` para saber en qué estado quedó la última sesión activa.
-3. Elegí **una** tarea con estado `pending` en `feature_list.json`. No trabajes en más de una a la vez.
+3. Elegí **una** tarea: preferí `pending` en `feature_list.json`. Si no hay pending, usá `progress/current.md` + cambios activos en `openspec/changes/`. No trabajes en más de una a la vez.
 
 ## 2. Mapa de navegación (qué leer según tu tarea)
 
@@ -17,16 +17,18 @@ Leé **solo** lo relevante a tu tarea. Cargar todo de antemano desperdicia conte
 
 | Si tu tarea es… | Leé esto |
 | :--- | :--- |
-| Arrancar sesión / elegir tarea | `feature_list.json` + `progress/current.md` |
+| Arrancar sesión / elegir tarea | `feature_list.json` (si hay pending) + `progress/current.md` + `openspec/changes/` |
 | Diseñar o estructurar cambios | `docs/agents/architecture.md` |
 | Escribir código (estilo, naming, DRY) | `docs/agents/conventions.md` |
 | Declarar tarea completada / escribir tests | `docs/agents/verification.md` |
-| Tocar UI, marca, diseño o accesibilidad | `PRODUCT.md` (fuente canónica de diseño) |
+| Tocar UI, marca, diseño o accesibilidad | `PRODUCT.md` (intención) → Design System de la plataforma |
 | Auto-evaluarte antes del review | `CHECKPOINTS.md` |
 | Definir o implementar un cambio grande (spec-driven) | familia SDD: `.agents/skills/sdd-*` + `openspec/` |
 | Crear PR / issue | skills `branch-pr` / `issue-creation` |
-| Estado actual del producto | `docs/PRD/11_CURRENT_STATUS.md` (vivo) |
-| Roadmap | `docs/PRD/09_ROADMAP.md` (master) |
+| Estado actual del producto | `docs/PRD/11_CURRENT_STATUS.md` (snapshot vivo) |
+| Roadmap | `docs/PRD/09_ROADMAP.md` (forward) · v2 inbound: `docs/PRD/15_MARKETPLACE_V2.md` |
+| Arquitectura por plataforma | `docs/{iOS,Android,Web,Backend}/Arquitectura General.md` |
+| Contrato API | `backend/docs/openapi.yaml` |
 | Contexto histórico | `progress/history.md` y `docs/_archive/` |
 
 **Stack por plataforma:** iOS, Android, Web y Backend. Ver `docs/agents/architecture.md` para el desglose de capas y `README.md` para los comandos de cada una.
@@ -44,13 +46,14 @@ Leé **solo** lo relevante a tu tarea. Cargar todo de antemano desperdicia conte
 
 | Área | iOS | Android | Web | Backend |
 | :--- | :--- | :--- | :--- | :--- |
-| Modelos | `ios/Packages/SolennixCore/.../Models/` | `android/core/model/` | `web/src/types/` | `backend/internal/model/` |
-| API/Red | `ios/Packages/SolennixNetwork/.../` | `android/core/network/` | `web/src/services/` | `backend/internal/handler/` |
+| Modelos | `ios/Packages/SolennixCore/.../Models/` | `android/core/model/` | `web/src/types/` | `backend/internal/models/` |
+| API/Red | `ios/Packages/SolennixNetwork/.../` | `android/core/network/` | `web/src/services/` | `backend/internal/handlers/` |
 | ViewModels | `.../ViewModels/` | `android/feature/**/viewmodel/` | `web/src/stores/` (Zustand) | — |
 | UI | `.../Views/` | `android/feature/**/ui/` | `web/src/pages/`, `components/` | — |
 | Navegación | `ios/Solennix/Navigation/` | `.../navigation/` | `web/src/router/` | — |
-| Auth | `AuthManager.swift` | `AuthInterceptor.kt` | `AuthContext.tsx` / `authStore.ts` | `handler/auth.go`, `middleware/auth.go` |
+| Auth | `AuthManager.swift` | `AuthInterceptor.kt` | `AuthContext.tsx` / `authStore.ts` | `handlers/auth.go`, `middleware/auth.go` |
 | DB / Repo | — | — | — | `backend/internal/repository/` |
+| Servicios | — | — | — | `backend/internal/services/` |
 | Rutas API | — | — | — | `backend/internal/router/` |
 
 ### Terminología del dominio

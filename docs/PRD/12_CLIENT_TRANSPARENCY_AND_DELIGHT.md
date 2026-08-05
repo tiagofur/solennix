@@ -20,7 +20,7 @@ status: active
 > Feature A (Portal Cliente) **MVP cerrado en los 4 stacks** (Backend + Web + iOS + Android) al 2026-04-16. Features B–L en estado de diseño, alineadas a sprints Q2–Q4 2026 y Q1 2027.
 
 > [!tip] Documentos relacionados
-> [[PRD MOC]] · [[02_FEATURES|Feature Matrix]] · [[04_MONETIZATION|Monetización §4.3]] · [[09_ROADMAP|Roadmap]] · [[13_POST_MVP_ROADMAP|Post-MVP Roadmap]] · [[14_CLIENT_EXPERIENCE_IDEAS|Ideas Experiencia Cliente]] · [[../_archive/15_PORTAL_CLIENTE_TRACKER|Portal Cliente Tracker]]
+> [[PRD MOC]] · [[02_FEATURES|Feature Matrix]] · [[04_MONETIZATION|Monetización §4.3]] · [[09_ROADMAP|Roadmap]] · [[14_CLIENT_EXPERIENCE_IDEAS|Ideas Experiencia Cliente]] · [[15_MARKETPLACE_V2|v2 Inbound]] · [[../_archive/15_PORTAL_CLIENTE_TRACKER|Portal Cliente Tracker]]
 
 **Autor:** Sesión 2026-04-16.
 **Última actualización:** 2026-04-17 (consolidación del root PRD al vault Obsidian).
@@ -130,7 +130,7 @@ La propuesta: abrir una **ventana controlada** al cliente — el organizador dec
 | Pro       | ✓ + branding propio + payment summary + cronograma + timeline + todos los features B-I                                                                                                                                                                                          |
 | Business  | + dominio custom + DKIM + white-label completo                                                                                                                                                                                                                                  |
 
-**Filosofía del split:** el upgrade driver pasa a ser **CALIDAD** (cómo se ve) no **CANTIDAD** (cuántos portales). El Gratis siente el "wow, mi cliente vio una página pro de mi evento" pero inmediatamente nota las limitaciones y sube a Pro para quitarlas. Ver [[04_MONETIZATION|PRD/04 §4.3]] para el detalle de qué se expone en cada tier.
+**Filosofía del split:** el upgrade driver pasa a ser **CALIDAD** (cómo se ve) no **CANTIDAD** (cuántos portales). El Gratis siente el "wow, mi cliente vio una página pro de mi evento" pero inmediatamente nota las limitaciones y sube a Pro para quitarlas. Ver [[04_MONETIZATION]] §2 para el detalle de qué se expone en cada tier.
 
 **Enforcement pendiente en Sprint 7.C** — hoy el MVP devuelve el shape completo para todos; la variante "basic shape para Gratis" se implementa cuando activemos gate.
 

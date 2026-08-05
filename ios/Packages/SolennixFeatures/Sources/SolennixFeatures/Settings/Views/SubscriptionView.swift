@@ -391,9 +391,9 @@ public struct SubscriptionView: View {
             ]
         } else {
             return [
-                tr("settings.subscription.feature.up_to_20_products", "Hasta 20 productos"),
-                tr("settings.subscription.feature.up_to_50_clients", "Hasta 50 clientes"),
-                tr("settings.subscription.feature.up_to_3_events", "Hasta 3 eventos por mes"),
+                tr("settings.subscription.feature.up_to_4_events", "Hasta 4 eventos por mes"),
+                tr("settings.subscription.feature.up_to_20_clients", "Hasta 20 clientes"),
+                tr("settings.subscription.feature.up_to_catalog", "Hasta 15 productos y 30 de inventario"),
                 tr("settings.subscription.feature.contract_generation", "Generación de contratos"),
                 tr("settings.subscription.feature.event_calendar", "Calendario de eventos"),
                 tr("settings.subscription.feature.basic_reports", "Reportes básicos")

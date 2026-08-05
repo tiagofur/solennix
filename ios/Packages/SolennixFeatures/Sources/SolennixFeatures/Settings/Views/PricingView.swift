@@ -131,8 +131,9 @@ public struct PricingView: View {
                 title: tr("settings.pricing.plan.basic", "Básico"),
                 price: tr("settings.pricing.plan.free", "Gratis"),
                 features: [
-                    tr("settings.pricing.features.basic.products", "Hasta 20 productos"),
-                    tr("settings.pricing.features.basic.clients", "Hasta 50 clientes"),
+                    tr("settings.pricing.features.basic.events", "Hasta 4 eventos por mes"),
+                    tr("settings.pricing.features.basic.clients", "Hasta 20 clientes"),
+                    tr("settings.pricing.features.basic.products", "Hasta 15 productos y 30 de inventario"),
                     tr("settings.pricing.features.basic.contracts", "Generación de contratos"),
                     tr("settings.pricing.features.basic.calendar", "Calendario de eventos")
                 ],

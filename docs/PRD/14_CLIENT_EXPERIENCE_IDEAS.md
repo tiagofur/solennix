@@ -16,12 +16,12 @@ status: exploration
 # 14 — Ideas de Experiencia del Cliente (Exploración)
 
 > [!warning] Este documento es EXPLORACIÓN, no compromiso
-> Las ideas aquí listadas NO están en el roadmap. Son propuestas abiertas para debate. Cuando una idea sea aprobada se mueve a [[13_POST_MVP_ROADMAP|Roadmap Post-MVP]] con estimación firme, tier y fecha.
+> Las ideas aquí listadas NO están en el roadmap. Son propuestas abiertas para debate. Cuando una idea sea aprobada se mueve a [[09_ROADMAP|Roadmap]] (Next/Later) o a un change OpenSpec con estimación firme, tier y fecha.
 
 > [!tip] Documentos relacionados
 >
 > - [[02_FEATURES|Catálogo de Features]] — Fila "Pilar 5" refiere a este doc
-> - [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] — Pilar 3 ya cubre lo comprometido
+> - [[09_ROADMAP|Roadmap]] · [[15_MARKETPLACE_V2|v2 Inbound]] — norte actual; histórico Post-MVP en `_archive/prd-history/`
 > - [[11_CURRENT_STATUS|Estado Actual]] — Portal Cliente MVP entregado (Abr 2026)
 > - [[04_MONETIZATION|Monetización]] — Tiers Gratis / Pro / Business
 
@@ -69,7 +69,7 @@ Reglas ya implementadas por diseño en el MVP:
 
 ---
 
-### 1.2 Lo que ya está planeado (Pilar 3 — [[13_POST_MVP_ROADMAP]])
+### 1.2 Lo que ya está planeado (Pilar 3 — histórico Post-MVP + [[09_ROADMAP]])
 
 - Notificaciones automáticas al cliente en momentos clave (cotización lista, contrato listo, pago recibido, checklist completo, en camino, llegamos, completado, recordatorio de pago).
 - Endpoints de acciones del evento (`departed`, `arrived`, `setup-done`, `completed`) que registran timeline y disparan notificaciones.
@@ -268,7 +268,7 @@ Todo lo anterior es **organizador → cliente (broadcast)**. No hay ninguna feat
 > **Aclaración:** los pagos de suscripción del organizador hacia Solennix (Stripe) siguen vigentes — eso NO cambia. Lo que queda fuera es la facilitación cliente↔organizador.
 >
 > **Qué SÍ se puede hacer sin entrar en este terreno:**
-> - Recordatorios al cliente sobre fechas de pago (ya planeado en [[13_POST_MVP_ROADMAP|Pilar 3]] como trigger `Recordatorio de pago`).
+> - Recordatorios al cliente sobre fechas de pago (planeado históricamente en Post-MVP Pilar 3 como trigger `Recordatorio de pago`).
 > - UI que muestra saldo pendiente (ya existe en el MVP como agregado).
 > - Instrucciones de pago en texto libre que el organizador sube (sin procesar dinero).
 >
@@ -598,11 +598,11 @@ Formato idéntico al de [[02_FEATURES]]. `📋` = idea, aún no planeada.
 
 | Ruta                                                       | Por qué                                                                   |
 | ---------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `backend/internal/handler/`                                | Patrón handler existente — respetar estilo auth-gated vs token-public     |
+| `backend/internal/handlers/`                               | Patrón handler existente — respetar estilo auth-gated vs token-public     |
 | `backend/internal/repository/`                             | Repositorio por tabla, patrón actual                                      |
 | `backend/migrations/`                                      | Numeración incremental, próxima `042_*.sql`                               |
 | `backend/internal/repository/event_public_links.go`        | Base para G.1 (extensión mínima)                                          |
-| `backend/internal/handler/public_event.go`                 | Base para B.1 (filtro antes de serializar)                                |
+| `backend/internal/handlers/` (portal / public event)       | Base para B.1 (filtro antes de serializar)                                |
 | `web/src/pages/ClientPortalPage.tsx`                       | Extender con secciones nuevas — no duplicar                               |
 | `web/src/services/`                                        | Un service por cluster (`messagesService.ts`, etc.)                       |
 | `web/src/stores/`                                          | Un store por cluster cuando haya estado compartido                        |
@@ -615,7 +615,7 @@ Formato idéntico al de [[02_FEATURES]]. `📋` = idea, aún no planeada.
 
 ## 10. Siguientes pasos
 
-1. Usuario prioriza qué clusters van a [[13_POST_MVP_ROADMAP]] como Pilar 5 o extensión de Pilar 3.
+1. Usuario prioriza qué clusters van a [[09_ROADMAP]] / OpenSpec como extensión del trabajo cliente.
 2. Por cada cluster aprobado, abrir un change SDD (`/sdd-new cluster-X-nombre`) con specs, design, tasks.
 3. Actualizar [[02_FEATURES]] reemplazando `📋` por `⬜` en las filas que pasen a roadmap firme.
 4. Marcar este documento como `status: partially-implemented` cuando el primer cluster aterrice.

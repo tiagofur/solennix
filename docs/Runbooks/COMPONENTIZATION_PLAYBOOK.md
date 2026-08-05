@@ -79,7 +79,7 @@ For each feature or refactor affecting behavior, verify parity impacts:
 - Android: `android/feature/**`
 - iOS: `ios/Packages/SolennixFeatures/**` + related ViewModels
 - Web: `web/src/pages/**`, `web/src/components/**`, `web/src/services/**`
-- Backend: `backend/internal/handler/**`, `service/**`, `repository/**`, models/contracts
+- Backend: `backend/internal/handlers/**`, `services/**`, `repository/**`, `models/` contracts
 
 Refactor-only UI moves without behavior changes can stay platform-local,
 but architecture conventions should be mirrored across platforms.

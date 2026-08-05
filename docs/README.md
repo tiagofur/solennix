@@ -7,71 +7,67 @@ aliases:
   - Solennix Docs
   - Solennix Vault
 status: active
+updated: 2026-08-05
 ---
 
-# 📚 Solennix — Documentación
+# Solennix — Documentación
 
 > [!abstract] Resumen
-> Documentación operativa de Solennix por plataforma (iOS, Android, Web, Backend) y función (Producto, Arquitectura, Marketing). El estado del producto es **vivo** — ver las fuentes canónicas abajo.
+> Documentación operativa por plataforma y por función. **Una fuente canónica por tema** — ver tabla abajo.
 
 ---
 
-## 🎯 Punto de entrada
+## Punto de entrada
 
 - [[00_DASHBOARD|Dashboard Ejecutivo]] — vista de 30 segundos
+- [`AGENTS.md`](../AGENTS.md) — reglas para agentes de IA (router)
 
 ---
 
-## 📁 Navegación por área
+## Navegación por área
 
-- **[[iOS/iOS MOC|iOS]]** — App nativa para iPhone/iPad
-- **[[Android/Android MOC|Android]]** — App nativa para Android
-- **[[Web/Web MOC|Web]]** — Aplicación web React
-- **[[Backend/Backend MOC|Backend]]** — API, base de datos, servicios
-- **[[PRD/PRD MOC|Producto (PRD)]]** — Visión, features, roadmap
-- **[[Marketing/videos/MOC|Marketing / Videos]]** — Branding, campañas, assets de video
-
----
-
-## 📋 Fuentes canónicas de estado
-
-- 📊 **[[PRD/11_CURRENT_STATUS|Estado Actual del producto]]** — fuente viva
-- 📅 **[[PRD/09_ROADMAP|Roadmap maestro]]**
-- 🏗️ **[[../AGENTS|AGENTS.md]]** — reglas normativas para agentes de IA (router)
-
-> [!note] Estado por plataforma
-> Para estado operativo de cada plataforma, ver el MOC correspondiente. El de Android incluye una baseline de calidad (2026-05-13); las demás plataformas se reflejan en PRD/11.
+| Área | Entry |
+| :--- | :--- |
+| iOS | [[iOS/iOS MOC]] |
+| Android | [[Android/Android MOC]] |
+| Web | [[Web/Web MOC]] |
+| Backend | [[Backend/Backend MOC]] |
+| Producto (PRD) | [[PRD/PRD MOC]] |
+| Marketing | [[Marketing/MOC]] |
+| Agentes (estándares cortos) | `agents/architecture.md` · `conventions.md` · `verification.md` |
+| Runbooks | [[Runbooks/README]] |
+| Templates | [[_templates/README]] |
 
 ---
 
-## 🗂️ Templates disponibles
+## Fuentes canónicas (quién gana)
 
-Usá estos al crear nueva documentación:
-- [[_templates/Template - Modulo|Módulo]]
-- [[_templates/Template - ADR|ADR (decisión arquitectónica)]]
-- [[_templates/Template - Runbook|Runbook (procedimiento operativo)]]
-
-Ver [[_templates/README|todos los templates]].
-
----
-
-## 🏗️ Estructura de mantenimiento
-
-1. **Cambios en arquitectura** → Crear/actualizar ADR en la plataforma afectada
-2. **Nueva feature** → Crear módulo en la carpeta correspondiente + actualizar PRD
-3. **Procedimiento repetible** → Crear Runbook en `Runbooks/`
-4. **Estado del sistema** → Actualizar `PRD/11_CURRENT_STATUS.md`
-5. **Cambios cerrados/históricos** → Mover a `[[_archive|docs/_archive/]]`
+| Tema | Canónico |
+| :--- | :--- |
+| Estado del producto | [[PRD/11_CURRENT_STATUS]] |
+| Roadmap forward | [[PRD/09_ROADMAP]] |
+| Features / paridad | [[PRD/02_FEATURES]] |
+| v2 inbound | [[PRD/15_MARKETPLACE_V2]] |
+| Intención de diseño | [`PRODUCT.md`](../PRODUCT.md) |
+| Tokens UI | `docs/{iOS,Android,Web}/Design System.md` |
+| Arquitectura de capas | `docs/{plataforma}/Arquitectura General.md` + `agents/architecture.md` |
+| API | `backend/docs/openapi.yaml` |
+| Versiones | `versioning/releases.json` + `CHANGELOG.md` |
+| Specs de cambios grandes | `openspec/` |
+| Sesión de agente | `progress/current.md` |
+| Histórico | [[_archive/README\|docs/_archive/]] |
 
 ---
 
-## ✅ Reglas de mantenimiento
+## Reglas de mantenimiento
 
-- **Estado del producto:** `PRD/11_CURRENT_STATUS.md` es la fuente viva — mantenerla actualizada.
-- **Ningún ADR sin linkearse:** Siempre actualizar el MOC correspondiente.
-- **Documentación antes de code:** PRD + ADR antes de implementar features grandes.
-- **Planos cerrados:** archivar en `_archive/` (historia preservada, no activos).
+1. **No uses el PRD como changelog.** Releases → `versioning` / `CHANGELOG`. Diario → `progress/`.
+2. **PRD 05–08 son índices** → detalle en docs de plataforma.
+3. **Cambios grandes** → OpenSpec / SDD, no un tracker suelto en PRD.
+4. **Planes cerrados** → `_archive/` (no borrar sin necesidad).
+5. **Nueva feature de dominio** → módulo en la plataforma + fila en `02_FEATURES` + status en `11` si cambia el snapshot.
+6. **Templates** → [[_templates/Template - Modulo]], [[_templates/Template - ADR]], [[_templates/Template - Runbook]].
 
 ---
 
-*Reglas normativas para agentes de IA en [`AGENTS.md`](../AGENTS.md) (raíz del repo).*
+*Reglas normativas para agentes: [`AGENTS.md`](../AGENTS.md).*

@@ -49,28 +49,29 @@
   },
   "features": {
     "free": [
-      "Hasta 3 eventos por mes",
-      "Hasta 50 clientes registrados",
-      "Hasta 20 ítems en catálogo",
-      "Gestión básica de clientes",
-      "Calendario de eventos",
-      "Generación de PDFs (cotizaciones, contratos y más)"
+      "Hasta 4 eventos por mes",
+      "Hasta 20 clientes registrados",
+      "Hasta 15 productos y 30 de inventario (techo catálogo 20)",
+      "1 colaborador en catálogo de personal",
+      "3 enlaces de solicitud activos",
+      "Portal cliente y perfil público básicos",
+      "Calendario, PDFs y pagos manuales"
     ],
     "pro": [
-      "Eventos ilimitados",
-      "Clientes y catálogo ilimitados",
-      "Control de pagos e ingresos en múltiples plazos",
-      "Reportes y analíticas avanzadas",
-      "Portal del cliente con tu marca",
-      "Soporte prioritario"
+      "Eventos, clientes, catálogo y links de solicitud ilimitados",
+      "2 seats de personal + email al asignar",
+      "Branding completo en PDFs y portal cliente",
+      "Payment submissions (cliente reporta transferencia)",
+      "Perfil público full (portfolio, packages, reseñas)",
+      "Inbound analytics + directorio estándar",
+      "Reportes avanzados y soporte prioritario"
     ],
     "business": [
       "Todo lo de Pro, sin excepción",
-      "Hasta 3 usuarios del equipo con roles",
-      "WhatsApp Business API para notificaciones al cliente",
-      "Firma digital de contratos con validez legal",
-      "Dominio propio + emails con tu marca (DKIM)",
-      "Integraciones webhooks + API pública",
+      "Staff seats ilimitados + portal de colaboradores (login)",
+      "Destacado en el directorio de proveedores",
+      "WhatsApp Business API (roadmap)",
+      "Integraciones webhooks + API pública (roadmap)",
       "Soporte 1:1 con onboarding personalizado"
     ],
     "pro_include": "Todo lo anterior, y además:"
