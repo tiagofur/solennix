@@ -685,7 +685,7 @@ func nullStr(s *string) string {
 func (r *PublicProfileRepo) ListPackagesByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicPackage, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT id, user_id, title, description, from_price, inclusions, image_url,
-			is_featured, sort_order, created_at, updated_at
+			is_featured, sort_order, min_guests, created_at, updated_at
 		FROM organizer_public_packages
 		WHERE user_id = $1
 		ORDER BY sort_order ASC
@@ -705,6 +705,9 @@ func (r *PublicProfileRepo) ListPackagesByUserID(ctx context.Context, userID uui
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("list packages rows: %w", err)
+	}
+	if err := r.hydratePackages(ctx, items); err != nil {
+		return nil, err
 	}
 	return items, nil
 }
@@ -737,12 +740,12 @@ func (r *PublicProfileRepo) CreatePackage(ctx context.Context, pkg *models.Organ
 
 	row := r.pool.QueryRow(ctx, `
 		INSERT INTO organizer_public_packages
-			(user_id, title, description, from_price, inclusions, image_url, is_featured, sort_order)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			(user_id, title, description, from_price, inclusions, image_url, is_featured, sort_order, min_guests)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id, user_id, title, description, from_price, inclusions, image_url,
-			is_featured, sort_order, created_at, updated_at`,
+			is_featured, sort_order, min_guests, created_at, updated_at`,
 		pkg.UserID, pkg.Title, pkg.Description, pkg.FromPrice, inclusions,
-		pkg.ImageURL, pkg.IsFeatured, pkg.SortOrder,
+		pkg.ImageURL, pkg.IsFeatured, pkg.SortOrder, pkg.MinGuests,
 	)
 	stored, err := scanPackage(row)
 	if err != nil {
@@ -767,12 +770,13 @@ func (r *PublicProfileRepo) UpdatePackage(ctx context.Context, pkg *models.Organ
 			image_url = $7,
 			is_featured = $8,
 			sort_order = $9,
+			min_guests = $10,
 			updated_at = NOW()
 		WHERE id = $1 AND user_id = $2
 		RETURNING id, user_id, title, description, from_price, inclusions, image_url,
-			is_featured, sort_order, created_at, updated_at`,
+			is_featured, sort_order, min_guests, created_at, updated_at`,
 		pkg.ID, pkg.UserID, pkg.Title, pkg.Description, pkg.FromPrice, inclusions,
-		pkg.ImageURL, pkg.IsFeatured, pkg.SortOrder,
+		pkg.ImageURL, pkg.IsFeatured, pkg.SortOrder, pkg.MinGuests,
 	)
 	stored, err := scanPackage(row)
 	if err != nil {
@@ -798,11 +802,11 @@ func (r *PublicProfileRepo) DeletePackage(ctx context.Context, userID, id uuid.U
 	return nil
 }
 
-// GetPackage loads one owned package.
+// GetPackage loads one owned package with items and discount tiers.
 func (r *PublicProfileRepo) GetPackage(ctx context.Context, userID, id uuid.UUID) (*models.OrganizerPublicPackage, error) {
 	row := r.pool.QueryRow(ctx, `
 		SELECT id, user_id, title, description, from_price, inclusions, image_url,
-			is_featured, sort_order, created_at, updated_at
+			is_featured, sort_order, min_guests, created_at, updated_at
 		FROM organizer_public_packages
 		WHERE id = $1 AND user_id = $2`, id, userID)
 	pkg, err := scanPackage(row)
@@ -812,7 +816,125 @@ func (r *PublicProfileRepo) GetPackage(ctx context.Context, userID, id uuid.UUID
 		}
 		return nil, fmt.Errorf("get package: %w", err)
 	}
-	return pkg, nil
+	list := []models.OrganizerPublicPackage{*pkg}
+	if err := r.hydratePackages(ctx, list); err != nil {
+		return nil, err
+	}
+	return &list[0], nil
+}
+
+// ReplacePackageItemsAndTiers rewrites items and discount tiers for a package (max 3 tiers).
+func (r *PublicProfileRepo) ReplacePackageItemsAndTiers(
+	ctx context.Context,
+	packageID uuid.UUID,
+	items []models.OrganizerPublicPackageItem,
+	tiers []models.OrganizerPublicPackageDiscountTier,
+) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin package details tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, `DELETE FROM organizer_public_package_items WHERE package_id = $1`, packageID); err != nil {
+		return fmt.Errorf("clear package items: %w", err)
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM organizer_public_package_discount_tiers WHERE package_id = $1`, packageID); err != nil {
+		return fmt.Errorf("clear package tiers: %w", err)
+	}
+
+	for i, it := range items {
+		unit := string(it.PricingUnit)
+		if unit != string(models.PackagePricingPerGuest) && unit != string(models.PackagePricingPerEvent) {
+			unit = string(models.PackagePricingPerEvent)
+		}
+		sortOrder := it.SortOrder
+		if sortOrder == 0 {
+			sortOrder = i
+		}
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO organizer_public_package_items (package_id, product_id, pricing_unit, sort_order)
+			VALUES ($1, $2, $3, $4)`,
+			packageID, it.ProductID, unit, sortOrder,
+		); err != nil {
+			return fmt.Errorf("insert package item: %w", err)
+		}
+	}
+	for _, tier := range tiers {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO organizer_public_package_discount_tiers (package_id, from_guests, discount_percent)
+			VALUES ($1, $2, $3)`,
+			packageID, tier.FromGuests, tier.DiscountPercent,
+		); err != nil {
+			return fmt.Errorf("insert package tier: %w", err)
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit package details: %w", err)
+	}
+	return nil
+}
+
+func (r *PublicProfileRepo) hydratePackages(ctx context.Context, pkgs []models.OrganizerPublicPackage) error {
+	if len(pkgs) == 0 {
+		return nil
+	}
+	ids := make([]uuid.UUID, len(pkgs))
+	byID := make(map[uuid.UUID]*models.OrganizerPublicPackage, len(pkgs))
+	for i := range pkgs {
+		ids[i] = pkgs[i].ID
+		byID[pkgs[i].ID] = &pkgs[i]
+		pkgs[i].Items = []models.OrganizerPublicPackageItem{}
+		pkgs[i].DiscountTiers = []models.OrganizerPublicPackageDiscountTier{}
+	}
+
+	itemRows, err := r.pool.Query(ctx, `
+		SELECT i.id, i.package_id, i.product_id, i.pricing_unit, i.sort_order,
+			COALESCE(p.name, ''), p.base_price
+		FROM organizer_public_package_items i
+		LEFT JOIN products p ON p.id = i.product_id
+		WHERE i.package_id = ANY($1)
+		ORDER BY i.sort_order ASC`, ids)
+	if err != nil {
+		return fmt.Errorf("list package items: %w", err)
+	}
+	defer itemRows.Close()
+	for itemRows.Next() {
+		var it models.OrganizerPublicPackageItem
+		var unit string
+		var price *float64
+		if err := itemRows.Scan(&it.ID, &it.PackageID, &it.ProductID, &unit, &it.SortOrder, &it.Name, &price); err != nil {
+			return fmt.Errorf("scan package item: %w", err)
+		}
+		it.PricingUnit = models.PackagePricingUnit(unit)
+		it.UnitPrice = price
+		if pkg := byID[it.PackageID]; pkg != nil {
+			pkg.Items = append(pkg.Items, it)
+		}
+	}
+	if err := itemRows.Err(); err != nil {
+		return fmt.Errorf("package item rows: %w", err)
+	}
+
+	tierRows, err := r.pool.Query(ctx, `
+		SELECT id, package_id, from_guests, discount_percent
+		FROM organizer_public_package_discount_tiers
+		WHERE package_id = ANY($1)
+		ORDER BY from_guests ASC`, ids)
+	if err != nil {
+		return fmt.Errorf("list package tiers: %w", err)
+	}
+	defer tierRows.Close()
+	for tierRows.Next() {
+		var t models.OrganizerPublicPackageDiscountTier
+		if err := tierRows.Scan(&t.ID, &t.PackageID, &t.FromGuests, &t.DiscountPercent); err != nil {
+			return fmt.Errorf("scan package tier: %w", err)
+		}
+		if pkg := byID[t.PackageID]; pkg != nil {
+			pkg.DiscountTiers = append(pkg.DiscountTiers, t)
+		}
+	}
+	return tierRows.Err()
 }
 
 type packageRowScanner interface {
@@ -826,7 +948,7 @@ func scanPackage(row packageRowScanner) (*models.OrganizerPublicPackage, error) 
 	var inclusions []byte
 	if err := row.Scan(
 		&pkg.ID, &pkg.UserID, &pkg.Title, &pkg.Description, &pkg.FromPrice, &inclusions,
-		&pkg.ImageURL, &pkg.IsFeatured, &pkg.SortOrder, &pkg.CreatedAt, &pkg.UpdatedAt,
+		&pkg.ImageURL, &pkg.IsFeatured, &pkg.SortOrder, &pkg.MinGuests, &pkg.CreatedAt, &pkg.UpdatedAt,
 	); err != nil {
 		return nil, err
 	}

@@ -308,7 +308,7 @@ func (h *PublicProfileHandler) projectPackages(ctx context.Context, userID uuid.
 	}
 	out := make([]models.PublicPackage, 0, len(raw))
 	for _, p := range raw {
-		out = append(out, models.PublicPackage{
+		pub := models.PublicPackage{
 			ID:          p.ID,
 			Title:       p.Title,
 			Description: p.Description,
@@ -317,7 +317,38 @@ func (h *PublicProfileHandler) projectPackages(ctx context.Context, userID uuid.
 			ImageURL:    p.ImageURL,
 			IsFeatured:  p.IsFeatured,
 			SortOrder:   p.SortOrder,
-		})
+			MinGuests:   p.MinGuests,
+		}
+		if len(p.Items) > 0 {
+			pub.Items = make([]models.PublicPackageItem, 0, len(p.Items))
+			for _, it := range p.Items {
+				price := 0.0
+				if it.UnitPrice != nil {
+					price = *it.UnitPrice
+				}
+				name := it.Name
+				if name == "" {
+					name = "Item"
+				}
+				pub.Items = append(pub.Items, models.PublicPackageItem{
+					ProductID:   it.ProductID,
+					Name:        name,
+					UnitPrice:   price,
+					PricingUnit: it.PricingUnit,
+					SortOrder:   it.SortOrder,
+				})
+			}
+		}
+		if len(p.DiscountTiers) > 0 {
+			pub.DiscountTiers = make([]models.PublicPackageDiscountTier, 0, len(p.DiscountTiers))
+			for _, t := range p.DiscountTiers {
+				pub.DiscountTiers = append(pub.DiscountTiers, models.PublicPackageDiscountTier{
+					FromGuests:      t.FromGuests,
+					DiscountPercent: t.DiscountPercent,
+				})
+			}
+		}
+		out = append(out, pub)
 	}
 	return out
 }

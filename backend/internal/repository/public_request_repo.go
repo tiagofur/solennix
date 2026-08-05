@@ -35,7 +35,7 @@ func NewPublicRequestRepo(pool *pgxpool.Pool) *PublicRequestRepo {
 const publicRequestFields = `
 	id, organizer_user_id, client_token, contact_email, contact_name, contact_phone,
 	event_type, event_date, location, city, guest_count, budget, currency,
-	services, message, status, source, link_id, submit_mode, is_read, event_id, declined_reason,
+	services, message, package_quote, status, source, link_id, submit_mode, is_read, event_id, declined_reason,
 	last_status_change, created_at, updated_at`
 
 // PublicRequestListFilters controls ListByOrganizer pagination + filtering.
@@ -106,17 +106,24 @@ func (r *PublicRequestRepo) createWith(ctx context.Context, q queryRower, req *m
 	if err != nil {
 		return fmt.Errorf("marshal services: %w", err)
 	}
+	var packageQuoteJSON []byte
+	if req.PackageQuote != nil {
+		packageQuoteJSON, err = json.Marshal(req.PackageQuote)
+		if err != nil {
+			return fmt.Errorf("marshal package_quote: %w", err)
+		}
+	}
 	query := `
 		INSERT INTO public_requests
 			(organizer_user_id, contact_email, contact_name, contact_phone, event_type, event_date,
-			 location, city, guest_count, budget, currency, services, message, status,
+			 location, city, guest_count, budget, currency, services, message, package_quote, status,
 			 source, link_id, submit_mode)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 		RETURNING ` + publicRequestFields
 	args := []any{
 		req.OrganizerUserID, req.ContactEmail, req.ContactName, req.ContactPhone,
 		req.EventType, req.EventDate, req.Location, req.City, req.GuestCount,
-		req.Budget, req.Currency, servicesJSON, req.Message, string(req.Status),
+		req.Budget, req.Currency, servicesJSON, req.Message, packageQuoteJSON, string(req.Status),
 		string(req.Source), req.LinkID, string(req.SubmitMode),
 	}
 	return scanPublicRequest(
@@ -554,23 +561,24 @@ func (r *PublicRequestRepo) ListResponsesByRequest(ctx context.Context, requestI
 
 func scanPublicRequest(sc rowScanner, req *models.PublicRequest, wrap string) error {
 	var (
-		servicesRaw    []byte
-		statusStr      string
-		sourceStr      string
-		modeStr        string
-		eventDate      *string
-		location       *string
-		city           *string
-		contactName    *string
-		contactPhone   *string
-		eventType      *string
-		message        *string
-		declinedReason *string
+		servicesRaw     []byte
+		packageQuoteRaw []byte
+		statusStr       string
+		sourceStr       string
+		modeStr         string
+		eventDate       *string
+		location        *string
+		city            *string
+		contactName     *string
+		contactPhone    *string
+		eventType       *string
+		message         *string
+		declinedReason  *string
 	)
 	err := sc.Scan(
 		&req.ID, &req.OrganizerUserID, &req.ClientToken, &req.ContactEmail, &contactName, &contactPhone,
 		&eventType, &eventDate, &location, &city, &req.GuestCount, &req.Budget, &req.Currency,
-		&servicesRaw, &message, &statusStr, &sourceStr, &req.LinkID, &modeStr, &req.IsRead, &req.EventID, &declinedReason,
+		&servicesRaw, &message, &packageQuoteRaw, &statusStr, &sourceStr, &req.LinkID, &modeStr, &req.IsRead, &req.EventID, &declinedReason,
 		&req.LastStatusChange, &req.CreatedAt, &req.UpdatedAt,
 	)
 	if err != nil {
@@ -588,6 +596,13 @@ func scanPublicRequest(sc rowScanner, req *models.PublicRequest, wrap string) er
 		if req.Services[i].Qty <= 0 {
 			req.Services[i].Qty = 1
 		}
+	}
+	if len(packageQuoteRaw) > 0 && string(packageQuoteRaw) != "null" {
+		var snap models.PackageQuoteSnapshot
+		if err := json.Unmarshal(packageQuoteRaw, &snap); err != nil {
+			return fmt.Errorf("%s: unmarshal package_quote: %w", wrap, err)
+		}
+		req.PackageQuote = &snap
 	}
 	req.Status = models.RequestStatus(statusStr)
 	req.Source = models.RequestSource(sourceStr)

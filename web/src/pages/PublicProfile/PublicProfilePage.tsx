@@ -185,10 +185,17 @@ export const PublicProfilePage: React.FC = () => {
   const [quotePreset, setQuotePreset] = useState<{
     message?: string;
     serviceIds?: string[];
+    packageId?: string;
+    guestCount?: number;
   }>({});
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const openQuoteModal = (preset?: { message?: string; serviceIds?: string[] }) => {
+  const openQuoteModal = (preset?: {
+    message?: string;
+    serviceIds?: string[];
+    packageId?: string;
+    guestCount?: number;
+  }) => {
     setQuotePreset(preset ?? {});
     setIsQuoteModalOpen(true);
   };
@@ -602,12 +609,12 @@ export const PublicProfilePage: React.FC = () => {
         <Reveal delay={120}>
           <PackagesSection
             profile={profile}
-            onRequestPackage={(pkg) =>
+            onRequestPackage={({ packageId, message, guestCount, serviceIds }) =>
               openQuoteModal({
-                message: t("profile.packages_request_message", {
-                  title: pkg.title ?? "",
-                  defaultValue: `Me interesa el paquete "${pkg.title ?? ""}".`,
-                }),
+                message,
+                serviceIds,
+                packageId,
+                guestCount,
               })
             }
           />
@@ -936,6 +943,8 @@ export const PublicProfilePage: React.FC = () => {
         services={profile.services ?? []}
         initialMessage={quotePreset.message}
         initialServiceIds={quotePreset.serviceIds}
+        packageId={quotePreset.packageId}
+        guestCount={quotePreset.guestCount}
       />
 
       {lightboxIndex !== null && (

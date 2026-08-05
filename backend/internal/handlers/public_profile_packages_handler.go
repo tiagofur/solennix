@@ -10,6 +10,7 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
+	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
 // PublicProfilePackagesHandler serves authenticated CRUD for packages and FAQ
@@ -30,6 +31,7 @@ type packagesContentRepo interface {
 	UpdatePackage(ctx context.Context, pkg *models.OrganizerPublicPackage) error
 	DeletePackage(ctx context.Context, userID, id uuid.UUID) error
 	GetPackage(ctx context.Context, userID, id uuid.UUID) (*models.OrganizerPublicPackage, error)
+	ReplacePackageItemsAndTiers(ctx context.Context, packageID uuid.UUID, items []models.OrganizerPublicPackageItem, tiers []models.OrganizerPublicPackageDiscountTier) error
 
 	ListFaqByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicFaqItem, error)
 	CountFaqByUserID(ctx context.Context, userID uuid.UUID) (int, error)
@@ -45,24 +47,44 @@ func NewPublicProfilePackagesHandler(userRepo *repository.UserRepo, profileRepo 
 
 // ---------- Packages ----------
 
+type packageItemRequest struct {
+	ProductID   string `json:"product_id"`
+	PricingUnit string `json:"pricing_unit"` // per_guest | per_event
+}
+
+type packageTierRequest struct {
+	FromGuests      int     `json:"from_guests"`
+	DiscountPercent float64 `json:"discount_percent"`
+}
+
 type packageCreateRequest struct {
-	Title       string   `json:"title"`
-	Description *string  `json:"description,omitempty"`
-	FromPrice   *float64 `json:"from_price,omitempty"`
-	Inclusions  []string `json:"inclusions,omitempty"`
-	ImageURL    *string  `json:"image_url,omitempty"`
-	IsFeatured  bool     `json:"is_featured"`
-	SortOrder   *int     `json:"sort_order,omitempty"`
+	Title         string                `json:"title"`
+	Description   *string               `json:"description,omitempty"`
+	FromPrice     *float64              `json:"from_price,omitempty"`
+	Inclusions    []string              `json:"inclusions,omitempty"`
+	ImageURL      *string               `json:"image_url,omitempty"`
+	IsFeatured    bool                  `json:"is_featured"`
+	SortOrder     *int                  `json:"sort_order,omitempty"`
+	MinGuests     *int                  `json:"min_guests,omitempty"`
+	Items         []packageItemRequest  `json:"items,omitempty"`
+	DiscountTiers []packageTierRequest  `json:"discount_tiers,omitempty"`
 }
 
 type packageUpdateRequest struct {
-	Title       *string  `json:"title,omitempty"`
-	Description *string  `json:"description,omitempty"`
-	FromPrice   *float64 `json:"from_price,omitempty"`
-	Inclusions  []string `json:"inclusions,omitempty"`
-	ImageURL    *string  `json:"image_url,omitempty"`
-	IsFeatured  *bool    `json:"is_featured,omitempty"`
-	SortOrder   *int     `json:"sort_order,omitempty"`
+	Title         *string              `json:"title,omitempty"`
+	Description   *string              `json:"description,omitempty"`
+	FromPrice     *float64             `json:"from_price,omitempty"`
+	Inclusions    []string             `json:"inclusions,omitempty"`
+	ImageURL      *string              `json:"image_url,omitempty"`
+	IsFeatured    *bool                `json:"is_featured,omitempty"`
+	SortOrder     *int                 `json:"sort_order,omitempty"`
+	MinGuests     *int                 `json:"min_guests,omitempty"`
+	// ClearMinGuests forces min_guests to null when true.
+	ClearMinGuests bool                `json:"clear_min_guests,omitempty"`
+	Items         []packageItemRequest `json:"items,omitempty"`
+	// ReplaceDetails when true rewrites items+tiers (even if empty = clear structured pricing).
+	ReplaceDetails bool                `json:"replace_details,omitempty"`
+	DiscountTiers  []packageTierRequest `json:"discount_tiers,omitempty"`
 }
 
 func (h *PublicProfilePackagesHandler) ListPackages(w http.ResponseWriter, r *http.Request) {
@@ -120,6 +142,15 @@ func (h *PublicProfilePackagesHandler) CreatePackage(w http.ResponseWriter, r *h
 		sortOrder = *req.SortOrder
 	}
 
+	items, tiers, ok := parsePackageDetails(w, req.Items, req.DiscountTiers, len(req.Items) > 0)
+	if !ok {
+		return
+	}
+	if req.MinGuests != nil && *req.MinGuests < 1 {
+		writeError(w, http.StatusBadRequest, "min_guests must be >= 1")
+		return
+	}
+
 	pkg := &models.OrganizerPublicPackage{
 		UserID:      user.ID,
 		Title:       title,
@@ -129,6 +160,7 @@ func (h *PublicProfilePackagesHandler) CreatePackage(w http.ResponseWriter, r *h
 		ImageURL:    trimStrPtr(req.ImageURL),
 		IsFeatured:  req.IsFeatured,
 		SortOrder:   sortOrder,
+		MinGuests:   req.MinGuests,
 	}
 	if err := h.contentRepo.CreatePackage(r.Context(), pkg); err != nil {
 		if errors.Is(err, repository.ErrPackagesFull) {
@@ -138,7 +170,18 @@ func (h *PublicProfilePackagesHandler) CreatePackage(w http.ResponseWriter, r *h
 		writeError(w, http.StatusInternalServerError, "Failed to create package")
 		return
 	}
-	writeJSON(w, http.StatusCreated, pkg)
+	if len(items) > 0 || len(tiers) > 0 {
+		if err := h.contentRepo.ReplacePackageItemsAndTiers(r.Context(), pkg.ID, items, tiers); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to save package items")
+			return
+		}
+	}
+	full, err := h.contentRepo.GetPackage(r.Context(), user.ID, pkg.ID)
+	if err != nil {
+		writeJSON(w, http.StatusCreated, pkg)
+		return
+	}
+	writeJSON(w, http.StatusCreated, full)
 }
 
 func (h *PublicProfilePackagesHandler) UpdatePackage(w http.ResponseWriter, r *http.Request) {
@@ -192,6 +235,15 @@ func (h *PublicProfilePackagesHandler) UpdatePackage(w http.ResponseWriter, r *h
 	if req.SortOrder != nil {
 		existing.SortOrder = *req.SortOrder
 	}
+	if req.ClearMinGuests {
+		existing.MinGuests = nil
+	} else if req.MinGuests != nil {
+		if *req.MinGuests < 1 {
+			writeError(w, http.StatusBadRequest, "min_guests must be >= 1")
+			return
+		}
+		existing.MinGuests = req.MinGuests
+	}
 
 	if err := h.contentRepo.UpdatePackage(r.Context(), existing); err != nil {
 		if errors.Is(err, repository.ErrPackageNotFound) {
@@ -201,7 +253,89 @@ func (h *PublicProfilePackagesHandler) UpdatePackage(w http.ResponseWriter, r *h
 		writeError(w, http.StatusInternalServerError, "Failed to update package")
 		return
 	}
-	writeJSON(w, http.StatusOK, existing)
+
+	if req.ReplaceDetails || len(req.Items) > 0 || len(req.DiscountTiers) > 0 {
+		items, tiers, ok := parsePackageDetails(w, req.Items, req.DiscountTiers, req.ReplaceDetails || len(req.Items) > 0)
+		if !ok {
+			return
+		}
+		if err := h.contentRepo.ReplacePackageItemsAndTiers(r.Context(), existing.ID, items, tiers); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to save package items")
+			return
+		}
+	}
+
+	full, err := h.contentRepo.GetPackage(r.Context(), user.ID, existing.ID)
+	if err != nil {
+		writeJSON(w, http.StatusOK, existing)
+		return
+	}
+	writeJSON(w, http.StatusOK, full)
+}
+
+// parsePackageDetails validates items (optional unless requireItems) and up to 3 discount tiers.
+func parsePackageDetails(
+	w http.ResponseWriter,
+	rawItems []packageItemRequest,
+	rawTiers []packageTierRequest,
+	requireItems bool,
+) ([]models.OrganizerPublicPackageItem, []models.OrganizerPublicPackageDiscountTier, bool) {
+	if requireItems && len(rawItems) > 0 && len(rawItems) < 2 {
+		writeError(w, http.StatusBadRequest, "packages with catalog items need at least 2 products")
+		return nil, nil, false
+	}
+	if len(rawTiers) > services.MaxPackageDiscountTiers {
+		writeError(w, http.StatusBadRequest, "discount_tiers limited to 3")
+		return nil, nil, false
+	}
+
+	items := make([]models.OrganizerPublicPackageItem, 0, len(rawItems))
+	seenProduct := make(map[uuid.UUID]struct{}, len(rawItems))
+	for i, raw := range rawItems {
+		pid, err := uuid.Parse(strings.TrimSpace(raw.ProductID))
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid product_id in items")
+			return nil, nil, false
+		}
+		if _, dup := seenProduct[pid]; dup {
+			writeError(w, http.StatusBadRequest, "duplicate product_id in items")
+			return nil, nil, false
+		}
+		seenProduct[pid] = struct{}{}
+		unit := models.PackagePricingUnit(strings.TrimSpace(raw.PricingUnit))
+		if unit != models.PackagePricingPerGuest && unit != models.PackagePricingPerEvent {
+			writeError(w, http.StatusBadRequest, "pricing_unit must be per_guest or per_event")
+			return nil, nil, false
+		}
+		items = append(items, models.OrganizerPublicPackageItem{
+			ProductID:   pid,
+			PricingUnit: unit,
+			SortOrder:   i,
+		})
+	}
+
+	tiers := make([]models.OrganizerPublicPackageDiscountTier, 0, len(rawTiers))
+	seenFrom := make(map[int]struct{}, len(rawTiers))
+	for _, raw := range rawTiers {
+		if raw.FromGuests < 1 {
+			writeError(w, http.StatusBadRequest, "from_guests must be >= 1")
+			return nil, nil, false
+		}
+		if raw.DiscountPercent < 0 || raw.DiscountPercent > 100 {
+			writeError(w, http.StatusBadRequest, "discount_percent must be between 0 and 100")
+			return nil, nil, false
+		}
+		if _, dup := seenFrom[raw.FromGuests]; dup {
+			writeError(w, http.StatusBadRequest, "duplicate from_guests in discount_tiers")
+			return nil, nil, false
+		}
+		seenFrom[raw.FromGuests] = struct{}{}
+		tiers = append(tiers, models.OrganizerPublicPackageDiscountTier{
+			FromGuests:      raw.FromGuests,
+			DiscountPercent: raw.DiscountPercent,
+		})
+	}
+	return items, tiers, true
 }
 
 func (h *PublicProfilePackagesHandler) DeletePackage(w http.ResponseWriter, r *http.Request) {

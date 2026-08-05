@@ -30,6 +30,8 @@ export type CreatePublicRequestRequest = Omit<
   services?: CreatePublicRequestServiceLine[];
   /** Honeypot anti-spam. Must stay empty; bots that fill it get a fake 201. */
   website?: string;
+  /** When set, server freezes a live package quote snapshot on the request. */
+  package_id?: string;
 };
 
 export type PublicRequest = components["schemas"]["PublicRequest"] & {

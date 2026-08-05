@@ -70,7 +70,22 @@ export type PortfolioUpdateRequest = {
 };
 
 export type OrganizerPublicPackage =
-  components["schemas"]["OrganizerPublicPackage"];
+  components["schemas"]["OrganizerPublicPackage"] & {
+    min_guests?: number | null;
+    items?: Array<{
+      id?: string;
+      product_id: string;
+      pricing_unit: "per_guest" | "per_event";
+      sort_order?: number;
+      name?: string;
+      unit_price?: number | null;
+    }>;
+    discount_tiers?: Array<{
+      id?: string;
+      from_guests: number;
+      discount_percent: number;
+    }>;
+  };
 export type PackageCreateRequest = {
   title: string;
   description?: string | null;
@@ -79,8 +94,20 @@ export type PackageCreateRequest = {
   image_url?: string | null;
   is_featured?: boolean;
   sort_order?: number;
+  min_guests?: number | null;
+  items?: Array<{
+    product_id: string;
+    pricing_unit: "per_guest" | "per_event";
+  }>;
+  discount_tiers?: Array<{
+    from_guests: number;
+    discount_percent: number;
+  }>;
 };
-export type PackageUpdateRequest = Partial<PackageCreateRequest>;
+export type PackageUpdateRequest = Partial<PackageCreateRequest> & {
+  replace_details?: boolean;
+  clear_min_guests?: boolean;
+};
 
 export type OrganizerPublicFaqItem =
   components["schemas"]["OrganizerPublicFaqItem"];
