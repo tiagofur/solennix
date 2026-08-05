@@ -7,7 +7,7 @@
 > **Min iOS**: 17.0 · **Swift**: 5.9
 > **Build**: XcodeGen (project.yml) · Xcode 15+
 > **Estado**: Producción (MVP + Google/Apple SSO ✅) · App Store ready
-> **Última actualización**: 2026-04-29
+> **Última actualización**: 2026-08-05 (plan i18n por pantalla archivado; i18n epic #202 cerrada)
 
 ---
 

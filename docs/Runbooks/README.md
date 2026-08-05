@@ -9,22 +9,25 @@ aliases:
   - Procedimientos operativos
 type: moc
 status: active
-date: 2026-04-29
-updated: 2026-04-29
+updated: 2026-08-05
 ---
 
-# 🛠️ Runbooks
+# Runbooks
 
-Procedimientos operativos paso a paso para tareas repetibles en Solennix.
+Procedimientos operativos y playbooks de ingeniería para tareas repetibles.
 
 ## Disponibles
 
-[Listar runbooks aquí a medida que se crean]
+| Runbook | Uso |
+| :--- | :--- |
+| [[COMPONENTIZATION_PLAYBOOK]] | Extraer/compartir componentes UI sin romper paridad |
 
 ## Crear un nuevo runbook
 
-Usá el template [[../_templates/Template - Runbook|Template - Runbook]] para crear procedimientos estandarizados.
+Usá el template [[../_templates/Template - Runbook|Template - Runbook]].
+
+Al crear uno nuevo, listalo en la tabla de arriba y linkealo desde el MOC de la plataforma afectada.
 
 ---
 
-Otros: [[../README|← Volver al índice principal]]
+[[../README|← Índice principal]]

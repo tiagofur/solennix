@@ -78,4 +78,4 @@ Una pantalla solo se marca cerrada cuando los 3 tracks están completos.
 - [[Manejo de Estado]] — @Observable ViewModels como target principal
 - [[Capa de Red]] — APIClient actor testeable
 - [[../PRD/09_ROADMAP|Roadmap maestro]] — testing como prioridad
-- [[Plan iOS i18n + QA + Refactor por Pantalla]] — ejecución operativa pantalla por pantalla
+- [[../PRD/19_I18N_STRATEGY|i18n Strategy]] — governance (epic #202 cerrada); plan por pantalla archivado

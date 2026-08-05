@@ -242,7 +242,7 @@ sequenceDiagram
 | Notificación al cliente del usuario | Acciones de evento | ⬜ Pendiente |
 
 > [!tip] Preferencias del usuario (Etapa 2)
-> En la Etapa 2 se agregará una tabla de preferencias para que el usuario pueda activar/desactivar cada tipo de email. Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP]].
+> Preferencias por tipo de email: candidata a [[../PRD/09_ROADMAP|Roadmap]] Next/Later (detalle histórico en `_archive/prd-history/13_POST_MVP_ROADMAP.md`).
 
 ### Características del Email
 
@@ -410,7 +410,7 @@ graph TB
 | **Analytics/Tracking** | No implementado | Diferido hasta usuarios en producción |
 | **Notificaciones al cliente del organizador** | No implementado | Etapa 2: emails automáticos al cliente final (P1) |
 
-> [!tip] Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] para el plan completo de implementación.
+> [!tip] Plan forward: [[../PRD/09_ROADMAP|Roadmap]]. Histórico Post-MVP: `docs/_archive/prd-history/13_POST_MVP_ROADMAP.md`.
 
 ---
 

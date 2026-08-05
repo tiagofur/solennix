@@ -4,6 +4,18 @@
 
 product
 
+## Canonical sources (who wins)
+
+| Topic | Source of truth |
+| :--- | :--- |
+| Product intent, users, anti-refs, design principles | **This file** (`PRODUCT.md`) |
+| UI tokens / components per platform | `docs/{iOS,Android,Web}/Design System.md` |
+| Marketing brand kit (logos, campaigns) | `docs/Marketing/brand-manual/` + `docs/Marketing/MOC.md` |
+| Feature catalog & parity | `docs/PRD/02_FEATURES.md` |
+| Product status snapshot | `docs/PRD/11_CURRENT_STATUS.md` |
+
+If tokens conflict with principles, fix the Design System to match this file — do not invent a third palette.
+
 ## Users
 
 Event organizers in LATAM (weddings, quinceañeras, corporate events). Small business owners juggling clients, quotes, inventory, payments and event-day logistics. Desktop is primary (web), mobile (iOS/Android) secondary for on-the-go checks and quick captures. They want control, professionalism, and less chaos — many are migrating from WhatsApp + spreadsheets.

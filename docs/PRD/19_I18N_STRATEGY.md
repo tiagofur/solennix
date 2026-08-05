@@ -1,5 +1,9 @@
 # i18n Strategy
 
+> [!success] Estado
+> Epic #202 **cerrada** (slices #94–#209). Este doc es **governance + copy matrix**, no un plan de ejecución abierto.
+> Plan de pantalla iOS histórico: `docs/_archive/prd-history/Plan iOS i18n + QA + Refactor por Pantalla.md`.
+
 > [!abstract] Resumen
 > Solennix se construye multi-idioma desde el Calendario (slice inicial, 2026-04-20). Cada plataforma usa su infraestructura nativa; los idiomas shipped por default son **ES (source / development language)** y **EN**. Desde 2026-04-29 la estrategia ya no se organiza por plataforma sino por **slice cross-platform** con una **copy matrix canónica** para evitar drift semántico entre iOS, Android y Web. El selector de idioma per-usuario queda pendiente para un slice posterior — por ahora el device / navigator locale gobierna.
 
