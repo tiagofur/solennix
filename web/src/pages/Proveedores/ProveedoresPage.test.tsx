@@ -63,6 +63,40 @@ describe("ProveedoresPage", () => {
     expect(screen.getByPlaceholderText(/ciudad/i)).toBeInTheDocument();
   });
 
+  it("renders hub category chips and toggles service filter", async () => {
+    server.use(
+      http.get(`${API_BASE}/public/organizers`, () =>
+        HttpResponse.json(makeResponse([], 0)),
+      ),
+    );
+    renderPage();
+    expect(screen.getByTestId("directory-hub-chips")).toBeInTheDocument();
+    const catering = screen.getByTestId("hub-service-catering");
+    fireEvent.click(catering);
+    await waitFor(() => {
+      expect(screen.getByTestId("service-category-select")).toHaveValue("catering");
+    });
+  });
+
+  it("injects ItemList JSON-LD when results load", async () => {
+    server.use(
+      http.get(`${API_BASE}/public/organizers`, () =>
+        HttpResponse.json(makeResponse([makeCard()], 1)),
+      ),
+    );
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText("Alice Catering")).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      const el = document.getElementById("providers-directory-jsonld");
+      expect(el).toBeTruthy();
+      const data = JSON.parse(el!.textContent || "{}");
+      expect(data["@type"]).toBe("ItemList");
+      expect(data.itemListElement?.[0]?.item?.name).toBe("Alice Catering");
+    });
+  });
+
   it("renders advanced filters (#1128 budget, service, date)", () => {
     server.use(
       http.get(`${API_BASE}/public/organizers`, () =>
