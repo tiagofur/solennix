@@ -1,8 +1,16 @@
 .env
 .env.production
 .DS_Store
+**/.DS_Store
 testsprite_tests/tmp/
 nul
+
+# Local agent / skill cache (regenerable)
+.atl/.skill-registry.cache.json
+
+# Scratch marketing screenshots (keep docs/Marketing/**/final/)
+docs/Marketing/smartphone/Screenshot_*.png
+docs/Marketing/smartphone/Simulator Screenshot*.png
 
 # Xcode
 #
@@ -49,3 +57,16 @@ ios/apple-keys/
 android/google-services.json
 .claude/settings.local.json
 web/lint_output.txt
+web/check_i18n_results.json
+web/pages_test_output.txt
+web/test_run.json
+web/test_run_output.txt
+
+# Backend local artifacts (also listed under backend/.gitignore)
+backend/server
+backend/main.exe
+backend/coverage.out
+backend/cookies.txt
+backend/login_cookies.txt
+backend/test_output.txt
+backend/tests_out.txt
