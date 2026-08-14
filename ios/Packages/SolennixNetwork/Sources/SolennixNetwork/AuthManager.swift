@@ -358,7 +358,8 @@ public final class AuthManager {
             throw APIError.unknown
         }
 
-        let body = ["email": email, "password": password]
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let body = ["email": normalizedEmail, "password": password]
         let response: AuthResponse = try await client.post(Endpoint.login, body: body)
 
         storeTokens(access: response.accessToken, refresh: response.refreshToken)
@@ -381,7 +382,8 @@ public final class AuthManager {
             throw APIError.unknown
         }
 
-        let body = ["name": name, "email": email, "password": password]
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let body = ["name": name.trimmingCharacters(in: .whitespacesAndNewlines), "email": normalizedEmail, "password": password]
         let response: RegisterResponse = try await client.post(Endpoint.register, body: body)
         return response.user
     }
@@ -392,7 +394,8 @@ public final class AuthManager {
             throw APIError.unknown
         }
 
-        let body = ["email": email]
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let body = ["email": normalizedEmail]
         let _: EmptyResponse = try await client.post(Endpoint.verifyEmailResend, body: body)
     }
 

@@ -69,7 +69,7 @@ public final class AuthViewModel {
     @MainActor
     public func signIn() async {
         // Validate
-        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !trimmedEmail.isEmpty else {
             errorMessage = AuthStrings.validationEmailRequired
             return
@@ -107,7 +107,7 @@ public final class AuthViewModel {
     @MainActor
     public func signUp() async {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
         guard trimmedName.count >= 2 else {
             errorMessage = AuthStrings.validationNameMin2
@@ -274,7 +274,7 @@ public final class AuthViewModel {
 
     @MainActor
     public func forgotPassword() async {
-        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
         guard !trimmedEmail.isEmpty else {
             errorMessage = AuthStrings.validationEmailRequired
@@ -385,7 +385,7 @@ public final class AuthViewModel {
 
     @MainActor
     public func resendVerificationEmail() async {
-        let trimmedEmail = verificationEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedEmail = verificationEmail.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !trimmedEmail.isEmpty else {
             errorMessage = AuthStrings.validationEmailRequired
             return
