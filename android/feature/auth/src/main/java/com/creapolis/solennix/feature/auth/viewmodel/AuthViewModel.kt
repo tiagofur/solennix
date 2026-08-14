@@ -77,10 +77,11 @@ class AuthViewModel @Inject constructor(
             errorMessage = null
             verificationNotice = null
             try {
+                val normalizedEmail = loginEmail.trim().lowercase()
                 val response: AuthResponse = runCatchingApi {
                     apiService.post<AuthResponse>(
                         Endpoints.LOGIN,
-                        mapOf("email" to loginEmail, "password" to loginPassword)
+                        mapOf("email" to normalizedEmail, "password" to loginPassword)
                     )
                 }
                 authManager.storeTokens(response.accessToken, response.refreshToken)
@@ -89,7 +90,7 @@ class AuthViewModel @Inject constructor(
                 _loginSuccess.tryEmit(Unit)
             } catch (e: SolennixException.Server) {
                 if (e.code == 403) {
-                    verificationEmail = loginEmail.trim()
+                    verificationEmail = loginEmail.trim().lowercase()
                     verificationNotice = if (e.message.isNullOrBlank()) {
                         tr(R.string.auth_verification_required_notice)
                     } else {
@@ -128,17 +129,18 @@ class AuthViewModel @Inject constructor(
             errorMessage = null
             verificationNotice = null
             try {
+                val normalizedEmail = registerEmail.trim().lowercase()
                 val response: RegisterResponse = runCatchingApi {
                     apiService.post<RegisterResponse>(
                         Endpoints.REGISTER,
                         mapOf(
-                            "name" to registerName,
-                            "email" to registerEmail,
+                            "name" to registerName.trim(),
+                            "email" to normalizedEmail,
                             "password" to registerPassword
                         )
                     )
                 }
-                verificationEmail = registerEmail.trim()
+                verificationEmail = normalizedEmail
                 loginEmail = verificationEmail
                 verificationNotice = response.message?.takeIf { it.isNotBlank() }
                     ?: tr(R.string.auth_verification_required_notice)
@@ -151,7 +153,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun resendVerificationEmail() {
-        val email = verificationEmail.trim()
+        val email = verificationEmail.trim().lowercase()
         if (!email.isValidEmail()) {
             errorMessage = tr(R.string.auth_verification_resend_requires_email)
             return
@@ -183,8 +185,9 @@ class AuthViewModel @Inject constructor(
             isLoading = true
             errorMessage = null
             try {
+                val normalizedEmail = forgotEmail.trim().lowercase()
                 runCatchingApi {
-                    apiService.post<Unit>(Endpoints.FORGOT_PASSWORD, mapOf("email" to forgotEmail))
+                    apiService.post<Unit>(Endpoints.FORGOT_PASSWORD, mapOf("email" to normalizedEmail))
                 }
                 forgotSuccess = true
             } catch (e: ApiError) {
