@@ -74,7 +74,8 @@ export const Login: React.FC = () => {
     setError(null);
     setNotice(null);
     try {
-      await api.post("/auth/login", { email: data.email, password: data.password });
+      const normalizedEmail = data.email.trim().toLowerCase();
+      await api.post("/auth/login", { email: normalizedEmail, password: data.password });
       await checkAuth();
       navigate("/dashboard");
     } catch (err: any) {
@@ -90,7 +91,7 @@ export const Login: React.FC = () => {
   };
 
   const resendVerification = async () => {
-    const email = getValues("email").trim();
+    const email = getValues("email").trim().toLowerCase();
     if (!email) {
       setError(t("auth:login.resend_requires_email"));
       return;

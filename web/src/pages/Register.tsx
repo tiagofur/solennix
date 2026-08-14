@@ -96,14 +96,15 @@ export const Register: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
+      const normalizedEmail = data.email.trim().toLowerCase();
       await api.post("/auth/register", {
-        name: data.name,
-        email: data.email,
+        name: data.name.trim(),
+        email: normalizedEmail,
         password: data.password,
       });
       navigate("/login", {
         state: {
-          email: data.email,
+          email: normalizedEmail,
           verificationRequired: true,
         },
       });
