@@ -28,3 +28,21 @@ func trimStrPtr(s *string) *string {
 	}
 	return &t
 }
+
+// normalizeEmail trims whitespace and converts email to lowercase.
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
+// normalizeEmailPtr trims and lowercases a string pointer; empty results become nil.
+func normalizeEmailPtr(s *string) *string {
+	if s == nil {
+		return nil
+	}
+	t := strings.ToLower(strings.TrimSpace(*s))
+	if t == "" {
+		return nil
+	}
+	return &t
+}
+

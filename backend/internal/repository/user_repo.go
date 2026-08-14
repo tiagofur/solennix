@@ -62,6 +62,7 @@ func normalizePlan(plan string) string {
 }
 
 func (r *UserRepo) Create(ctx context.Context, user *models.User) error {
+	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
 	query := `
 		INSERT INTO users (email, password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf, plan, role, registration_platform, default_currency)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -113,10 +114,8 @@ func defaultPublicSlugForUser(user *models.User) string {
 		base = *user.BusinessName
 	} else if strings.TrimSpace(user.Name) != "" {
 		base = user.Name
-	} else if at := strings.Index(user.Email, "@"); at > 0 {
-		base = user.Email[:at]
-	} else {
-		base = "user"
+	} else if strings.TrimSpace(user.Email) != "" {
+		base = strings.Split(user.Email, "@")[0]
 	}
 	base = strings.ToLower(strings.TrimSpace(base))
 	base = nonSlugChars.ReplaceAllString(base, "-")
@@ -132,6 +131,7 @@ func defaultPublicSlugForUser(user *models.User) string {
 }
 
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	email = strings.ToLower(strings.TrimSpace(email))
 	user := &models.User{}
 	query := `SELECT id, email, COALESCE(password_hash, '') AS password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
@@ -146,7 +146,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		stripe_customer_id, last_active_at, registration_platform,
 		COALESCE(inactivity_stage, 0) AS inactivity_stage, inactivity_warning_sent_at,
 		created_at, updated_at
-		FROM users WHERE email = $1`
+		FROM users WHERE LOWER(email) = LOWER($1)`
 	err := r.pool.QueryRow(ctx, query, email).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.CoverURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
 		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
@@ -655,6 +655,7 @@ func (r *UserRepo) GetByAppleUserID(ctx context.Context, appleUserID string) (*m
 
 // CreateWithOAuth creates a new user with OAuth provider ID (no password)
 func (r *UserRepo) CreateWithOAuth(ctx context.Context, user *models.User) error {
+	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
 	query := `
 		INSERT INTO users (email, name, plan, role, google_user_id, apple_user_id, email_verified_at, default_currency, registration_platform)
 		VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, $8)

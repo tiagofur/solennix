@@ -396,7 +396,7 @@ func (h *StaffHandler) InviteStaffUser(w http.ResponseWriter, r *http.Request) {
 	invite := &models.StaffInvite{
 		StaffID:     staff.ID,
 		OwnerUserID: userID,
-		Email:       strings.TrimSpace(*staff.Email),
+		Email:       normalizeEmail(*staff.Email),
 		TargetRole:  targetRole,
 		TokenHash:   hex.EncodeToString(hash[:]),
 		ExpiresAt:   expiresAt,

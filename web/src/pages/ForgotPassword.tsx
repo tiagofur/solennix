@@ -50,8 +50,9 @@ export function ForgotPassword() {
   const onSubmit = async (data: ForgotPasswordForm) => {
     try {
       setError(null);
-      await api.post('/auth/forgot-password', { email: data.email });
-      setSubmittedEmail(data.email);
+      const normalizedEmail = data.email.trim().toLowerCase();
+      await api.post('/auth/forgot-password', { email: normalizedEmail });
+      setSubmittedEmail(normalizedEmail);
       setIsSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth:forgot_password.error'));
