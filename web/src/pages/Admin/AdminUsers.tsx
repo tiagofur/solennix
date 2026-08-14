@@ -143,11 +143,14 @@ export const AdminUsers: React.FC = () => {
         ? eligibleUsers
         : standardUsers;
 
+  const { data: allAccounts = [], isLoading: loadingAllAccounts } = useAdminUsers('all');
+
   const loading =
     (auditFilter === 'none' && loadingStandard) ||
     (auditFilter === 'inactive' && loadingInactive) ||
     (auditFilter === 'zero_resources' && loadingZero) ||
-    (auditFilter === 'eligible_for_deletion' && loadingEligible);
+    (auditFilter === 'eligible_for_deletion' && loadingEligible) ||
+    loadingAllAccounts;
   const upgradeUser = useUpgradeUser();
   const error = usersError ? t('admin:users.errors.loading') : null;
   const [sortField, setSortField] = useState<SortField>('created_at');
@@ -159,12 +162,6 @@ export const AdminUsers: React.FC = () => {
   const [blockReason, setBlockReason] = useState('');
   const [blockReasonError, setBlockReasonError] = useState('');
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
-  // Cross-role account list only when needed (type "all" or export menu open).
-  const { data: allAccounts = [] } = useAdminUsers(
-    'all',
-    undefined,
-    accountType === 'all' || exportMenuOpen,
-  );
   const blockUser = useBlockUser();
   const { addToast } = useToast();
 
