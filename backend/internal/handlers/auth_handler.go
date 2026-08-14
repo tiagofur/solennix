@@ -447,7 +447,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.Email = strings.TrimSpace(req.Email)
+	req.Email = normalizeEmail(req.Email)
 	req.Name = strings.TrimSpace(req.Name)
 
 	if req.Email == "" || req.Password == "" || req.Name == "" {
@@ -547,7 +547,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.Email = strings.TrimSpace(req.Email)
+	req.Email = normalizeEmail(req.Email)
 
 	if req.Email == "" || req.Password == "" {
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.email_password_required")
@@ -691,7 +691,7 @@ func (h *AuthHandler) ResendEmailVerification(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	req.Email = strings.TrimSpace(req.Email)
+	req.Email = normalizeEmail(req.Email)
 	if !emailRegex.MatchString(req.Email) || len(req.Email) > 255 {
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_email_format")
 		return
@@ -971,6 +971,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req.Email = normalizeEmail(req.Email)
 	slog.Info("auth.event", "action", "password_reset_request", "email", maskEmail(req.Email), "ip", clientIP(r))
 
 	// Always respond success (don't reveal if email exists)
@@ -987,21 +988,23 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Send password reset email with retry (up to 3 attempts)
-		const maxRetries = 3
-		var sendErr error
-		for attempt := 1; attempt <= maxRetries; attempt++ {
-			sendErr = h.emailService.SendPasswordResetLocalized(user.Email, token, user.Name, i18n.NormalizeLocale(user.PreferredLanguage))
-			if sendErr == nil {
-				slog.Info("Password reset email sent", "email", maskEmail(user.Email), "attempt", attempt)
-				break
+		if h.emailService != nil {
+			const maxRetries = 3
+			var sendErr error
+			for attempt := 1; attempt <= maxRetries; attempt++ {
+				sendErr = h.emailService.SendPasswordResetLocalized(user.Email, token, user.Name, i18n.NormalizeLocale(user.PreferredLanguage))
+				if sendErr == nil {
+					slog.Info("Password reset email sent", "email", maskEmail(user.Email), "attempt", attempt)
+					break
+				}
+				slog.Warn("Failed to send password reset email", "error", sendErr, "email", maskEmail(user.Email), "attempt", attempt)
+				if attempt < maxRetries {
+					time.Sleep(1 * time.Second)
+				}
 			}
-			slog.Warn("Failed to send password reset email", "error", sendErr, "email", maskEmail(user.Email), "attempt", attempt)
-			if attempt < maxRetries {
-				time.Sleep(1 * time.Second)
+			if sendErr != nil {
+				slog.Error("All attempts to send password reset email failed", "error", sendErr, "email", maskEmail(user.Email), "attempts", maxRetries)
 			}
-		}
-		if sendErr != nil {
-			slog.Error("All attempts to send password reset email failed", "error", sendErr, "email", maskEmail(user.Email), "attempts", maxRetries)
 		}
 	}
 
@@ -1391,7 +1394,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	googleUserID := claims.Subject
-	email := claims.Email
+	email := normalizeEmail(claims.Email)
 	name := claims.Name
 	if req.FullName != nil && *req.FullName != "" {
 		name = *req.FullName
@@ -1788,9 +1791,9 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	appleUserID := claims.Subject
-	email := claims.Email
+	email := normalizeEmail(claims.Email)
 	if email == "" && req.Email != nil {
-		email = *req.Email
+		email = normalizeEmail(*req.Email)
 	}
 
 	name := ""
@@ -2087,9 +2090,9 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	appleUserID := claims.Subject
-	email := claims.Email
+	email := normalizeEmail(claims.Email)
 	if email == "" && appleUser.Email != "" {
-		email = appleUser.Email
+		email = normalizeEmail(appleUser.Email)
 	}
 
 	fullName := ""

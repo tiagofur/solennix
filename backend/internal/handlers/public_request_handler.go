@@ -143,7 +143,7 @@ func (h *PublicRequestHandler) CreatePublicRequest(w http.ResponseWriter, r *htt
 			"data": map[string]any{
 				"id":            uuid.New().String(),
 				"client_token":  uuid.New().String(),
-				"contact_email": strings.TrimSpace(req.ContactEmail),
+				"contact_email": normalizeEmail(req.ContactEmail),
 				"status":        models.RequestStatusPending,
 				"services":      []any{},
 				"currency":      "MXN",
@@ -169,7 +169,7 @@ func (h *PublicRequestHandler) CreatePublicRequest(w http.ResponseWriter, r *htt
 // buildCreateInputFromRequest maps the visitor JSON body to the service input.
 // On validation failure it writes the HTTP error and returns ok=false.
 func buildCreateInputFromRequest(w http.ResponseWriter, slug string, req CreatePublicRequestRequest) (services.CreatePublicRequestInput, bool) {
-	email := strings.TrimSpace(req.ContactEmail)
+	email := normalizeEmail(req.ContactEmail)
 	// Profile path (slug set) still requires email; link path allows phone-only.
 	if slug != "" {
 		if email == "" {

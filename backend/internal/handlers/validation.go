@@ -274,6 +274,7 @@ func ValidateClient(client *models.Client) error {
 		return ValidationError{Field: "name", Message: "must not exceed 255 characters"}
 	}
 
+	client.Email = normalizeEmailPtr(client.Email)
 	// Validate email format if provided
 	if client.Email != nil && *client.Email != "" {
 		if !emailRegex.MatchString(*client.Email) {
@@ -414,6 +415,7 @@ func ValidateStaff(s *models.Staff) error {
 	if err := validateStringLength("name", s.Name, MaxNameLength); err != nil {
 		return err
 	}
+	s.Email = normalizeEmailPtr(s.Email)
 	if s.Email != nil && *s.Email != "" {
 		if !emailRegex.MatchString(*s.Email) {
 			return ValidationError{Field: "email", Message: "invalid email format"}

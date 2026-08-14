@@ -2157,6 +2157,63 @@ func TestAuthHandler_Register_EmailAndNameTrimming(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+func TestAuthHandler_RegisterAndLogin_CaseInsensitiveEmail(t *testing.T) {
+	mockRepo := new(MockFullUserRepo)
+	authService := services.NewAuthService("test-secret", 1)
+	h := &AuthHandler{
+		userRepo:    mockRepo,
+		authService: authService,
+	}
+
+	// 1. Register with uppercase email should query and store lowercase
+	mockRepo.On("GetByEmail", mock.Anything, "uppercase@test.dev").Return(nil, fmt.Errorf("not found")).Once()
+	mockRepo.On("Create", mock.Anything, mock.MatchedBy(func(u *models.User) bool {
+		return u.Email == "uppercase@test.dev"
+	})).Run(func(args mock.Arguments) {
+		user := args.Get(1).(*models.User)
+		user.ID = uuid.New()
+	}).Return(nil).Once()
+
+	registerBody := `{"email":"  UpperCase@Test.DEV  ","password":"Test1234!","name":"Upper User"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(registerBody))
+	rr := httptest.NewRecorder()
+	h.Register(rr, req)
+
+	assert.Equal(t, http.StatusCreated, rr.Code)
+
+	// 2. Login with different case should find user by normalized lowercase email
+	hash, _ := authService.HashPassword("Test1234!")
+	verifiedAt := time.Now()
+	registeredUser := &models.User{
+		ID:              uuid.New(),
+		Email:           "uppercase@test.dev",
+		PasswordHash:    hash,
+		EmailVerifiedAt: &verifiedAt,
+		Name:            "Upper User",
+		Plan:            "basic",
+	}
+	mockRepo.On("GetByEmail", mock.Anything, "uppercase@test.dev").Return(registeredUser, nil).Once()
+
+	loginBody := `{"email":"UPPERCASE@TEST.DEV","password":"Test1234!"}`
+	loginReq := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(loginBody))
+	loginRr := httptest.NewRecorder()
+	h.Login(loginRr, loginReq)
+
+	assert.Equal(t, http.StatusOK, loginRr.Code)
+	assert.Contains(t, loginRr.Body.String(), "user")
+
+	// 3. Forgot password with mixed case email
+	mockRepo.On("GetByEmail", mock.Anything, "uppercase@test.dev").Return(registeredUser, nil).Once()
+	forgotBody := `{"email":"UpPeRcAsE@tEsT.dEv"}`
+	forgotReq := httptest.NewRequest(http.MethodPost, "/api/auth/forgot-password", strings.NewReader(forgotBody))
+	forgotRr := httptest.NewRecorder()
+	h.ForgotPassword(forgotRr, forgotReq)
+	assert.Equal(t, http.StatusOK, forgotRr.Code)
+
+	mockRepo.AssertExpectations(t)
+}
+
+
 func TestAuthHandler_Register_WhitespaceOnlyFields(t *testing.T) {
 	// Whitespace-only email after trimming should be caught as empty
 	h := &AuthHandler{authService: services.NewAuthService("test-secret", 1)}
