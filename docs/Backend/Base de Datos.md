@@ -428,7 +428,7 @@ sequenceDiagram
 
 | Gap | Impacto | Solución |
 |-----|---------|----------|
-| **Sin backup strategy** | Pérdida total de datos ante desastre | pg_dump automatizado + S3/GCS |
+| **Estrategia de backup pendiente de implementación** | Pérdida total de datos ante desastre | Implementar [[Backup y Recuperación]]: pgBackRest + WAL/PITR + dump lógico offsite |
 | **Sin down migrations automático** | Rollback manual, riesgoso | Comando CLI para rollback |
 | **Pool config hardcoded** | No se adapta a distintos ambientes | Variables de entorno para cada parámetro |
 

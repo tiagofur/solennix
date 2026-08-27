@@ -5,7 +5,7 @@
 > [!info] Plataforma
 > **Stack**: Go 1.24 + Chi v5 + PostgreSQL 15 + pgx/v5 + StorageProvider (local/S3) + FCM/APNs
 > **Estado**: Producción (API completa + OAuth Google/Apple + refresh rotation + dashboard server-side + Personal + Portal Cliente + formularios públicos)
-> **Última actualización**: 2026-08-05
+> **Última actualización**: 2026-08-26
 
 ---
 
@@ -39,6 +39,7 @@
 ## Infraestructura
 
 - [[Base de Datos]] — PostgreSQL, pgxpool, migraciones custom con go:embed, pool config
+- [[Backup y Recuperación]] — RPO/RTO, PostgreSQL PITR, medias, retención, seguridad y runbooks
 - [[Integraciones]] — Stripe, RevenueCat, Resend (email)
 - [[Despliegue]] — Docker multi-stage, Docker Compose, variables de entorno, graceful shutdown
 
