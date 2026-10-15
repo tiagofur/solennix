@@ -416,4 +416,21 @@ describe('AdminUsers', () => {
       expect(screen.queryByText('Bloquear Usuario')).not.toBeInTheDocument();
     });
   });
+
+  it('displays correct counts in account type cards on initial load without clicking cards', async () => {
+    render(<MemoryRouter><AdminUsers /></MemoryRouter>);
+    await waitFor(() => expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument());
+
+    // adminService.getUsers('all') should have been called on mount
+    expect(adminService.getUsers).toHaveBeenCalledWith('all', undefined);
+
+    // Cards should show counts based on mock data (8 total, 7 users, 1 admin, 0 team, 0 assistants)
+    const allCard = screen.getByRole('button', { name: /Mostrando 8 de 8/i });
+    const usersCard = screen.getByRole('button', { name: /Mostrando 7 de 8/i });
+    const adminsCard = screen.getByRole('button', { name: /Mostrando 1 de 8/i });
+
+    expect(within(allCard).getByText('8')).toBeInTheDocument();
+    expect(within(usersCard).getByText('7')).toBeInTheDocument();
+    expect(within(adminsCard).getByText('1')).toBeInTheDocument();
+  });
 });
