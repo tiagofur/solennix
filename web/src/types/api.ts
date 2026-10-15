@@ -4418,7 +4418,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Authenticated successfully. Dual-transport contract: `tokens` in the body serve native clients (Bearer); this response also sets the httpOnly `auth_token`/`refresh_token` cookies that carry the web session — web clients must ignore the body tokens. Web mutating requests must send `X-CSRF-Token` matching the `csrf_token_v2` cookie. */
+            /** @description Authenticated successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
