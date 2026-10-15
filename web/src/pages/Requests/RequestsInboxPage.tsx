@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Modal } from "@/components/Modal";
+import { Pagination } from "@/components/Pagination";
 import { useToast } from "@/hooks/useToast";
 import {
   organizerRequestsService,
@@ -27,6 +28,8 @@ import { RequestLinksPanel } from "./RequestLinksPanel";
 
 const LIST_KEY = ["organizer-requests"];
 const UNREAD_KEY = ["organizer-requests", "unread"];
+const PAGE_SIZE = 50;
+const UNREAD_REFRESH_MS = 30_000;
 
 const STATUS_FILTERS: Array<PublicRequestStatus | ""> = [
   "",
@@ -60,6 +63,7 @@ export const RequestsInboxPage: React.FC = () => {
   };
 
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [respondOpen, setRespondOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
@@ -70,11 +74,11 @@ export const RequestsInboxPage: React.FC = () => {
   const [declineReason, setDeclineReason] = useState("");
 
   const listQuery = useQuery({
-    queryKey: [...LIST_KEY, statusFilter],
+    queryKey: [...LIST_KEY, statusFilter, page],
     queryFn: () =>
       organizerRequestsService.list({
-        page: 1,
-        limit: 50,
+        page,
+        limit: PAGE_SIZE,
         status: statusFilter || undefined,
         sort: "created_at",
         order: "desc",
@@ -84,6 +88,7 @@ export const RequestsInboxPage: React.FC = () => {
   const unreadQuery = useQuery({
     queryKey: UNREAD_KEY,
     queryFn: () => organizerRequestsService.unreadCount(),
+    refetchInterval: UNREAD_REFRESH_MS,
   });
 
   const detailQuery = useQuery({
@@ -314,7 +319,10 @@ export const RequestsInboxPage: React.FC = () => {
         <select
           id="req-status-filter"
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(1);
+          }}
           className="rounded-xl border border-border bg-card px-3 py-1.5 text-sm text-text"
           data-testid="requests-status-filter"
         >
@@ -401,6 +409,13 @@ export const RequestsInboxPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={listQuery.data?.page ?? page}
+            totalPages={listQuery.data?.total_pages ?? 0}
+            totalItems={listQuery.data?.total ?? 0}
+            itemsPerPage={PAGE_SIZE}
+            onPageChange={setPage}
+          />
         </div>
       )}
 
