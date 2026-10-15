@@ -220,4 +220,65 @@ describe('notifications', () => {
     const { unregisterPushNotifications } = await import('./notifications');
     await expect(unregisterPushNotifications('token-xyz')).resolves.toBeUndefined();
   });
+
+  it('S4: repeated init with same user key registers one onMessage and reuses token', async () => {
+    setFirebaseEnv(true);
+    setupBrowserSupport('granted');
+
+    initializeAppMock.mockReturnValue({ app: true });
+    getMessagingMock.mockReturnValue({ messaging: true });
+    getTokenMock.mockResolvedValue('token-123');
+    mockApiPost.mockResolvedValue({ ok: true });
+
+    const { initPushNotifications } = await import('./notifications');
+    await expect(initPushNotifications('user-a')).resolves.toBe('token-123');
+    await expect(initPushNotifications('user-a')).resolves.toBe('token-123');
+
+    expect(getTokenMock).toHaveBeenCalledTimes(1);
+    expect(onMessageMock).toHaveBeenCalledTimes(1);
+    expect(mockApiPost).toHaveBeenCalledTimes(1);
+  });
+
+  it('S4: init for a different user unsubscribes previous foreground listener', async () => {
+    setFirebaseEnv(true);
+    setupBrowserSupport('granted');
+
+    initializeAppMock.mockReturnValue({ app: true });
+    getMessagingMock.mockReturnValue({ messaging: true });
+    getTokenMock.mockResolvedValueOnce('token-a').mockResolvedValueOnce('token-b');
+    mockApiPost.mockResolvedValue({ ok: true });
+    const unsub = vi.fn();
+    onMessageMock.mockImplementation(() => unsub);
+
+    const { initPushNotifications } = await import('./notifications');
+    await initPushNotifications('user-a');
+    await initPushNotifications('user-b');
+
+    expect(unsub).toHaveBeenCalledTimes(1);
+    expect(onMessageMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('S3: unregister clears cached token even when backend fails, avoiding double POST', async () => {
+    setFirebaseEnv(true);
+    setupBrowserSupport('granted');
+
+    initializeAppMock.mockReturnValue({ app: true });
+    getMessagingMock.mockReturnValue({ messaging: true });
+    getTokenMock.mockResolvedValue('token-123');
+    mockApiPost.mockImplementation((url: string) =>
+      url === '/devices/register' ? Promise.resolve({ ok: true }) : Promise.reject(new Error('down')),
+    );
+
+    const { initPushNotifications, getCachedPushToken, unregisterPushNotifications } =
+      await import('./notifications');
+    await initPushNotifications('user-a');
+    expect(getCachedPushToken()).toBe('token-123');
+
+    await expect(unregisterPushNotifications('token-123')).resolves.toBeUndefined();
+    expect(getCachedPushToken()).toBeNull();
+
+    // Second signOut-sized call must not re-POST the stale token.
+    const calls = mockApiPost.mock.calls.filter(([u]) => u === '/devices/unregister');
+    expect(calls).toHaveLength(1);
+  });
 });

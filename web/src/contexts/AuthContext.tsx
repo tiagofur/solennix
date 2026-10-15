@@ -8,6 +8,7 @@ import i18n from '@/i18n/config';
 import { queryClient } from '@/lib/queryClient';
 import { setDefaultCurrency, setDefaultLocale, localeFromLanguage } from '@/lib/finance';
 import { clearUserScopedStorage } from '@/lib/storage';
+import { getCachedPushToken, unregisterPushNotifications } from '@/lib/notifications';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export { AuthContext, useAuth };
@@ -54,6 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Listen for 401 logout events from api.ts
     const handleLogout = () => {
+      // Best-effort: unregister swallows backend errors but always clears
+      // local push state (cache + foreground listener) in its finally.
+      const pushToken = getCachedPushToken();
+      if (pushToken) void unregisterPushNotifications(pushToken);
       setUser(null);
       queryClient.clear();
       clearUserScopedStorage();
@@ -84,6 +89,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Even if logout fails, clear local state
       logError('Logout error', error);
     } finally {
+      // Best-effort: drop the FCM registration so push stops reaching
+      // this browser after logout (shared machines, S3).
+      const pushToken = getCachedPushToken();
+      if (pushToken) await unregisterPushNotifications(pushToken);
       setUser(null);
       queryClient.clear();
       // Clear session-scoped localStorage (onboarding tips, local checklist
