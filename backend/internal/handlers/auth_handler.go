@@ -1082,6 +1082,10 @@ func (h *AuthHandler) AcceptTeamInvite(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("auth.event", "action", "team_invite_accepted", "user_id", user.ID, "email", maskEmail(user.Email), "ip", clientIP(r))
 
+	// Dual-transport contract: `tokens` stay in the body for native clients
+	// (iOS/Android authenticate with bearer tokens and have no cookies).
+	// Web MUST ignore them: its session travels via the httpOnly cookies set
+	// by issueLoginSession above. Same shape as Login. Do not remove.
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"user":   user,
 		"tokens": tokens,

@@ -4,18 +4,33 @@ info:
   version: 1.0.0
   description: Event management platform for Latin American organizers
 servers:
-  - url: http://localhost:8000
-    description: Local dev
+  - url: http://localhost:8080
+    description: Local dev (PORT env, default 8080)
   - url: https://api.solennix.com
     description: Production
 security:
   - bearerAuth: []
+  - cookieAuth: []
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: >-
+        Native-client transport (iOS/Android): send `Authorization: Bearer
+        <access_token>` using the tokens returned in the response body of
+        login/register/team-invite/accept.
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth_token
+      description: >-
+        Web-client transport: login/register/refresh responses also set httpOnly
+        `auth_token` (24h) and `refresh_token` (7d, path /api/auth) cookies plus a
+        readable `csrf_token_v2` cookie. Mutating requests must send the
+        `X-CSRF-Token` header matching `csrf_token_v2`. Web clients must ignore
+        the `tokens` object in response bodies.
   schemas:
     User:
       type: object
@@ -137,6 +152,12 @@ components:
           format: int64
     AuthSuccessResponse:
       type: object
+      description: >-
+        Dual-transport contract: `tokens` in the body serve native clients
+        (iOS/Android authenticate with Bearer headers and have no cookie jar).
+        The same response also sets httpOnly `auth_token`/`refresh_token` cookies,
+        which are the web client's session — web code must ignore the body tokens
+        and rely on cookies + CSRF.
       required:
         - user
         - tokens
@@ -3084,6 +3105,7 @@ components:
         - show_reviews
         - show_portfolio
         - show_contact
+        - publication_status
         - created_at
         - updated_at
       properties:
@@ -3163,6 +3185,22 @@ components:
         public_slug:
           type: string
           nullable: true
+        publication_status:
+          type: string
+          enum: [unpublished, pending_review, published, rejected]
+        publication_rejection_reason:
+          type: string
+          nullable: true
+        publication_reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        publication_submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        publication_spam_flag:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -3581,6 +3619,780 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PortfolioCandidatePhoto"
+    # --- Staff (collaborators catalog + team-member portal) ---
+    Staff:
+      type: object
+      required:
+        - id
+        - user_id
+        - name
+        - notification_email_opt_in
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role_label:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        notification_email_opt_in:
+          type: boolean
+          description: Pro+ only (Phase 2 gating)
+        invited_user_id:
+          type: string
+          format: uuid
+          nullable: true
+        invite_status:
+          type: string
+          enum: [pending, accepted, revoked, expired]
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    StaffUpsertRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        role_label:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        notification_email_opt_in:
+          type: boolean
+    PaginatedStaffResponse:
+      type: object
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - total_pages
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Staff"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        total_pages:
+          type: integer
+    StaffInviteRequest:
+      type: object
+      properties:
+        target_role:
+          type: string
+          enum: [team_member, assistant]
+          default: team_member
+          description: assistant requires Business plan
+    StaffInviteResponse:
+      type: object
+      required:
+        - invite_id
+        - staff_id
+        - email
+        - target_role
+        - status
+        - accept_url
+        - expires_at
+        - created_at
+      properties:
+        invite_id:
+          type: string
+          format: uuid
+        staff_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        target_role:
+          type: string
+          enum: [team_member, assistant]
+        status:
+          type: string
+          enum: [pending, accepted, revoked, expired]
+        accept_url:
+          type: string
+          description: One-time frontend accept URL (/team-invite?token=...); the raw token is not stored server-side
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    StaffAvailabilityAssignment:
+      type: object
+      required:
+        - event_id
+        - event_name
+        - event_date
+        - status
+      properties:
+        event_id:
+          type: string
+          format: uuid
+        event_name:
+          type: string
+        event_date:
+          type: string
+          format: date
+        shift_start:
+          type: string
+          nullable: true
+        shift_end:
+          type: string
+          nullable: true
+        status:
+          type: string
+          description: Assignment status (pending/confirmed)
+    StaffAvailability:
+      type: object
+      required:
+        - staff_id
+        - staff_name
+        - assignments
+      properties:
+        staff_id:
+          type: string
+          format: uuid
+        staff_name:
+          type: string
+        assignments:
+          type: array
+          items:
+            $ref: "#/components/schemas/StaffAvailabilityAssignment"
+    TeamMemberAssignment:
+      type: object
+      description: Team-member portal projection of an event_staff row
+      required:
+        - event_staff_id
+        - event_id
+        - event_name
+        - event_date
+        - staff_id
+        - status
+      properties:
+        event_staff_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        event_name:
+          type: string
+        event_date:
+          type: string
+        staff_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, confirmed, declined, cancelled]
+        location:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        contact_name:
+          type: string
+          nullable: true
+        contact_phone:
+          type: string
+          nullable: true
+        organizer_notes:
+          type: string
+          nullable: true
+        fee_amount:
+          type: number
+          nullable: true
+        role_override:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        shift_start:
+          type: string
+          nullable: true
+        shift_end:
+          type: string
+          nullable: true
+        offer_group_id:
+          type: string
+          format: uuid
+          nullable: true
+        offer_slots:
+          type: integer
+          nullable: true
+        notification_last_result:
+          type: string
+          nullable: true
+        notification_sent_at:
+          type: string
+          nullable: true
+    AssignmentRespondRequest:
+      type: object
+      required:
+        - response
+      properties:
+        response:
+          type: string
+          enum: [accept, decline]
+    AssignmentResponseOutcome:
+      type: object
+      required:
+        - event_staff_id
+        - final_status
+        - seats_remaining
+        - auto_declined_count
+      properties:
+        event_staff_id:
+          type: string
+          format: uuid
+        final_status:
+          type: string
+          description: Resolved status after accept/decline (first-come-first-served for grouped offers)
+        seats_remaining:
+          type: integer
+        auto_declined_count:
+          type: integer
+    ExecutionChecklist:
+      type: object
+      required:
+        - arrival
+        - materials
+        - closing
+      properties:
+        arrival:
+          type: boolean
+        materials:
+          type: boolean
+        closing:
+          type: boolean
+    AssignmentExecutionState:
+      type: object
+      required:
+        - checklist
+        - quick_note
+      properties:
+        checklist:
+          $ref: "#/components/schemas/ExecutionChecklist"
+        quick_note:
+          type: string
+          maxLength: 2000
+    TeamMemberChangeEvent:
+      type: object
+      required:
+        - id
+        - event_id
+        - event_staff_id
+        - event_name
+        - event_date
+        - change_type
+        - field_name
+        - occurred_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        event_staff_id:
+          type: string
+          format: uuid
+        event_name:
+          type: string
+        event_date:
+          type: string
+        change_type:
+          type: string
+        field_name:
+          type: string
+        old_value:
+          type: string
+          nullable: true
+        new_value:
+          type: string
+          nullable: true
+        occurred_at:
+          type: string
+        read_at:
+          type: string
+          nullable: true
+    TeamTimelineMarkReadRequest:
+      type: object
+      required:
+        - ids
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+    TeamTimelineMarkReadResponse:
+      type: object
+      required:
+        - updated
+      properties:
+        updated:
+          type: integer
+    # --- Payment submissions (client portal + organizer inbox) ---
+    PaymentSubmission:
+      type: object
+      required:
+        - id
+        - event_id
+        - client_id
+        - user_id
+        - amount
+        - status
+        - submitted_at
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        transfer_ref:
+          type: string
+          nullable: true
+        receipt_file_url:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        submitted_at:
+          type: string
+          format: date-time
+        reviewed_by:
+          type: string
+          format: uuid
+          nullable: true
+        reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        rejection_reason:
+          type: string
+          nullable: true
+        linked_payment_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        client_name:
+          type: string
+          nullable: true
+        event_label:
+          type: string
+          nullable: true
+    PaymentSubmissionListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentSubmission"
+    PaymentSubmissionEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/PaymentSubmission"
+    PaymentSubmissionReviewRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected]
+        rejection_reason:
+          type: string
+          nullable: true
+          description: Required when status is rejected
+    PaymentSubmissionPublicCreateRequest:
+      type: object
+      description: multipart/form-data fields for the public portal submission
+      required:
+        - event_id
+        - client_id
+        - amount
+      properties:
+        event_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          description: Positive amount (sent as form string)
+        transfer_ref:
+          type: string
+        receipt_file:
+          type: string
+          format: binary
+          description: Optional receipt image (jpeg/png/webp) or PDF, max 10MB
+    # --- Auth: team invite accept + email verification ---
+    TeamInviteAcceptRequest:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+          description: One-time staff invite token from /team-invite?token=...
+        password:
+          type: string
+          format: password
+          description: Must satisfy the password policy
+    ResendVerificationRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+    # --- Public analytics beacons ---
+    PageViewRecordRequest:
+      type: object
+      properties:
+        page_key:
+          type: string
+          maxLength: 40
+          description: Normalized server-side against a marketing-page allowlist (landing, pricing, about, directory, ...)
+    RegistrationFunnelRecordRequest:
+      type: object
+      properties:
+        step:
+          type: string
+          description: Only the client-trusted step `register_view` is recorded; others are ignored
+        method:
+          type: string
+          enum: [email, google, apple, unknown]
+    # --- Dashboard summary ---
+    DashboardSummary:
+      type: object
+      description: Bundled dashboard aggregates (one round-trip instead of N GETs)
+      required:
+        - kpis
+        - revenue_chart
+        - events_by_status
+        - top_clients
+        - product_demand
+        - forecast
+      properties:
+        kpis:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/DashboardKPIs"
+        revenue_chart:
+          type: array
+          items:
+            $ref: "#/components/schemas/RevenueDataPoint"
+        events_by_status:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventStatusCount"
+        top_clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopClient"
+        product_demand:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductDemandItem"
+        forecast:
+          type: array
+          items:
+            $ref: "#/components/schemas/ForecastDataPoint"
+    # --- Equipment availability ---
+    EquipmentAvailabilityItem:
+      type: object
+      required:
+        - inventory_id
+        - available
+      properties:
+        inventory_id:
+          type: string
+          format: uuid
+        available:
+          type: integer
+          description: current_stock minus reserved by quoted/confirmed events on that date
+    # --- Event reviews ---
+    PublicReviewMeta:
+      type: object
+      required:
+        - allow_public_testimonials
+      properties:
+        event_date:
+          type: string
+          nullable: true
+        event_label:
+          type: string
+          nullable: true
+        organizer_name:
+          type: string
+          nullable: true
+        allow_public_testimonials:
+          type: boolean
+          description: Whether the organizer's plan allows public testimonials
+    PublicReviewMetaEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/PublicReviewMeta"
+    SubmitPublicReviewRequest:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          nullable: true
+        visibility:
+          type: string
+          enum: [private, public]
+          default: private
+          description: Free plans always store reviews as private
+    EventReview:
+      type: object
+      required:
+        - id
+        - event_id
+        - user_id
+        - client_id
+        - rating
+        - visibility
+        - submitted_at
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        review_request_id:
+          type: string
+          format: uuid
+          nullable: true
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          nullable: true
+        visibility:
+          type: string
+          enum: [private, public]
+        organizer_response:
+          type: string
+          nullable: true
+        responded_at:
+          type: string
+          format: date-time
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        client_name:
+          type: string
+          nullable: true
+        event_label:
+          type: string
+          nullable: true
+        organizer_name:
+          type: string
+          nullable: true
+        public_slug:
+          type: string
+          nullable: true
+    EventReviewListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventReview"
+    EventReviewEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/EventReview"
+    ReviewOrganizerResponseRequest:
+      type: object
+      required:
+        - response
+      properties:
+        response:
+          type: string
+          nullable: true
+          description: Public reply text; null clears an existing reply
+    ReviewVisibilityUpdateRequest:
+      type: object
+      required:
+        - visibility
+      properties:
+        visibility:
+          type: string
+          enum: [private, public]
+    # --- Admin: user maintenance + listing moderation ---
+    BlockUserRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          description: Block reason (audited); required
+    ModerationListing:
+      type: object
+      required:
+        - user_id
+        - public_slug
+        - business_name
+        - plan
+        - publication_status
+        - publication_spam_flag
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        public_slug:
+          type: string
+        business_name:
+          type: string
+        plan:
+          type: string
+        city:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        headline:
+          type: string
+          nullable: true
+        about:
+          type: string
+          nullable: true
+        cover_url:
+          type: string
+          nullable: true
+        publication_status:
+          type: string
+          enum: [unpublished, pending_review, published, rejected]
+        publication_spam_flag:
+          type: boolean
+        publication_submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        publication_rejection_reason:
+          type: string
+          nullable: true
+    ModerationListingListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModerationListing"
+    ListingModerationRejectRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
 paths:
   /health:
     get:
@@ -3636,6 +4448,12 @@ paths:
       responses:
         "200":
           description: Authenticated successfully
+          x-transport-note: >-
+            Dual-transport contract: `tokens` in the body serve native
+            clients (Bearer); this response also sets the httpOnly
+            `auth_token`/`refresh_token` cookies that carry the web session —
+            web clients must ignore the body tokens. Web mutating requests
+            must send `X-CSRF-Token` matching the `csrf_token_v2` cookie.
           content:
             application/json:
               schema:
@@ -7472,3 +8290,1258 @@ paths:
           description: Requires Pro+ plan
         "404":
           description: Item not found
+  # --- Staff: collaborators catalog (Personal) ---
+  /api/staff:
+    get:
+      operationId: listStaff
+      summary: List, search, or paginate the organizer's staff catalog
+      description: >-
+        Without params returns the full list. `q` returns up to 10 matches by
+        name/email/phone similarity. `page` (and optional `limit`, `sort`, `order`)
+        returns a paginated envelope. Staff seats are plan-gated (Gratis=1, Pro=2,
+        Business=unlimited).
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search term (name/email/phone)
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: When present, enables paginated output
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [name, created_at, updated_at]
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        "200":
+          description: Staff list (plain array) or paginated envelope when page is set
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/Staff"
+                  - $ref: "#/components/schemas/PaginatedStaffResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to fetch staff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createStaff
+      summary: Create a staff member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffUpsertRequest"
+      responses:
+        "201":
+          description: Staff member created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Staff"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "402":
+          description: Plan seat limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to create staff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/staff/{id}:
+    get:
+      operationId: getStaff
+      summary: Get a staff member by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Staff member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Staff"
+        "400":
+          description: Invalid id
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateStaff
+      summary: Update a staff member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffUpsertRequest"
+      responses:
+        "200":
+          description: Staff member updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Staff"
+        "400":
+          description: Invalid id or validation error
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to update staff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteStaff
+      summary: Delete a staff member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Staff member deleted
+        "400":
+          description: Invalid id
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to delete staff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/staff/{id}/invite:
+    post:
+      operationId: inviteStaffUser
+      summary: Create (or rotate) a team-member invitation for a staff member
+      description: Pro and Business plans only. `assistant` target role requires Business.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffInviteRequest"
+      responses:
+        "201":
+          description: Invite created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffInviteResponse"
+        "400":
+          description: Invalid id, staff has no email, or invalid target role
+        "401":
+          description: Unauthorized
+        "403":
+          description: Plan does not allow invites
+        "404":
+          description: Staff member not found
+        "500":
+          description: Failed to create invite
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: revokeStaffInvite
+      summary: Revoke the pending invite for a staff member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Invite revoked
+        "400":
+          description: Invalid id
+        "401":
+          description: Unauthorized
+        "404":
+          description: Staff member not found
+        "500":
+          description: Failed to revoke invite
+  /api/staff/availability:
+    get:
+      operationId: getStaffAvailability
+      summary: List busy staff with their assignments inside a date window
+      description: Staff without assignments in the window are not included (they are free).
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Single-day shortcut (sets start=end)
+        - name: start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Busy staff grouped by staff member
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffAvailability"
+        "400":
+          description: Missing/invalid dates or end before start
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to fetch availability
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/staff/my-assignments:
+    get:
+      operationId: getMyAssignments
+      summary: List event assignments for the authenticated team member
+      responses:
+        "200":
+          description: Assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamMemberAssignment"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Requires team_member or assistant role
+        "500":
+          description: Failed to fetch assignments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/staff/my-timeline:
+    get:
+      operationId: getMyTimeline
+      summary: List the team member's assignment changes (newest first)
+      parameters:
+        - name: unread_only
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["true"]
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Timeline events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamMemberChangeEvent"
+        "400":
+          description: Invalid limit
+        "401":
+          description: Unauthorized
+        "403":
+          description: Requires team_member or assistant role
+        "500":
+          description: Failed to fetch timeline
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/staff/my-timeline/read:
+    post:
+      operationId: markMyTimelineRead
+      summary: Mark timeline items as read
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamTimelineMarkReadRequest"
+      responses:
+        "200":
+          description: Number of items marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamTimelineMarkReadResponse"
+        "400":
+          description: Invalid ids
+        "401":
+          description: Unauthorized
+        "403":
+          description: Requires team_member or assistant role
+        "500":
+          description: Failed to mark read
+  /api/staff/assignments/{id}/respond:
+    post:
+      operationId: respondAssignment
+      summary: Accept or decline an assignment (grouped offers are first-come-first-served)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: event_staff id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentRespondRequest"
+      responses:
+        "200":
+          description: Resolved outcome
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentResponseOutcome"
+        "400":
+          description: Invalid id or response value
+        "401":
+          description: Unauthorized
+        "403":
+          description: Requires team_member/assistant role, or assignment not yours
+        "404":
+          description: Assignment not found
+        "409":
+          description: Assignment not pending or grouped offer already filled
+        "500":
+          description: Failed to respond
+  /api/staff/assignments/{id}/execution-state:
+    get:
+      operationId: getAssignmentExecutionState
+      summary: Get the team-member execution state (checklist + note) for an assignment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: event_staff id
+      responses:
+        "200":
+          description: Execution state (defaults when none stored)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentExecutionState"
+        "400":
+          description: Invalid id
+        "401":
+          description: Unauthorized
+        "403":
+          description: Requires team_member/assistant role, or assignment not yours
+        "404":
+          description: Assignment not found
+        "500":
+          description: Failed to fetch state
+    put:
+      operationId: putAssignmentExecutionState
+      summary: Upsert the team-member execution state for an assignment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: event_staff id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentExecutionState"
+      responses:
+        "200":
+          description: Saved state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentExecutionState"
+        "400":
+          description: Invalid id or quick_note longer than 2000 chars
+        "401":
+          description: Unauthorized
+        "403":
+          description: Requires team_member/assistant role, or assignment not yours
+        "404":
+          description: Assignment not found
+        "500":
+          description: Failed to save state
+  # --- Payment submissions ---
+  /api/payment-submissions:
+    get:
+      operationId: getPendingPaymentSubmissions
+      summary: Organizer inbox of pending payment submissions
+      responses:
+        "200":
+          description: Pending submissions (empty array when none)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentSubmissionListResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to fetch submissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/payment-submissions/{id}:
+    patch:
+      operationId: reviewPaymentSubmission
+      summary: Approve or reject a pending payment submission
+      description: >-
+        Approving creates the linked Payment and may auto-confirm a quoted event
+        whose deposit is covered, in the same transaction. Only pending
+        submissions can be reviewed (409 otherwise).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentSubmissionReviewRequest"
+      responses:
+        "200":
+          description: Reviewed submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentSubmissionEnvelope"
+        "400":
+          description: Invalid id/body, or rejection_reason missing on reject
+        "401":
+          description: Unauthorized
+        "404":
+          description: Submission not found
+        "409":
+          description: Submission has already been reviewed
+        "500":
+          description: Failed to review submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/payment-submissions/{id}/receipt/{filename}:
+    get:
+      operationId: downloadPaymentSubmissionReceipt
+      summary: Download a submission's receipt file (organizer only, no-store)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Receipt file bytes (attachment)
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Invalid submission id
+        "401":
+          description: Unauthorized
+        "404":
+          description: Submission or receipt not found
+  /api/public/events/{token}/payment-submissions:
+    get:
+      security: []
+      operationId: getPublicPaymentSubmissionHistory
+      summary: Client-portal payment submission history
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: event_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Submission history (empty array when none)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentSubmissionListResponse"
+        "400":
+          description: Missing/invalid query params
+        "403":
+          description: Client ID does not match the event
+        "500":
+          description: Failed to fetch submissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      security: []
+      operationId: createPublicPaymentSubmission
+      summary: Submit a payment (transfer reference + optional receipt) from the client portal
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/PaymentSubmissionPublicCreateRequest"
+      responses:
+        "201":
+          description: Submission created (status pending)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentSubmissionEnvelope"
+        "400":
+          description: Invalid form values or event mismatch
+        "404":
+          description: Invalid link
+        "410":
+          description: Link revoked or expired
+        "500":
+          description: Failed to create submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  # --- Auth: team invite + email verification ---
+  /api/auth/team-invite/accept:
+    post:
+      security: []
+      operationId: acceptTeamInvite
+      summary: Activate a team-member account from a staff invite token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamInviteAcceptRequest"
+      responses:
+        "200":
+          description: >-
+            Team-member account activated. Dual-transport contract: `tokens` in
+            the body serve native clients (Bearer); this response also sets the
+            httpOnly `auth_token`/`refresh_token` cookies that carry the web
+            session — web clients must ignore the body tokens. Same shape as
+            login.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccessResponse"
+        "400":
+          description: Missing token/password or password policy violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid invite token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Invite already used or email taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "410":
+          description: Invite expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to accept invite
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/auth/verify-email:
+    get:
+      security: []
+      operationId: verifyEmail
+      summary: Verify an email address with a verification token
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Email verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Missing token
+        "401":
+          description: Token invalid or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/auth/verify-email/resend:
+    post:
+      security: []
+      operationId: resendEmailVerification
+      summary: Resend the verification email
+      description: Returns the same neutral message whether or not the account exists (no enumeration). Rate-limited per account (cooldown).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResendVerificationRequest"
+      responses:
+        "200":
+          description: Verification email resent if the account exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid email format
+        "429":
+          description: Resend cooldown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  # --- Public analytics beacons ---
+  /api/public/page-views:
+    post:
+      security: []
+      operationId: recordPageView
+      summary: Marketing page-view beacon (best-effort, always 204)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PageViewRecordRequest"
+      responses:
+        "204":
+          description: Recorded (or ignored) — never fails
+  /api/public/registration-funnel:
+    post:
+      security: []
+      operationId: recordRegistrationFunnelStep
+      summary: Registration funnel beacon (best-effort, always 204)
+      description: Only the client-trusted step `register_view` is recorded; server-trusted steps are recorded internally.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationFunnelRecordRequest"
+      responses:
+        "204":
+          description: Recorded (or ignored) — never fails
+  # --- Dashboard summary ---
+  /api/dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      summary: Bundled dashboard aggregates in one round-trip
+      responses:
+        "200":
+          description: KPIs + charts + widgets (revenue period=year, status scope=month, top clients limit=5)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to fetch summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  # --- Equipment availability ---
+  /api/events/equipment/availability:
+    get:
+      operationId: getEquipmentAvailability
+      summary: Available stock per inventory item on a date
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: inventory_ids
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Comma-separated inventory UUIDs
+        - name: exclude_event_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Event being edited (its reservations are excluded)
+      responses:
+        "200":
+          description: Availability per inventory item
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EquipmentAvailabilityItem"
+        "400":
+          description: Missing date/inventory_ids or invalid UUID
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to get availability
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  # --- Event reviews ---
+  /api/public/reviews/{token}:
+    get:
+      security: []
+      operationId: getPublicReviewRequest
+      summary: Get review-request metadata for a one-time token
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Review request metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicReviewMetaEnvelope"
+        "400":
+          description: Missing token
+        "404":
+          description: Review request not found
+        "410":
+          description: Already submitted or expired
+    post:
+      security: []
+      operationId: submitPublicReview
+      summary: Submit a post-event review with a one-time token
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitPublicReviewRequest"
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventReviewEnvelope"
+        "400":
+          description: Invalid body or rating out of range
+        "404":
+          description: Review request not found
+        "409":
+          description: Review already submitted for this event
+        "410":
+          description: Already submitted or expired
+  /api/reviews:
+    get:
+      operationId: listOrganizerReviews
+      summary: List reviews received by the organizer
+      responses:
+        "200":
+          description: Reviews (empty array when none)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventReviewListResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to fetch reviews
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/reviews/{id}/response:
+    patch:
+      operationId: updateReviewOrganizerResponse
+      summary: Set or clear the organizer's public reply to a review (paid plans)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewOrganizerResponseRequest"
+      responses:
+        "200":
+          description: Updated review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventReviewEnvelope"
+        "400":
+          description: Invalid id or body
+        "401":
+          description: Unauthorized
+        "403":
+          description: Requires paid plan or not your review
+        "404":
+          description: Review not found
+        "500":
+          description: Failed to update response
+  /api/reviews/{id}/visibility:
+    patch:
+      operationId: updateReviewVisibility
+      summary: Toggle a review between private and public testimonial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewVisibilityUpdateRequest"
+      responses:
+        "200":
+          description: Updated review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventReviewEnvelope"
+        "400":
+          description: Invalid id or visibility value
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not your review, or public visibility requires a paid plan
+        "404":
+          description: Review not found
+        "500":
+          description: Failed to update visibility
+  # --- Admin: user maintenance + listing moderation ---
+  /api/admin/users/inactive:
+    get:
+      operationId: getInactiveAdminUsers
+      summary: List users with no login in the last N days
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Inactive users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Admin only
+        "500":
+          description: Failed to get inactive users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/users/empty-resources:
+    get:
+      operationId: getAdminUsersWithZeroResources
+      summary: List users with zero events, products, and clients
+      responses:
+        "200":
+          description: Users with empty resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Admin only
+        "500":
+          description: Failed to get users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/users/{id}/verify-email:
+    post:
+      operationId: adminVerifyUserEmail
+      summary: Manually verify a user's email (audited)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Updated user (or a message when refetch fails)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "400":
+          description: Invalid user id
+        "401":
+          description: Unauthorized
+        "403":
+          description: Admin only
+        "500":
+          description: Failed to verify email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/users/{id}/block:
+    put:
+      operationId: adminBlockUser
+      summary: Block an end-user account with a reason (audited)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlockUserRequest"
+      responses:
+        "200":
+          description: Updated user (or a message when refetch fails)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "400":
+          description: Invalid user id or missing reason
+        "401":
+          description: Unauthorized
+        "403":
+          description: Admin only, or only end-user accounts can be blocked
+        "404":
+          description: User not found
+        "409":
+          description: User already deleted
+        "500":
+          description: Failed to block user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/listing-moderation:
+    get:
+      operationId: listListingModeration
+      summary: Directory listing moderation queue (#1130)
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [unpublished, pending_review, published, rejected]
+            default: pending_review
+      responses:
+        "200":
+          description: Moderation queue (max 50)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModerationListingListResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Admin only
+        "500":
+          description: Failed to load moderation queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/listing-moderation/{id}/approve:
+    post:
+      operationId: approveListing
+      summary: Approve a directory listing submission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Provider user id
+      responses:
+        "200":
+          description: Updated public profile
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/OrganizerPublicProfile"
+        "400":
+          description: Invalid user id
+        "401":
+          description: Unauthorized
+        "403":
+          description: Admin only
+        "409":
+          description: Invalid status transition
+        "500":
+          description: Failed to approve listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/listing-moderation/{id}/reject:
+    post:
+      operationId: rejectListing
+      summary: Reject a directory listing submission with a reason
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Provider user id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingModerationRejectRequest"
+      responses:
+        "200":
+          description: Updated public profile
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/OrganizerPublicProfile"
+        "400":
+          description: Invalid user id or missing reason
+        "401":
+          description: Unauthorized
+        "403":
+          description: Admin only
+        "409":
+          description: Invalid status transition
+        "500":
+          description: Failed to reject listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/users/me/public-profile/submit-for-review:
+    post:
+      operationId: submitProfileForDirectoryReview
+      summary: Submit own public profile for directory review
+      responses:
+        "200":
+          description: Submitted profile (envelope, OrganizerPublicProfile shape)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/OrganizerPublicProfile"
+        "400":
+          description: Missing/disabled profile or directory requirements unmet
+        "401":
+          description: Unauthorized
+        "409":
+          description: Profile cannot be submitted from its current status
+        "500":
+          description: Failed to submit for review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "501":
+          description: Listing moderation not configured

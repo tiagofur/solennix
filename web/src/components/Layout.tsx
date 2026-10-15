@@ -96,7 +96,7 @@ export const Layout: React.FC = () => {
   useEffect(() => {
     if (user) {
       import('@/lib/notifications').then(({ initPushNotifications }) => {
-        initPushNotifications();
+        initPushNotifications(user.id);
       });
     }
   }, [user]);
