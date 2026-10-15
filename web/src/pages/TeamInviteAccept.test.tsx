@@ -51,7 +51,6 @@ describe('TeamInviteAccept', () => {
     (useAuth as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ checkAuth });
     (authService.acceptTeamInvite as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: { role: 'team_member' },
-      tokens: {},
     });
 
     renderPage('/team-invite?token=token-123');
@@ -100,7 +99,6 @@ describe('TeamInviteAccept', () => {
     (useAuth as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ checkAuth });
     (authService.acceptTeamInvite as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: { role: 'team_member' },
-      tokens: {},
     });
 
     renderPage('/team-invite/accept?token=legacy-token');
