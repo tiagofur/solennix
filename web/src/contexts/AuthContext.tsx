@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ApiHttpError, api } from '@/lib/api';
 import { logError } from '@/lib/errorHandler';
 import { User } from '@/types/auth';
@@ -28,20 +28,26 @@ const isPublicAuthRoute = (pathname: string) => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  // Generation counter: invalidates in-flight checkAuth results when a
+  // logout (or a newer check) supersedes them — no zombie sessions.
+  const authGen = useRef(0);
 
   const checkAuth = async () => {
+    const gen = authGen.current;
     try {
       // Auth state is determined by httpOnly cookie — call /auth/me to validate
       const userData = await api.get<User>('/auth/me');
+      if (authGen.current !== gen) return; // superseded by logout/newer check
       setUser(userData);
     } catch (error) {
+      if (authGen.current !== gen) return;
       // A 401 from /auth/me is expected when no session is active — don't log it as an error
       if (!(error instanceof ApiHttpError && error.statusCode === 401)) {
         logError('Auth check failed', error);
       }
       setUser(null);
     } finally {
-      setLoading(false);
+      if (authGen.current === gen) setLoading(false);
     }
   };
 
@@ -55,11 +61,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Listen for 401 logout events from api.ts
     const handleLogout = () => {
+      authGen.current++; // invalidate any in-flight checkAuth
       // Best-effort: unregister swallows backend errors but always clears
       // local push state (cache + foreground listener) in its finally.
       const pushToken = getCachedPushToken();
       if (pushToken) void unregisterPushNotifications(pushToken);
       setUser(null);
+      setLoading(false);
       queryClient.clear();
       clearUserScopedStorage();
     };
@@ -93,6 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // this browser after logout (shared machines, S3).
       const pushToken = getCachedPushToken();
       if (pushToken) await unregisterPushNotifications(pushToken);
+      authGen.current++; // invalidate any in-flight checkAuth
       setUser(null);
       queryClient.clear();
       // Clear session-scoped localStorage (onboarding tips, local checklist
