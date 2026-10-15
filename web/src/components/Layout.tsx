@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -69,6 +69,16 @@ export const Layout: React.FC = () => {
     if (!isCollapsed) localStorage.setItem('sidebar-width', String(sidebarWidth));
   }, [sidebarWidth, isCollapsed]);
 
+  // Tracks the active sidebar-drag cleanup so an interrupted drag
+  // (pointercancel) or an unmount mid-drag never leaks document listeners.
+  const resizeCleanup = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    return () => {
+      resizeCleanup.current?.();
+      resizeCleanup.current = null;
+    };
+  }, []);
+
   const startResize = (e: React.PointerEvent<HTMLDivElement>) => {
     // Only resize in expanded desktop mode (not mobile slide-in, not collapsed).
     if (isCollapsed) return;
@@ -76,20 +86,33 @@ export const Layout: React.FC = () => {
     const startX = e.clientX;
     const startWidth = sidebarWidth;
     const handle = e.currentTarget;
-    handle.setPointerCapture(e.pointerId);
+    const pointerId = e.pointerId;
+    handle.setPointerCapture(pointerId);
 
     const onMove = (ev: PointerEvent) => {
       const delta = ev.clientX - startX;
       const next = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, startWidth + delta));
       setSidebarWidth(next);
     };
-    const onUp = (ev: PointerEvent) => {
-      handle.releasePointerCapture(ev.pointerId);
+    const cleanup = () => {
+      try {
+        if (handle.hasPointerCapture(pointerId)) handle.releasePointerCapture(pointerId);
+      } catch {
+        // best-effort: handle may be detached
+      }
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onCancel);
+      if (resizeCleanup.current === cleanup) resizeCleanup.current = null;
     };
+    const onUp = () => cleanup();
+    const onCancel = () => cleanup();
+    // End any previous drag before starting a new one.
+    resizeCleanup.current?.();
+    resizeCleanup.current = cleanup;
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onCancel);
   };
 
   // Initialize push notifications after login

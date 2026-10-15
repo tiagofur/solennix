@@ -114,4 +114,83 @@ describe("RequestsInboxPage", () => {
       expect(screen.getByTestId("request-links-panel")).toBeInTheDocument();
     });
   });
+
+  it("fetches page 2 when clicking pagination", async () => {
+    vi.mocked(organizerRequestsService.list).mockResolvedValue({
+      data: [
+        {
+          id: "r1",
+          contact_name: "María",
+          contact_email: "m@example.com",
+          event_type: "boda",
+          status: "pending",
+          is_read: true,
+          created_at: "2026-08-01T12:00:00Z",
+        },
+      ],
+      total: 60,
+      page: 1,
+      limit: 50,
+      total_pages: 2,
+    });
+    render(
+      <MemoryRouter initialEntries={["/requests"]}>
+        <RequestsInboxPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("request-row-r1")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Ir a la página 2" }));
+    await waitFor(() => {
+      expect(organizerRequestsService.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 2, limit: 50 }),
+      );
+    });
+  });
+
+  it("resets to page 1 when the status filter changes", async () => {
+    vi.mocked(organizerRequestsService.list).mockResolvedValue({
+      data: [
+        {
+          id: "r1",
+          contact_name: "María",
+          contact_email: "m@example.com",
+          event_type: "boda",
+          status: "pending",
+          is_read: true,
+          created_at: "2026-08-01T12:00:00Z",
+        },
+      ],
+      total: 60,
+      page: 1,
+      limit: 50,
+      total_pages: 2,
+    });
+    render(
+      <MemoryRouter initialEntries={["/requests"]}>
+        <RequestsInboxPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => {
+      expect(organizerRequestsService.list).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("request-row-r1")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Ir a la página 2" }));
+    await waitFor(() => {
+      expect(organizerRequestsService.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 2 }),
+      );
+    });
+    fireEvent.change(screen.getByTestId("requests-status-filter"), {
+      target: { value: "pending" },
+    });
+    await waitFor(() => {
+      expect(organizerRequestsService.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 1, status: "pending" }),
+      );
+    });
+  });
 });

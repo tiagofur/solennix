@@ -337,6 +337,15 @@ export const EventForm: React.FC = () => {
   const { data: existingEventEquipment } = useEventEquipment(id);
   const { data: existingEventSupplies } = useEventSupplies(id);
 
+  // Hydrate-once guards (no silent overwrite): after the initial hydration
+  // the form owns its state; background refetches must not clobber edits.
+  // Guards reset whenever the edited event changes. Declared before the
+  // hydration effects so the reset runs first on id change.
+  const hydratedRef = useRef<Record<string, boolean>>({});
+  useEffect(() => {
+    hydratedRef.current = {};
+  }, [id]);
+
   // Staff for edit-mode — plain service call because there is no dedicated
   // hook yet and this query is scoped to a single event detail view.
   useEffect(() => {
@@ -369,7 +378,8 @@ export const EventForm: React.FC = () => {
 
   // Populate form when existing event loads (edit mode)
   useEffect(() => {
-    if (!existingEvent) return;
+    if (!existingEvent || hydratedRef.current.form) return;
+    hydratedRef.current.form = true;
     setDiscountType(existingEvent.discount_type || "percent");
     reset({
       client_id: existingEvent.client_id || "",
@@ -395,7 +405,8 @@ export const EventForm: React.FC = () => {
 
   // Populate items when they load (edit mode)
   useEffect(() => {
-    if (existingEventProducts) {
+    if (existingEventProducts && !hydratedRef.current.products) {
+      hydratedRef.current.products = true;
       setSelectedProducts(
         existingEventProducts.map((ep: EventProduct) => ({
           product_id: ep.product_id,
@@ -408,7 +419,8 @@ export const EventForm: React.FC = () => {
   }, [existingEventProducts]);
 
   useEffect(() => {
-    if (existingEventExtras) {
+    if (existingEventExtras && !hydratedRef.current.extras) {
+      hydratedRef.current.extras = true;
       setExtras(
         existingEventExtras.map((e: EventExtra) => ({
           description: e.description,
@@ -422,7 +434,8 @@ export const EventForm: React.FC = () => {
   }, [existingEventExtras]);
 
   useEffect(() => {
-    if (existingEventEquipment) {
+    if (existingEventEquipment && !hydratedRef.current.equipment) {
+      hydratedRef.current.equipment = true;
       setSelectedEquipment(
         existingEventEquipment.map((eq: EventEquipmentEntity) => ({
           inventory_id: eq.inventory_id,
@@ -434,7 +447,8 @@ export const EventForm: React.FC = () => {
   }, [existingEventEquipment]);
 
   useEffect(() => {
-    if (existingEventSupplies) {
+    if (existingEventSupplies && !hydratedRef.current.supplies) {
+      hydratedRef.current.supplies = true;
       setSelectedSupplies(
         existingEventSupplies.map((s: EventSupply) => ({
           inventory_id: s.inventory_id,
@@ -821,16 +835,21 @@ export const EventForm: React.FC = () => {
       setEquipmentSuggestions([]);
       return;
     }
+    let cancelled = false;
     const fetchSuggestions = async () => {
       try {
         const suggestions =
           await eventService.getEquipmentSuggestions(productItems);
-        setEquipmentSuggestions(suggestions || []);
+        if (!cancelled) setEquipmentSuggestions(suggestions || []);
       } catch {
         // Silently ignore suggestion errors
       }
     };
-    fetchSuggestions();
+    const timer = setTimeout(fetchSuggestions, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [selectedProducts]);
 
   // Auto-suggest supplies when products change
@@ -842,16 +861,21 @@ export const EventForm: React.FC = () => {
       setSupplySuggestions([]);
       return;
     }
+    let cancelled = false;
     const fetchSupplySuggestions = async () => {
       try {
         const suggestions =
           await eventService.getSupplySuggestions(productItems);
-        setSupplySuggestions(suggestions || []);
+        if (!cancelled) setSupplySuggestions(suggestions || []);
       } catch {
         // Silently ignore suggestion errors
       }
     };
-    fetchSupplySuggestions();
+    const timer = setTimeout(fetchSupplySuggestions, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [selectedProducts]);
 
   // Check equipment conflicts (debounced)

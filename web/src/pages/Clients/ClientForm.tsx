@@ -57,8 +57,16 @@ export const ClientForm: React.FC = () => {
 
   const watchedName = useWatch({ control, name: "name" });
 
+  // Hydrate-once guard (no silent overwrite): after the initial hydration
+  // the form owns its state; background refetches must not clobber edits.
+  const hydratedRef = useRef(false);
   useEffect(() => {
-    if (existingClient) {
+    hydratedRef.current = false;
+  }, [id]);
+
+  useEffect(() => {
+    if (existingClient && !hydratedRef.current) {
+      hydratedRef.current = true;
       reset({
         name: existingClient.name || "",
         phone: existingClient.phone || "",
