@@ -4143,9 +4143,10 @@ components:
         - forecast
       properties:
         kpis:
+          type: object
+          nullable: true
           allOf:
             - $ref: "#/components/schemas/DashboardKPIs"
-          nullable: true
         revenue_chart:
           type: array
           items:
