@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ClipboardList,
   Wrench,
@@ -52,17 +52,45 @@ export const EventChecklistView: React.FC<EventChecklistViewProps> = ({
   const { t } = useTranslation(['events', 'common']);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
 
+  const storageKey = `event_checklist_${eventId}`;
+
   // ── Restore checked state from localStorage ──
   // Runs only on event change (mount/id switch), NOT on background refetches,
   // so toggles made during the session survive query invalidation.
   useEffect(() => {
-    const savedChecked = localStorage.getItem(`event_checklist_${eventId}`);
+    const savedChecked = localStorage.getItem(storageKey);
     if (savedChecked) {
       try { setCheckedIds(new Set(JSON.parse(savedChecked))); } catch { setCheckedIds(new Set()); }
     } else {
       setCheckedIds(new Set());
     }
-  }, [eventId]);
+  }, [eventId, storageKey]);
+
+  // Valid ids for the current item list. Items resolve after mount, so the
+  // restore above may hold orphan ids (products removed from the event).
+  const validIds = useMemo(() => new Set(checklistItems.map((i) => i.id)), [checklistItems]);
+
+  // ── Prune orphans: drop checked ids that no longer exist ──
+  // Only removes ids absent from the list; valid session toggles survive.
+  // Writes the pruned set back so stale keys shrink instead of growing.
+  useEffect(() => {
+    setCheckedIds((prev) => {
+      let pruned: Set<string> | null = null;
+      for (const id of prev) {
+        if (!validIds.has(id)) {
+          pruned ??= new Set(prev);
+          pruned.delete(id);
+        }
+      }
+      if (!pruned) return prev;
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(Array.from(pruned)));
+      } catch {
+        // storage full/blocked — in-memory state still applies
+      }
+      return pruned;
+    });
+  }, [validIds, storageKey]);
 
   const toggleChecklistItem = useCallback((itemId: string) => {
     setCheckedIds((prev) => {
@@ -77,7 +105,9 @@ export const EventChecklistView: React.FC<EventChecklistViewProps> = ({
     });
   }, [eventId]);
 
-  const checklistProgress = checklistItems.length > 0 ? checkedIds.size / checklistItems.length : 0;
+  const checklistProgress = checklistItems.length > 0
+    ? Math.min(1, checkedIds.size / checklistItems.length)
+    : 0;
 
   // Report live progress up so the tab badge (rendered by the parent) mirrors
   // it while the checklist tab is mounted.
