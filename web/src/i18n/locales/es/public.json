@@ -527,6 +527,7 @@
       "error_generic": "No pudimos enviar tu solicitud. Probá de nuevo.",
       "error_not_found": "Este perfil ya no está disponible.",
       "date_past": "La fecha del evento debe ser futura.",
+      "captcha_required": "Completá la verificación anti-spam antes de enviar.",
       "budget_invalid": "El presupuesto debe ser un número positivo.",
       "email_label_optional": "Correo electrónico",
       "name_label_required": "Nombre completo *",

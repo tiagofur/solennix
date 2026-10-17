@@ -10,6 +10,7 @@ import {
   Phone,
 } from "lucide-react";
 import type { CreatePublicRequestRequest } from "@/services/publicRequestService";
+import { TurnstileWidget, isTurnstileConfigured } from "@/components/TurnstileWidget";
 import type { SubmitMode } from "@/services/requestLinkService";
 
 export type RequestFormMode = "profile" | "link";
@@ -115,6 +116,7 @@ export function validateRequestForm(
 
 export function buildRequestPayload(
   values: RequestFormValues,
+  turnstileToken?: string,
 ): CreatePublicRequestRequest {
   const services = Object.entries(values.selectedServices)
     .filter(([, qty]) => qty > 0)
@@ -136,6 +138,7 @@ export function buildRequestPayload(
     services: services.length > 0 ? services : undefined,
     message: values.message.trim() || undefined,
     website: values.website || "",
+    turnstile_token: turnstileToken || undefined,
   };
 }
 
@@ -177,6 +180,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({
     },
   }));
   const [localError, setLocalError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const effectiveSubmitMode: SubmitMode =
     mode === "profile" ? "standard" : submitMode;
@@ -241,7 +245,11 @@ export const RequestForm: React.FC<RequestFormProps> = ({
       return;
     }
     setLocalError(null);
-    await onSubmit(buildRequestPayload(values));
+    if (isTurnstileConfigured() && !turnstileToken) {
+      setLocalError(t("profile.request.captcha_required"));
+      return;
+    }
+    await onSubmit(buildRequestPayload(values, turnstileToken ?? undefined));
   };
 
   return (
@@ -571,6 +579,13 @@ export const RequestForm: React.FC<RequestFormProps> = ({
         />
       </div>
 
+      <div className="pt-2">
+        <TurnstileWidget
+          onVerify={setTurnstileToken}
+          onExpire={() => setTurnstileToken(null)}
+          onError={() => setTurnstileToken(null)}
+        />
+      </div>
       <div className="pt-2 flex justify-end gap-3">
         {footerSecondary}
         <button

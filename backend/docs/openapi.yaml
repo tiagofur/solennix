@@ -2903,6 +2903,11 @@ components:
             Honeypot anti-spam field. Must be empty. Bots that fill hidden fields
             receive a fake 201 without creating a request.
           maxLength: 200
+        turnstile_token:
+          type: string
+          description: >
+            Cloudflare Turnstile client token. Required when the server
+            configures TURNSTILE_SECRET_KEY; ignored otherwise.
         package_id:
           type: string
           format: uuid

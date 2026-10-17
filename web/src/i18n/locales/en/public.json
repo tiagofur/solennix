@@ -527,6 +527,7 @@
       "error_generic": "We couldn't send your request. Please try again.",
       "error_not_found": "This profile is no longer available.",
       "date_past": "The event date must be in the future.",
+      "captcha_required": "Complete the anti-spam verification before submitting.",
       "budget_invalid": "Budget must be a positive number.",
       "email_label_optional": "Correo electrónico",
       "name_label_required": "Nombre completo *",

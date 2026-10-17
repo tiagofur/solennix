@@ -24,6 +24,8 @@ type Config struct {
 	ResendFromEmail string
 	FrontendURL     string
 
+	TurnstileSecretKey string // Cloudflare Turnstile secret; empty = verification skipped (dev mode)
+
 	StripeSecretKey         string
 	StripeWebhookSecret     string
 	StripeProPriceID        string
@@ -88,6 +90,7 @@ func Load() (*Config, error) {
 		ResendAPIKey:               os.Getenv("RESEND_API_KEY"),
 		ResendFromEmail:            getEnv("RESEND_FROM_EMAIL", "Solennix <noreply@solennix.com>"),
 		FrontendURL:                getEnv("FRONTEND_URL", "http://localhost:5173"),
+		TurnstileSecretKey:         os.Getenv("TURNSTILE_SECRET_KEY"),
 		StripeSecretKey:            os.Getenv("STRIPE_SECRET_KEY"),
 		StripeWebhookSecret:        os.Getenv("STRIPE_WEBHOOK_SECRET"),
 		StripeProPriceID:           os.Getenv("STRIPE_PRO_PRICE_ID"),
