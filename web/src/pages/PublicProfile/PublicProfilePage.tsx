@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/hooks/useTheme";
+import { useDynamicManifestStartUrl } from "@/hooks/useDynamicManifestStartUrl";
 import { Logo } from "@/components/Logo";
 import { Card } from "@/components/Card";
 import { Reveal } from "@/components/Reveal";
@@ -175,6 +176,7 @@ function CategoryChip({
 }
 
 export const PublicProfilePage: React.FC = () => {
+  useDynamicManifestStartUrl();
   const { slug } = useParams<{ slug: string }>();
   const { t, i18n } = useTranslation("public");
   const { theme, toggleTheme } = useTheme();

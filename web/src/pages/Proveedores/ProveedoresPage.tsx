@@ -17,6 +17,7 @@ import { Logo } from "@/components/Logo";
 import { Pagination } from "@/components/Pagination";
 import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 import { useTheme } from "@/hooks/useTheme";
+import { useDynamicManifestStartUrl } from "@/hooks/useDynamicManifestStartUrl";
 import { upsertMeta, setDocumentTitle, setJsonLd, removeJsonLd } from "@/lib/seo";
 import { recordPageView } from "@/services/pageViewService";
 import { useDirectoryFilters } from "./useDirectoryFilters";
@@ -58,6 +59,7 @@ const RADIUS_OPTIONS = ["25", "50", "100"] as const;
  * Legacy /proveedores redirects here (SPA + nginx 301).
  */
 export const ProveedoresPage: React.FC = () => {
+  useDynamicManifestStartUrl();
   const { t } = useTranslation("public");
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
