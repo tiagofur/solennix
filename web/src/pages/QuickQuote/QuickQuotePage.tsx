@@ -67,6 +67,28 @@ export const QuickQuotePage: React.FC = () => {
     "percent",
   );
   const [discountValue, setDiscountValue] = useState(0);
+  const [discountError, setDiscountError] = useState<string | null>(null);
+
+  // Visible validation instead of silent clamping: out-of-range input
+  // still clamps, but the user is told why.
+  const applyDiscountValue = (val: number) => {
+    if (!Number.isFinite(val)) {
+      setDiscountError(t("quotes:discount_negative_error"));
+      return;
+    }
+    if (discountType === "percent" && (val < 0 || val > 100)) {
+      setDiscountError(t("quotes:discount_range_error"));
+      setDiscountValue(Math.max(0, Math.min(100, val)));
+      return;
+    }
+    if (val < 0) {
+      setDiscountError(t("quotes:discount_negative_error"));
+      setDiscountValue(0);
+      return;
+    }
+    setDiscountError(null);
+    setDiscountValue(val);
+  };
   const [requiresInvoice] = useState(false);
   const [taxRate] = useState(16);
 
@@ -489,15 +511,16 @@ export const QuickQuotePage: React.FC = () => {
                   step="0.01"
                   value={discountValue}
                   onChange={(e) => {
-                    const val = Number(e.target.value);
-                    if (discountType === "percent") {
-                      setDiscountValue(Math.max(0, Math.min(100, val)));
-                    } else {
-                      setDiscountValue(Math.max(0, val));
-                    }
+                    applyDiscountValue(Number(e.target.value));
                   }}
+                  aria-invalid={discountError !== null}
                   className="block w-full sm:w-48 text-sm border-border rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-primary/20 p-2 bg-card text-text border"
                 />
+                {discountError && (
+                  <p className="mt-1 text-xs text-error font-medium" role="alert">
+                    {discountError}
+                  </p>
+                )}
               </div>
             </div>
           </div>
