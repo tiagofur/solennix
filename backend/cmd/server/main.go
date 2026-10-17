@@ -194,7 +194,7 @@ func main() {
 	publicRequestService := services.NewPublicRequestService(publicRequestRepo, publicProfileRepo, productRepo, userRepo, pool, 0)
 	publicRequestService.SetNotifier(notificationService) // #1124 push on new PublicRequest
 	publicRequestService.SetLinkRepo(publicRequestLinkRepo)
-	publicRequestHandler := handlers.NewPublicRequestHandler(publicRequestService, publicRequestRepo)
+	publicRequestHandler := handlers.NewPublicRequestHandler(publicRequestService, publicRequestRepo, cfg.TurnstileSecretKey)
 	requestLinkHandler := handlers.NewRequestLinkHandler(
 		publicRequestLinkRepo, publicRequestService, productRepo, publicProfileRepo, userRepo, cfg.FrontendURL, pool,
 	)

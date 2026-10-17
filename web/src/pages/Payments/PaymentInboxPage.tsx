@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS } from "date-fns/locale";
 import {
 	Inbox,
 	ExternalLink,
@@ -112,7 +112,7 @@ export const PaymentInboxPage: React.FC = () => {
 
 	const formatDate = (dateStr: string) => {
 		try {
-			const locale = i18n.language.startsWith("en") ? undefined : es;
+			const locale = i18n.language.startsWith("en") ? enUS : es;
 			return format(new Date(dateStr), "dd MMM yyyy", { locale });
 		} catch {
 			return dateStr;

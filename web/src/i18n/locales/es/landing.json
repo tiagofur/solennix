@@ -1,0 +1,312 @@
+{
+  "nav": {
+    "features": "Características",
+    "how_it_works": "Cómo funciona",
+    "pricing": "Precios",
+    "app": "App Móvil",
+    "faq": "FAQ",
+    "providers": "Buscar proveedores",
+    "help": "Ayuda",
+    "login": "Ingresar",
+    "login_mobile": "Iniciar Sesión",
+    "register_cta": "Probar Gratis",
+    "open_menu": "Abrir menú",
+    "close_menu": "Cerrar menú",
+    "theme_light": "Cambiar a modo claro",
+    "theme_dark": "Cambiar a modo oscuro"
+  },
+  "hero": {
+    "badge": "Control operativo completo",
+    "title_line1": "Cotizá, Cobrá,",
+    "title_line2": "Coordiná y Cumplí",
+    "subtitle": "Una plataforma para gestionar todo el ciclo de tus eventos: cotizaciones profesionales, cobros online, inventario, staff y Portal del cliente. Todo desde un solo lugar.",
+    "cta_primary": "Empezar Gratis Ahora",
+    "cta_secondary": "Ya tengo cuenta",
+    "seeker_question": "¿Buscás un proveedor para tu evento?",
+    "seeker_link": "Busco un proveedor",
+    "trust_free": "Sin tarjeta de crédito",
+    "trust_install": "Instala en 2 minutos",
+    "trust_cancel": "Cancela cuando quieras",
+    "stores_available": "También disponible en"
+  },
+  "stores": {
+    "app_store_aria": "Descargar Solennix en App Store",
+    "app_store_pre": "Descargá en",
+    "app_store_name": "App Store",
+    "google_play_aria": "Descargar Solennix en Google Play",
+    "google_play_pre": "Disponible en",
+    "google_play_name": "Google Play"
+  },
+  "proof": {
+    "title": "Todo el ciclo operativo",
+    "subtitle": "De la cotizacion al cumplimiento",
+    "items": [
+      "Cotizaciones PDF",
+      "Cobros Online",
+      "Portal Cliente",
+      "Gestion Staff"
+    ]
+  },
+  "features": {
+    "badge": "✨ Características",
+    "title": "Todo lo que necesitas en un solo lugar",
+    "subtitle": "Deja de usar hojas de cálculo, WhatsApp y notas dispersas. Centraliza toda tu operación en una plataforma diseñada para organizadores de eventos.",
+    "items": [
+      {
+        "title": "Cotizaciones profesionales",
+        "description": "Genera cotizaciones PDF en minutos. Tu cliente las recibe por link, puede aceptar y pagar desde su celular."
+      },
+      {
+        "title": "Cobros y Pagos",
+        "description": "Stripe integrado. Cobrá en parcialidades, tus clientes pagan online y el sistema conciliar automatico."
+      },
+      {
+        "title": "Portal del Cliente",
+        "description": "Tus clientes acceden a un portal con su contrato, fotos, timeline y pagan sin salir de la app."
+      },
+      {
+        "title": "Inventario y Recursos",
+        "description": "Registrá equipos y personal. El sistema evita conflictos de disponibilidad automaticamente."
+      },
+      {
+        "title": "Staff y Equipos",
+        "description": "Asigna personal, envia asignaciones y recibe confirmaciones. Todo centralizado."
+      },
+      {
+        "title": "Calendario Integral",
+        "description": "Todas tus eventos, disponibilidad y conflictos en una vista. Arrastrá y reorganizá."
+      },
+      {
+        "title": "Reportes en Tiempo Real",
+        "description": "Ingresos, eventos, ocupacion. Métricas reales para optimizar precios y crecer."
+      },
+      {
+        "title": "Forms Públicos",
+        "description": "Crea formularios de solicitud o cotizacion. Tus clientes cotizan ellos mismos."
+      }
+    ]
+  },
+  "inbound": {
+    "badge": "📈 Conseguí clientes",
+    "title": "Operá… y también crecé",
+    "subtitle": "Además de gestionar eventos, Solennix te da herramientas de inbound: perfil público, solicitudes de cotización y visibilidad en el directorio. Facilitamos el contacto; el servicio y el pago del evento siguen siendo tuyos.",
+    "pillars": [
+      {
+        "title": "Perfil público",
+        "description": "Tu página profesional en /u/tu-negocio: portfolio, servicios y branding para compartir por WhatsApp o Instagram."
+      },
+      {
+        "title": "Solicitudes de cotización",
+        "description": "Visitantes te piden presupuesto sin crear cuenta. Vos respondés desde Solennix; el acuerdo sigue siendo tuyo."
+      },
+      {
+        "title": "Directorio de proveedores",
+        "description": "Aparecé en el directorio público para que te encuentren por ciudad, tipo de evento y servicio."
+      }
+    ],
+    "chips_title": "¿Qué buscan los clientes?",
+    "chips": [
+      "Catering",
+      "Decoración",
+      "Música / DJ",
+      "Fotografía",
+      "Flores",
+      "Mobiliario"
+    ],
+    "cta_primary": "Probar gratis",
+    "cta_secondary": "Ver el directorio"
+  },
+  "how_it_works": {
+    "badge": "🚀 Cómo funciona",
+    "title": "Empieza en minutos, no en días",
+    "subtitle": "Diseñamos la plataforma para que sea intuitiva y potente desde el primer segundo.",
+    "steps": [
+      {
+        "title": "Crea tu cuenta",
+        "description": "Registrate gratis. Sin tarjeta requerida."
+      },
+      {
+        "title": "Cotiza en minutos",
+        "description": "Crea una cotizacion profesional. Tu cliente la recibe por link."
+      },
+      {
+        "title": "Cobra online",
+        "description": "Tu cliente acepta y paga desde su celular. Stripe hace la conciliacion."
+      },
+      {
+        "title": "Ejecuta y cumplí",
+        "description": "Inventario, staff y portal del cliente. Todo controlado."
+      }
+    ]
+  },
+  "mobile_app": {
+    "badge": "App Móvil",
+    "title": "Tu negocio en el bolsillo",
+    "subtitle": "Gestiona eventos, revisá pagos y confirmá inventario desde tu iPhone. La misma potencia de la plataforma web, ahora disponible donde estés.",
+    "features": [
+      "Face ID y Touch ID para entrar al instante",
+      "Widgets en la pantalla de inicio",
+      "Notificaciones en tiempo real",
+      "Sincronización automática con web"
+    ]
+  },
+  "testimonials": {
+    "badge": "💬 Testimonios",
+    "title": "Lo que dicen nuestros usuarios",
+    "subtitle": "Más de 500 organizadores ya confían en Solennix para gestionar su negocio.",
+    "rating_aria": "{{rating}} estrellas de 5",
+    "items": [
+      {
+        "name": "María González",
+        "role": "Organizadora de Bodas",
+        "location": "Ciudad de México",
+        "text": "El portal del cliente fue un cambio total. Mis novios ven su contrato, suben fotos y pagan online. Yo ya no persigo pagos."
+      },
+      {
+        "name": "Carlos Mendoza",
+        "role": "Productor de Eventos",
+        "location": "Monterrey",
+        "text": "El control de inventario salvo mi negocio. Ya no tenemos dobles reservas y el staff recibe sus asignaciones en el celular."
+      },
+      {
+        "name": "Ana Rodríguez",
+        "role": "DJ y Animadora",
+        "location": "Guadalajara",
+        "text": "Las cotizaciones automaticas y el link de pago online me ahorraron 10 horas semanales. Mis clientes pagan antes del evento."
+      }
+    ]
+  },
+  "pricing": {
+    "badge": "💰 Precios",
+    "title": "Planes para cada etapa",
+    "subtitle": "Comienza gratis y activa el plan Pro cuando lo necesites.",
+    "most_popular": "Más popular",
+    "plans": [
+      {
+        "name": "Básico",
+        "price": "Gratis",
+        "original_price": null,
+        "period": "",
+        "description": "Perfecto para empezar",
+        "promo": null,
+        "features": [
+          "Hasta 4 eventos por mes",
+          "Hasta 20 clientes registrados",
+          "Hasta 15 productos y 30 de inventario",
+          "Portal cliente y perfil público básicos",
+          "Calendario de eventos",
+          "3 enlaces de solicitud activos"
+        ],
+        "cta": "Comenzar Gratis"
+      },
+      {
+        "name": "Pro",
+        "price": "$99",
+        "original_price": "$199",
+        "period": "MXN/mes",
+        "description": "Para profesionales en crecimiento",
+        "promo": "🎉 Precio de lanzamiento",
+        "features": [
+          "Eventos, clientes y catálogo ilimitados",
+          "Generación de cotizaciones PDF",
+          "Control de pagos en múltiples plazos",
+          "Reportes y analíticas avanzadas",
+          "Perfil público + directorio + solicitudes",
+          "Soporte prioritario"
+        ],
+        "cta": "Comenzar Ahora"
+      }
+    ]
+  },
+  "faq": {
+    "badge": "❓ Preguntas frecuentes",
+    "title": "Resolvemos tus dudas",
+    "aria_open": "{{question}} - Abrir respuesta",
+    "aria_close": "{{question}} - Cerrar respuesta",
+    "items": [
+      {
+        "question": "¿Necesito tarjeta de crédito para registrarme?",
+        "answer": "No. El plan Básico es completamente gratuito y no requiere tarjeta de crédito. Solo necesitas un correo electrónico."
+      },
+      {
+        "question": "¿Cómo me encuentran clientes nuevos?",
+        "answer": "Activá tu perfil público, compartí el link /u/tu-negocio y, si cumplís los criterios de publicabilidad, podés aparecer en el directorio /providers. Los visitantes envían solicitudes de cotización; Solennix facilita el contacto — no intermedia el servicio ni los pagos del evento."
+      },
+      {
+        "question": "¿Puedo importar mis datos existentes?",
+        "answer": "Sí. Puedes importar clientes desde CSV o Excel. También ofrecemos migración asistida para cuentas Pro."
+      },
+      {
+        "question": "¿Mis datos están seguros?",
+        "answer": "Absolutamente. Usamos encriptación de extremo a extremo, backups automáticos diarios y servidores con certificación SOC 2."
+      },
+      {
+        "question": "¿Puedo cancelar en cualquier momento?",
+        "answer": "Sí, sin penalizaciones ni contratos de permanencia. Puedes cancelar cuando quieras y conservar acceso hasta el final del período pagado."
+      }
+    ]
+  },
+  "cta": {
+    "title_line1": "¿Listo para escalar",
+    "title_line2": "tu negocio?",
+    "subtitle": "Únete a la nueva generación de organizadores que ya profesionalizaron su operación.",
+    "primary": "Comenzar Gratis",
+    "secondary": "Ya tengo cuenta",
+    "trust_free": "Sin tarjeta de crédito",
+    "trust_cancel": "Cancela cuando quieras",
+    "trust_support": "Soporte en español",
+    "seeker_question": "¿Buscás un proveedor?",
+    "seeker_link": "Explorá el directorio"
+  },
+  "footer": {
+    "description": "La plataforma todo-en-uno para organizadores de eventos profesionales en México y Latinoamérica.",
+    "product_title": "Producto",
+    "product_features": "Características",
+    "product_pricing": "Precios",
+    "product_how": "Cómo funciona",
+    "product_faq": "FAQ",
+    "product_providers": "Buscar proveedores",
+    "product_inbound": "Conseguí clientes",
+    "download_title": "Descargar",
+    "download_ios": "iOS — App Store",
+    "download_android": "Android — Google Play",
+    "account_title": "Cuenta",
+    "account_register": "Registrarse",
+    "account_login": "Iniciar Sesión",
+    "account_forgot": "Recuperar contraseña",
+    "legal_title": "Legal",
+    "legal_about": "Acerca de",
+    "legal_help": "Ayuda",
+    "legal_terms": "Términos y Condiciones",
+    "legal_privacy": "Política de Privacidad",
+    "copyright": "© 2026 Solennix. Todos los derechos reservados.",
+    "security": "Datos protegidos con encriptación de extremo a extremo"
+  },
+  "scroll_to_top": "Volver al inicio",
+  "mock": {
+    "greeting": "Buenos días 👋",
+    "business_name": "Mi negocio",
+    "kpi_revenue": "Ingresos",
+    "kpi_revenue_delta": "+18% este mes",
+    "kpi_events": "Eventos",
+    "kpi_events_value": "8 activos",
+    "kpi_events_delta": "3 esta semana",
+    "upcoming_events": "Próximos eventos",
+    "view_all": "Ver todos →",
+    "guests": "{{guests}} personas",
+    "this_month": "{{delta}} este mes",
+    "status_confirmed": "Confirmado",
+    "status_quoted": "Cotizado",
+    "browser_url": "app.solennix.com/dashboard",
+    "events": [
+      { "name": "Boda Martínez", "date": "Sáb 15 Mar", "amount": "$45,000" },
+      { "name": "Cumpleaños VIP", "date": "Dom 16 Mar", "amount": "$12,500" },
+      { "name": "Evento Corporativo", "date": "Vie 21 Mar", "amount": "$78,000" }
+    ],
+    "kpis": [
+      { "label": "Ingresos del mes", "value": "$135,500", "delta": "+18%" },
+      { "label": "Eventos activos", "value": "8", "delta": "+3" },
+      { "label": "Clientes totales", "value": "47", "delta": "+5" }
+    ]
+  }
+}

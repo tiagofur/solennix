@@ -26,8 +26,9 @@ import (
 //
 // See openspec/changes/add-public-request-flow/specs/public-request/spec.md.
 type PublicRequestHandler struct {
-	svc         publicRequestService
-	requestRepo publicRequestInboxStore
+	svc             publicRequestService
+	requestRepo     publicRequestInboxStore
+	turnstileSecret string
 }
 
 // publicRequestService is the subset of *services.PublicRequestService the
@@ -62,8 +63,8 @@ type CursorPaginatedResponse struct {
 	Limit      int         `json:"limit"`
 }
 
-func NewPublicRequestHandler(svc *services.PublicRequestService, requestRepo *repository.PublicRequestRepo) *PublicRequestHandler {
-	return &PublicRequestHandler{svc: svc, requestRepo: requestRepo}
+func NewPublicRequestHandler(svc *services.PublicRequestService, requestRepo *repository.PublicRequestRepo, turnstileSecret string) *PublicRequestHandler {
+	return &PublicRequestHandler{svc: svc, requestRepo: requestRepo, turnstileSecret: turnstileSecret}
 }
 
 // --- Public endpoint ---
@@ -91,6 +92,9 @@ type CreatePublicRequestRequest struct {
 	// Website is a honeypot anti-spam field. Real browsers leave it empty;
 	// bots that autofill hidden fields get a fake 201 without persisting.
 	Website string `json:"website,omitempty"`
+	// TurnstileToken is the Cloudflare Turnstile client token. Required when
+	// the server configures TURNSTILE_SECRET_KEY; ignored otherwise.
+	TurnstileToken *string `json:"turnstile_token,omitempty"`
 	// PackageID when set freezes a live package quote snapshot on the request.
 	PackageID *string `json:"package_id,omitempty"`
 }
@@ -150,6 +154,17 @@ func (h *PublicRequestHandler) CreatePublicRequest(w http.ResponseWriter, r *htt
 				"is_read":       false,
 			},
 		})
+		return
+	}
+
+	// Turnstile: human proof for anonymous writes. Skipped when the server
+	// has no TURNSTILE_SECRET_KEY (dev mode); enforced otherwise.
+	token := ""
+	if req.TurnstileToken != nil {
+		token = *req.TurnstileToken
+	}
+	if err := verifyTurnstileToken(r.Context(), h.turnstileSecret, token, clientIP(r)); err != nil {
+		writeError(w, http.StatusBadRequest, "captcha verification failed")
 		return
 	}
 

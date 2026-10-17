@@ -6,6 +6,8 @@
   "discount_invoice": "Descuento y Facturación",
   "invoice_required": "Requiere factura (IVA {{rate}}%)",
   "general_discount": "Descuento General",
+  "discount_range_error": "El descuento en % debe estar entre 0 y 100.",
+  "discount_negative_error": "El descuento no puede ser negativo.",
   "convert_to_event": "Convertir a Evento",
   "export_pdf": "Exportar PDF",
   "summary": {

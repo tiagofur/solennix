@@ -3665,6 +3665,8 @@ export interface components {
             message?: string | null;
             /** @description Honeypot anti-spam field. Must be empty. Bots that fill hidden fields receive a fake 201 without creating a request. */
             website?: string;
+            /** @description Cloudflare Turnstile client token. Required when the server configures TURNSTILE_SECRET_KEY; ignored otherwise. */
+            turnstile_token?: string;
             /**
              * Format: uuid
              * @description When set, server builds a live package quote and freezes package_quote on the request (guest_count drives per_guest lines and discount tiers).

@@ -34,8 +34,14 @@ export const ClientForm: React.FC = () => {
 
   const clientSchema = useMemo(() => z.object({
     name: z.string().min(2, t("clients:form.validation.name_min")),
-    phone: z.string().min(10, t("clients:form.validation.phone_min")),
-    email: z.string().email(t("clients:form.validation.email_invalid")).optional().or(z.literal("")),
+    phone: z
+      .string()
+      .min(10, t("clients:form.validation.phone_min"))
+      .refine(
+        (v) => /^[+\d][\d\s().-]*$/.test(v) && v.replace(/\D/g, "").length <= 15,
+        t("clients:form.validation.phone_invalid"),
+      ),
+    email: z.email(t("clients:form.validation.email_invalid")).optional().or(z.literal("")),
     address: z.string().optional(),
     city: z.string().optional(),
     notes: z.string().optional(),

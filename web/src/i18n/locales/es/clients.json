@@ -41,6 +41,7 @@
       "name_required": "El nombre es requerido",
       "name_min": "El nombre debe tener al menos 2 caracteres",
       "phone_min": "El teléfono debe tener al menos 10 dígitos",
+      "phone_invalid": "Ingresá un teléfono válido (dígitos, espacios, + y -).",
       "email_invalid": "Email inválido. Usa el formato: nombre@dominio.com",
       "photo_too_large": "La foto debe ser menor a 10 MB",
       "photo_upload_error": "No se pudo subir la foto"

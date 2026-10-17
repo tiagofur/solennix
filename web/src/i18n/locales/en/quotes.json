@@ -6,6 +6,8 @@
   "discount_invoice": "Discount & Billing",
   "invoice_required": "Invoice required (VAT {{rate}}%)",
   "general_discount": "General Discount",
+  "discount_range_error": "Percent discount must be between 0 and 100.",
+  "discount_negative_error": "Discount cannot be negative.",
   "convert_to_event": "Convert to Event",
   "export_pdf": "Export PDF",
   "summary": {

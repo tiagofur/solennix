@@ -155,3 +155,57 @@ describe("RequestForm UI", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });
+
+describe("buildRequestPayload turnstile", () => {
+  const base = {
+    contactName: "Ana",
+    contactEmail: "a@b.com",
+    contactPhone: "",
+    eventType: "wedding",
+    eventDate: "",
+    location: "",
+    city: "",
+    numGuests: "",
+    budget: "",
+    message: "",
+    website: "",
+    selectedServices: {},
+  };
+
+  it("includes turnstile_token when provided", () => {
+    const payload = buildRequestPayload(base, "tok-123");
+    expect(payload.turnstile_token).toBe("tok-123");
+  });
+
+  it("omits turnstile_token when absent", () => {
+    const payload = buildRequestPayload(base);
+    expect(payload.turnstile_token).toBeUndefined();
+  });
+});
+
+describe("TurnstileWidget", () => {
+  it("renders nothing without a site key", async () => {
+    vi.stubEnv("VITE_TURNSTILE_SITE_KEY", "");
+    const { TurnstileWidget } = await import("@/components/TurnstileWidget");
+    const { queryByTestId } = render(
+      <TurnstileWidget onVerify={vi.fn()} />,
+    );
+    expect(queryByTestId("turnstile-widget")).toBeNull();
+  });
+});
+
+describe("RequestForm captcha gate", () => {
+  it("blocks submit when configured without a token", async () => {
+    vi.stubEnv("VITE_TURNSTILE_SITE_KEY", "test-key");
+    const onSubmit = vi.fn();
+    render(<RequestForm mode="profile" onSubmit={onSubmit} />);
+    fireEvent.change(screen.getByTestId("lead-email-input"), {
+      target: { value: "client@example.com" },
+    });
+    fireEvent.click(screen.getByTestId("lead-submit-button"));
+    await waitFor(() => {
+      expect(screen.getByTestId("lead-error")).toBeInTheDocument();
+    });
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});

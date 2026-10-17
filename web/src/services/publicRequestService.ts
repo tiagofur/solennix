@@ -30,6 +30,8 @@ export type CreatePublicRequestRequest = Omit<
   services?: CreatePublicRequestServiceLine[];
   /** Honeypot anti-spam. Must stay empty; bots that fill it get a fake 201. */
   website?: string;
+  /** Cloudflare Turnstile token. Required when the backend configures it. */
+  turnstile_token?: string;
 };
 
 export type PublicRequest = components["schemas"]["PublicRequest"] & {

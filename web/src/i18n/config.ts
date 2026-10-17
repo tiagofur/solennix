@@ -63,6 +63,9 @@ import enRequests from "./locales/en/requests.json";
 import esInbound from "./locales/es/inbound.json";
 import enInbound from "./locales/en/inbound.json";
 
+import esLanding from "./locales/es/landing.json";
+import enLanding from "./locales/en/landing.json";
+
 /**
  * i18next setup — namespaces are added incrementally as each screen is
  * internationalised. `common` holds shared strings (buttons, nav, errors).
@@ -93,6 +96,7 @@ void i18n
         reviews: esReviews,
         requests: esRequests,
         inbound: esInbound,
+        landing: esLanding,
       },
       en: {
         common: enCommon,
@@ -115,6 +119,7 @@ void i18n
         reviews: enReviews,
         requests: enRequests,
         inbound: enInbound,
+        landing: enLanding,
       },
     },
     fallbackLng: "es",
@@ -141,6 +146,7 @@ void i18n
       "reviews",
       "requests",
       "inbound",
+      "landing",
     ],
     defaultNS: "common",
     interpolation: {
