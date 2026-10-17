@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@tests/customRender';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
+import i18n from 'i18next';
 import { Landing } from './Landing';
 
 const mockToggleTheme = vi.fn();
@@ -258,7 +259,7 @@ describe('Landing', () => {
     expect(screen.getByText('Crea tu cuenta')).toBeInTheDocument();
     expect(screen.getByText('Cotiza en minutos')).toBeInTheDocument();
     expect(screen.getByText('Cobra online')).toBeInTheDocument();
-    expect(screen.getByText('Ejecuta y cumpli')).toBeInTheDocument();
+    expect(screen.getByText('Ejecuta y cumplí')).toBeInTheDocument();
   });
 
   it('renders product proof section', () => {
@@ -356,5 +357,16 @@ describe('Landing', () => {
     // There should be multiple "Iniciar Sesión" links now (desktop + mobile)
     const loginLinks = screen.getAllByText('Iniciar Sesión');
     expect(loginLinks.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('renders translated content when language switches to English', async () => {
+    renderLanding();
+
+    await i18n.changeLanguage('en');
+    expect(await screen.findByText('Quote, Charge,')).toBeInTheDocument();
+    expect(screen.getByText('Professional Quotes')).toBeInTheDocument();
+
+    // Restore Spanish so later tests assert the default locale.
+    await i18n.changeLanguage('es');
   });
 });

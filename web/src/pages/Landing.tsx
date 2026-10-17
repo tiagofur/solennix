@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Calendar,
   Users,
@@ -42,633 +42,84 @@ import { useTheme } from "@/hooks/useTheme";
 import { Logo } from "@/components/Logo";
 import { recordPageView } from "@/services/pageViewService";
 
-const FEATURES = [
-  {
-    icon: FileText,
-    color: "text-primary",
-    bg: "bg-primary/10",
-    title: "Cotizaciones profesionales",
-    description:
-      "Genera cotizaciones PDF en minutos. Tu cliente las recibe por link, puede aceptar y pagar desde su celular.",
-  },
-  {
-    icon: CreditCard,
-    color: "text-success",
-    bg: "bg-success/10",
-    title: "Cobros y Pagos",
-    description:
-      "Stripe integrado. Cobrá en parcialidades, tus clientes pagan online y el sistema conciliar automatico.",
-  },
-  {
-    icon: Send,
-    color: "text-info",
-    bg: "bg-info/10",
-    title: "Portal del Cliente",
-    description:
-      "Tus clientes acceden a un portal con su contrato, fotos, timeline y pagan sin salir de la app.",
-  },
-  {
-    icon: ClipboardList,
-    color: "text-warning",
-    bg: "bg-warning/10",
-    title: "Inventario y Recursos",
-    description:
-      "Registrá equipos y personal. El sistema evita conflictos de disponibilidad automaticamente.",
-  },
-  {
-    icon: UsersRound,
-    color: "text-primary",
-    bg: "bg-primary/10",
-    title: "Staff y Equipos",
-    description:
-      "Asigna personal, envia asignaciones y recibe confirmaciones. Todo centralizado.",
-  },
-  {
-    icon: Calendar,
-    color: "text-success",
-    bg: "bg-success/10",
-    title: "Calendario Integral",
-    description:
-      "Todas tus eventos, disponibilidad y conflictos en una vista. Arrastrá y reorganizá.",
-  },
-  {
-    icon: BarChart3,
-    color: "text-info",
-    bg: "bg-info/10",
-    title: "Reportes en Tiempo Real",
-    description:
-      "Ingresos, eventos, ocupacion. Métricas reales para optimizar precios y crecer.",
-  },
-  {
-    icon: Building,
-    color: "text-warning",
-    bg: "bg-warning/10",
-    title: "Forms Públicos",
-    description:
-      "Crea formularios de solicitud o cotizacion. Tus clientes cotizan ellos mismos.",
-  },
-];
+// All copy lives in the `landing` i18n namespace; the constants below hold
+// only visual config (icons, colors, URLs, non-translatable mock data).
 
-const FEATURES_EN = [
-  {
-    icon: FileText,
-    color: "text-primary",
-    bg: "bg-primary/10",
-    title: "Professional Quotes",
-    description:
-      "Generate PDF quotes in minutes. Your client receives a link, can accept, and pay from their phone.",
-  },
-  {
-    icon: CreditCard,
-    color: "text-success",
-    bg: "bg-success/10",
-    title: "Collections and Payments",
-    description:
-      "Stripe integrated. Charge in installments, let clients pay online, and reconcile payments automatically.",
-  },
-  {
-    icon: Send,
-    color: "text-info",
-    bg: "bg-info/10",
-    title: "Client Portal",
-    description:
-      "Your clients access their contract, photos, timeline, and can pay without leaving the app.",
-  },
-  {
-    icon: ClipboardList,
-    color: "text-warning",
-    bg: "bg-warning/10",
-    title: "Inventory and Resources",
-    description:
-      "Register equipment and staff. The system prevents availability conflicts automatically.",
-  },
-  {
-    icon: UsersRound,
-    color: "text-primary",
-    bg: "bg-primary/10",
-    title: "Staff and Teams",
-    description:
-      "Assign team members, send assignments, and collect confirmations in one place.",
-  },
-  {
-    icon: Calendar,
-    color: "text-success",
-    bg: "bg-success/10",
-    title: "Integrated Calendar",
-    description:
-      "All events, availability, and conflicts in one view. Drag and reorder as needed.",
-  },
-  {
-    icon: BarChart3,
-    color: "text-info",
-    bg: "bg-info/10",
-    title: "Real-Time Reports",
-    description:
-      "Revenue, events, and utilization. Real metrics to optimize pricing and grow.",
-  },
-  {
-    icon: Building,
-    color: "text-warning",
-    bg: "bg-warning/10",
-    title: "Public Forms",
-    description:
-      "Create request and quote forms. Let clients request quotes on their own.",
-  },
-];
+/** Icon + color pairing for `landing:features.items` (by index). */
+const FEATURE_STYLES = [
+  { icon: FileText, color: "text-primary", bg: "bg-primary/10" },
+  { icon: CreditCard, color: "text-success", bg: "bg-success/10" },
+  { icon: Send, color: "text-info", bg: "bg-info/10" },
+  { icon: ClipboardList, color: "text-warning", bg: "bg-warning/10" },
+  { icon: UsersRound, color: "text-primary", bg: "bg-primary/10" },
+  { icon: Calendar, color: "text-success", bg: "bg-success/10" },
+  { icon: BarChart3, color: "text-info", bg: "bg-info/10" },
+  { icon: Building, color: "text-warning", bg: "bg-warning/10" },
+] as const;
 
-const STEPS = [
-  {
-    number: "01",
-    title: "Crea tu cuenta",
-    description: "Registrate gratis. Sin tarjeta requerida.",
-    icon: Zap,
-  },
-  {
-    number: "02",
-    title: "Cotiza en minutos",
-    description: "Crea una cotizacion profesional. Tu cliente la recibe por link.",
-    icon: FileText,
-  },
-  {
-    number: "03",
-    title: "Cobra online",
-    description: "Tu cliente acepta y paga desde su celular. Stripe hace la conciliacion.",
-    icon: CreditCard,
-  },
-  {
-    number: "04",
-    title: "Ejecuta y cumpli",
-    description: "Inventario, staff y portal del cliente. Todo controlado.",
-    icon: ClipboardList,
-  },
-];
+/** Step numbers for `landing:how_it_works.steps` (by index). */
+const STEP_NUMBERS = ["01", "02", "03", "04"] as const;
 
-const STEPS_EN = [
-  {
-    number: "01",
-    title: "Create your account",
-    description: "Sign up for free. No credit card required.",
-    icon: Zap,
-  },
-  {
-    number: "02",
-    title: "Quote in minutes",
-    description: "Create a professional quote. Your client receives it by link.",
-    icon: FileText,
-  },
-  {
-    number: "03",
-    title: "Collect online",
-    description: "Your client accepts and pays from their phone. Stripe handles reconciliation.",
-    icon: CreditCard,
-  },
-  {
-    number: "04",
-    title: "Execute with confidence",
-    description: "Inventory, staff, and client portal. Everything under control.",
-    icon: ClipboardList,
-  },
-];
+/** Avatar + rating for `landing:testimonials.items` (by index). */
+const TESTIMONIAL_META = [
+  { avatar: "MG", avatarColor: "bg-error", rating: 5 },
+  { avatar: "CM", avatarColor: "bg-info", rating: 5 },
+  { avatar: "AR", avatarColor: "bg-primary", rating: 5 },
+] as const;
 
-// STATS - removed unverified stats per issue #194
-// Real proof through product capabilities instead of numbers
+/** Icons for `landing:proof.items` (by index). */
+const PROOF_ICONS = [FileText, CreditCard, Send, UsersRound] as const;
 
-const TESTIMONIALS = [
-  {
-    name: "María González",
-    role: "Organizadora de Bodas",
-    location: "Ciudad de México",
-    avatar: "MG",
-    avatarColor: "bg-error",
-    rating: 5,
-    text: "El portal del cliente fue un cambio total. Mis novios ven su contrato, suben fotos y pagan online. Yo ya no persigo pagos.",
-  },
-  {
-    name: "Carlos Mendoza",
-    role: "Productor de Eventos",
-    location: "Monterrey",
-    avatar: "CM",
-    avatarColor: "bg-info",
-    rating: 5,
-    text: "El control de inventario salvo mi negocio. Ya no tenemos dobles reservas y el staff recibe sus asignaciones en el celular.",
-  },
-  {
-    name: "Ana Rodríguez",
-    role: "DJ y Animadora",
-    location: "Guadalajara",
-    avatar: "AR",
-    avatarColor: "bg-primary",
-    rating: 5,
-    text: "Las cotizaciones automaticas y el link de pago online me ahorraron 10 horas semanales. Mis clientes pagan antes del evento.",
-  },
-];
+/** Icons for `landing:inbound.pillars` (by index). */
+const INBOUND_PILLAR_ICONS = [Link2, Send, Search] as const;
 
-const TESTIMONIALS_EN = [
-  {
-    name: "María González",
-    role: "Wedding Planner",
-    location: "Mexico City",
-    avatar: "MG",
-    avatarColor: "bg-error",
-    rating: 5,
-    text: "The client portal changed everything. Couples review contracts, upload photos, and pay online. I no longer chase payments.",
-  },
-  {
-    name: "Carlos Mendoza",
-    role: "Event Producer",
-    location: "Monterrey",
-    avatar: "CM",
-    avatarColor: "bg-info",
-    rating: 5,
-    text: "Inventory control saved our operation. No more double bookings and the team receives assignments on mobile.",
-  },
-  {
-    name: "Ana Rodríguez",
-    role: "DJ & Entertainer",
-    location: "Guadalajara",
-    avatar: "AR",
-    avatarColor: "bg-primary",
-    rating: 5,
-    text: "Automated quotes and payment links save me 10 hours a week. Clients pay before the event.",
-  },
-];
+/** Icons for `landing:mobile_app.features` (by index). */
+const MOBILE_FEATURE_ICONS = [
+  Fingerprint,
+  LayoutGrid,
+  Bell,
+  RefreshCw,
+] as const;
 
 const DIRECTORY_FROM_LANDING = "/providers?from=landing";
 
-/** Seeker category chips → pre-filtered directory (static, no live API). */
+/** Seeker category chips → pre-filtered directory (static, no live API).
+ * Labels come from `landing:inbound.chips` (by index); slugs are URL data. */
 const DIRECTORY_CATEGORY_CHIPS = [
-  { label: "Catering", serviceCategory: "catering" },
-  { label: "Decoración", serviceCategory: "decoracion" },
-  { label: "Música / DJ", serviceCategory: "dj" },
-  { label: "Fotografía", serviceCategory: "fotografia" },
-  { label: "Flores", serviceCategory: "flores" },
-  { label: "Mobiliario", serviceCategory: "mobiliario" },
+  { serviceCategory: "catering" },
+  { serviceCategory: "decoracion" },
+  { serviceCategory: "dj" },
+  { serviceCategory: "fotografia" },
+  { serviceCategory: "flores" },
+  { serviceCategory: "mobiliario" },
 ] as const;
 
-const INBOUND_PILLARS = [
-  {
-    icon: Link2,
-    title: "Perfil público",
-    description:
-      "Tu página profesional en /u/tu-negocio: portfolio, servicios y branding para compartir por WhatsApp o Instagram.",
-  },
-  {
-    icon: Send,
-    title: "Solicitudes de cotización",
-    description:
-      "Visitantes te piden presupuesto sin crear cuenta. Vos respondés desde Solennix; el acuerdo sigue siendo tuyo.",
-  },
-  {
-    icon: Search,
-    title: "Directorio de proveedores",
-    description:
-      "Aparecé en el directorio público para que te encuentren por ciudad, tipo de evento y servicio.",
-  },
+/** href + highlight flags for `landing:pricing.plans` (by index). */
+const PLAN_META = [
+  { href: "/register", highlighted: false },
+  { href: "/register", highlighted: true },
 ] as const;
 
-const PLANS = [
-  {
-    name: "Básico",
-    price: "Gratis",
-    originalPrice: null,
-    period: "",
-    description: "Perfecto para empezar",
-    promo: null,
-    features: [
-      "Hasta 4 eventos por mes",
-      "Hasta 20 clientes registrados",
-      "Hasta 15 productos y 30 de inventario",
-      "Portal cliente y perfil público básicos",
-      "Calendario de eventos",
-      "3 enlaces de solicitud activos",
-    ],
-    cta: "Comenzar Gratis",
-    href: "/register",
-    highlighted: false,
-  },
-  {
-    name: "Pro",
-    price: "$99",
-    originalPrice: "$199",
-    period: "MXN/mes",
-    description: "Para profesionales en crecimiento",
-    promo: "🎉 Precio de lanzamiento",
-    features: [
-      "Eventos, clientes y catálogo ilimitados",
-      "Generación de cotizaciones PDF",
-      "Control de pagos en múltiples plazos",
-      "Reportes y analíticas avanzadas",
-      "Perfil público + directorio + solicitudes",
-      "Soporte prioritario",
-    ],
-    cta: "Comenzar Ahora",
-    href: "/register",
-    highlighted: true,
-    ctaClass: "premium-gradient text-white",
-  },
-];
+// Mini dashboard mock data (non-translatable), merged by index with the
+// i18n `landing:mock.events` rows.
+const MOCK_EVENT_META = [
+  { guests: 180, status: "confirmed" },
+  { guests: 60, status: "quoted" },
+  { guests: 250, status: "confirmed" },
+] as const;
 
-const PLANS_EN = [
-  {
-    name: "Basic",
-    price: "Free",
-    originalPrice: null,
-    period: "",
-    description: "Perfect to get started",
-    promo: null,
-    features: [
-      "Up to 4 events per month",
-      "Up to 20 registered clients",
-      "Up to 15 products and 30 inventory items",
-      "Basic client portal and public profile",
-      "Event calendar",
-      "3 active request links",
-    ],
-    cta: "Start Free",
-    href: "/register",
-    highlighted: false,
-  },
-  {
-    name: "Pro",
-    price: "$99",
-    originalPrice: "$199",
-    period: "MXN/month",
-    description: "For growing professionals",
-    promo: "🎉 Launch price",
-    features: [
-      "Unlimited events, clients, and catalog",
-      "PDF quote generation",
-      "Multi-installment payment tracking",
-      "Advanced reports and analytics",
-      "Priority support",
-    ],
-    cta: "Start Now",
-    href: "/register",
-    highlighted: true,
-    ctaClass: "premium-gradient text-white",
-  },
-];
-
-const FAQS = [
-  {
-    question: "¿Necesito tarjeta de crédito para registrarme?",
-    answer:
-      "No. El plan Básico es completamente gratuito y no requiere tarjeta de crédito. Solo necesitas un correo electrónico.",
-  },
-  {
-    question: "¿Cómo me encuentran clientes nuevos?",
-    answer:
-      "Activá tu perfil público, compartí el link /u/tu-negocio y, si cumplís los criterios de publicabilidad, podés aparecer en el directorio /providers. Los visitantes envían solicitudes de cotización; Solennix facilita el contacto — no intermedia el servicio ni los pagos del evento.",
-  },
-  {
-    question: "¿Puedo importar mis datos existentes?",
-    answer:
-      "Sí. Puedes importar clientes desde CSV o Excel. También ofrecemos migración asistida para cuentas Pro.",
-  },
-  {
-    question: "¿Mis datos están seguros?",
-    answer:
-      "Absolutamente. Usamos encriptación de extremo a extremo, backups automáticos diarios y servidores con certificación SOC 2.",
-  },
-  {
-    question: "¿Puedo cancelar en cualquier momento?",
-    answer:
-      "Sí, sin penalizaciones ni contratos de permanencia. Puedes cancelar cuando quieras y conservar acceso hasta el final del período pagado.",
-  },
-];
-
-const FAQS_EN = [
-  {
-    question: "Do I need a credit card to sign up?",
-    answer:
-      "No. The Basic plan is fully free and does not require a credit card. You only need an email address.",
-  },
-  {
-    question: "Can I import my existing data?",
-    answer:
-      "Yes. You can import clients from CSV or Excel. We also offer assisted migration for Pro accounts.",
-  },
-  {
-    question: "Is my data secure?",
-    answer:
-      "Absolutely. We use end-to-end encryption, automatic daily backups, and SOC 2 certified infrastructure.",
-  },
-  {
-    question: "Can I cancel anytime?",
-    answer:
-      "Yes, with no penalties or lock-in contracts. You can cancel at any time and keep access until the end of your paid period.",
-  },
-];
-
-const MOBILE_FEATURES = [
-  { icon: Fingerprint, text: "Face ID y Touch ID para entrar al instante" },
-  { icon: LayoutGrid, text: "Widgets en la pantalla de inicio" },
-  { icon: Bell, text: "Notificaciones en tiempo real" },
-  { icon: RefreshCw, text: "Sincronización automática con web" },
-];
-
-const MOBILE_FEATURES_EN = [
-  { icon: Fingerprint, text: "Face ID and Touch ID for instant access" },
-  { icon: LayoutGrid, text: "Home screen widgets" },
-  { icon: Bell, text: "Real-time notifications" },
-  { icon: RefreshCw, text: "Automatic sync with web" },
-];
-
-const LANDING_COPY = {
-  es: {
-    nav: {
-      features: "Características",
-      howItWorks: "Cómo funciona",
-      pricing: "Precios",
-      app: "App Móvil",
-      faq: "FAQ",
-      login: "Ingresar",
-      trial: "Probar Gratis",
-      openMenu: "Abrir menú",
-      closeMenu: "Cerrar menú",
-      switchLight: "Cambiar a modo claro",
-      switchDark: "Cambiar a modo oscuro",
-      loginMobile: "Iniciar Sesión",
-    },
-    hero: {
-      badge: "Control operativo completo",
-      titleTop: "Cotizá, Cobrá,",
-      titleBottom: "Coordiná y Cumplí",
-      subtitle:
-        "Una plataforma para gestionar todo el ciclo de tus eventos: cotizaciones profesionales, cobros online, inventario, staff y Portal del cliente. Todo desde un solo lugar.",
-      start: "Empezar Gratis Ahora",
-      haveAccount: "Ya tengo cuenta",
-      noCard: "Sin tarjeta de crédito",
-      setup: "Instala en 2 minutos",
-      cancel: "Cancela cuando quieras",
-      alsoOn: "También disponible en",
-    },
-    proof: {
-      title: "Todo el ciclo operativo",
-      subtitle: "De la cotizacion al cumplimiento",
-      quote: "Cotizaciones PDF",
-      payments: "Cobros Online",
-      portal: "Portal Cliente",
-      staff: "Gestion Staff",
-    },
-    sections: {
-      featureBadge: "✨ Características",
-      featureTitle: "Todo lo que necesitas en un solo lugar",
-      featureDesc:
-        "Deja de usar hojas de cálculo, WhatsApp y notas dispersas. Centraliza toda tu operación en una plataforma diseñada para organizadores de eventos.",
-      howBadge: "🚀 Cómo funciona",
-      howTitle: "Empieza en minutos, no en días",
-      howDesc:
-        "Diseñamos la plataforma para que sea intuitiva y potente desde el primer segundo.",
-      appBadge: "App Móvil",
-      appTitle: "Tu negocio en el bolsillo",
-      appDesc:
-        "Gestiona eventos, revisá pagos y confirmá inventario desde tu iPhone. La misma potencia de la plataforma web, ahora disponible donde estés.",
-      testimonialBadge: "💬 Testimonios",
-      testimonialTitle: "Lo que dicen nuestros usuarios",
-      testimonialDesc:
-        "Más de 500 organizadores ya confían en Solennix para gestionar su negocio.",
-      pricingBadge: "💰 Precios",
-      pricingTitle: "Planes para cada etapa",
-      pricingDesc: "Comienza gratis y activa el plan Pro cuando lo necesites.",
-      faqBadge: "❓ Preguntas frecuentes",
-      faqTitle: "Resolvemos tus dudas",
-      popular: "Más popular",
-      closeAnswer: "Cerrar",
-      openAnswer: "Abrir",
-    },
-    cta: {
-      title: "¿Listo para escalar",
-      title2: "tu negocio?",
-      subtitle:
-        "Únete a la nueva generación de organizadores que ya profesionalizaron su operación.",
-      start: "Comenzar Gratis",
-      haveAccount: "Ya tengo cuenta",
-      noCard: "Sin tarjeta de crédito",
-      cancel: "Cancela cuando quieras",
-      supportEs: "Soporte en español",
-    },
-    footer: {
-      desc:
-        "La plataforma todo-en-uno para organizadores de eventos profesionales en México y Latinoamérica.",
-      product: "Producto",
-      download: "Descargar",
-      account: "Cuenta",
-      legal: "Legal",
-      register: "Registrarse",
-      login: "Iniciar Sesión",
-      forgot: "Recuperar contraseña",
-      about: "Acerca de",
-      terms: "Términos y Condiciones",
-      privacy: "Política de Privacidad",
-      rights: "© 2026 Solennix. Todos los derechos reservados.",
-      encryption: "Datos protegidos con encriptación de extremo a extremo",
-      scrollTop: "Volver al inicio",
-      appStore: "iOS — App Store",
-      playStore: "Android — Google Play",
-    },
-  },
-  en: {
-    nav: {
-      features: "Features",
-      howItWorks: "How it works",
-      pricing: "Pricing",
-      app: "Mobile App",
-      faq: "FAQ",
-      login: "Login",
-      trial: "Try Free",
-      openMenu: "Open menu",
-      closeMenu: "Close menu",
-      switchLight: "Switch to light mode",
-      switchDark: "Switch to dark mode",
-      loginMobile: "Sign in",
-    },
-    hero: {
-      badge: "Complete operations control",
-      titleTop: "Quote, Collect,",
-      titleBottom: "Coordinate and Deliver",
-      subtitle:
-        "One platform to run your full event cycle: professional quotes, online payments, inventory, staff, and a client portal. All in one place.",
-      start: "Start Free Now",
-      haveAccount: "I already have an account",
-      noCard: "No credit card required",
-      setup: "Set up in 2 minutes",
-      cancel: "Cancel anytime",
-      alsoOn: "Also available on",
-    },
-    proof: {
-      title: "Full operations cycle",
-      subtitle: "From quote to execution",
-      quote: "PDF Quotes",
-      payments: "Online Payments",
-      portal: "Client Portal",
-      staff: "Staff Management",
-    },
-    sections: {
-      featureBadge: "✨ Features",
-      featureTitle: "Everything you need in one place",
-      featureDesc:
-        "Stop juggling spreadsheets, chat threads, and scattered notes. Centralize your operation in a platform built for event professionals.",
-      howBadge: "🚀 How it works",
-      howTitle: "Start in minutes, not days",
-      howDesc: "We designed the platform to feel intuitive and powerful from second one.",
-      appBadge: "Mobile App",
-      appTitle: "Your business in your pocket",
-      appDesc:
-        "Manage events, review payments, and confirm inventory from your iPhone. The same power as the web platform, now wherever you are.",
-      testimonialBadge: "💬 Testimonials",
-      testimonialTitle: "What our users say",
-      testimonialDesc: "More than 500 organizers already trust Solennix to run their business.",
-      pricingBadge: "💰 Pricing",
-      pricingTitle: "Plans for every stage",
-      pricingDesc: "Start free and activate Pro when you need it.",
-      faqBadge: "❓ Frequently asked questions",
-      faqTitle: "Your questions, answered",
-      popular: "Most popular",
-      closeAnswer: "Close",
-      openAnswer: "Open",
-    },
-    cta: {
-      title: "Ready to scale",
-      title2: "your business?",
-      subtitle:
-        "Join the next generation of organizers already running a professional operation.",
-      start: "Start Free",
-      haveAccount: "I already have an account",
-      noCard: "No credit card required",
-      cancel: "Cancel anytime",
-      supportEs: "Support in Spanish",
-    },
-    footer: {
-      desc:
-        "The all-in-one platform for professional event organizers in Mexico and LATAM.",
-      product: "Product",
-      download: "Download",
-      account: "Account",
-      legal: "Legal",
-      register: "Sign up",
-      login: "Sign in",
-      forgot: "Forgot password",
-      about: "About",
-      terms: "Terms and Conditions",
-      privacy: "Privacy Policy",
-      rights: "© 2026 Solennix. All rights reserved.",
-      encryption: "Data protected with end-to-end encryption",
-      scrollTop: "Back to top",
-      appStore: "iOS — App Store",
-      playStore: "Android — Google Play",
-    },
-  },
-};
+/** Colors for `landing:mock.kpis` (by index). */
+const MOCK_KPI_COLORS = ["text-success", "text-primary", "text-info"] as const;
 
 function AppStoreBadge() {
+  const { t } = useTranslation("landing");
   return (
     <a
       href={APP_STORE_URL}
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center gap-3 bg-text text-bg px-5 py-3 rounded-2xl hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
-      aria-label="Descargar Solennix en App Store"
+      aria-label={t("landing:stores.app_store_aria")}
     >
       {/* Apple logo SVG */}
       <svg
@@ -680,22 +131,25 @@ function AppStoreBadge() {
       </svg>
       <div className="text-left">
         <div className="text-xs font-medium leading-none mb-0.5 opacity-75">
-          Descargá en
+          {t("landing:stores.app_store_pre")}
         </div>
-        <div className="text-base font-black leading-none">App Store</div>
+        <div className="text-base font-black leading-none">
+          {t("landing:stores.app_store_name")}
+        </div>
       </div>
     </a>
   );
 }
 
 function GooglePlayBadge() {
+  const { t } = useTranslation("landing");
   return (
     <a
       href={PLAY_STORE_URL}
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center gap-3 bg-text text-bg px-5 py-3 rounded-2xl hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
-      aria-label="Descargar Solennix en Google Play"
+      aria-label={t("landing:stores.google_play_aria")}
     >
       {/* Google Play triangle icon */}
       <svg
@@ -707,15 +161,30 @@ function GooglePlayBadge() {
       </svg>
       <div className="text-left">
         <div className="text-xs font-medium leading-none mb-0.5 opacity-75">
-          Disponible en
+          {t("landing:stores.google_play_pre")}
         </div>
-        <div className="text-base font-black leading-none">Google Play</div>
+        <div className="text-base font-black leading-none">
+          {t("landing:stores.google_play_name")}
+        </div>
       </div>
     </a>
   );
 }
 
 function PhoneMockup() {
+  const { t } = useTranslation("landing");
+  const mockEvents = (
+    t("landing:mock.events", { returnObjects: true }) as {
+      name: string;
+      date: string;
+      amount: string;
+    }[]
+  ).map((event, i) => ({ ...event, ...MOCK_EVENT_META[i] }));
+  const mockKpis = t("landing:mock.kpis", { returnObjects: true }) as {
+    label: string;
+    value: string;
+    delta: string;
+  }[];
   return (
     <div className="relative w-full max-w-70 mx-auto select-none pointer-events-none">
       {/* Phone frame */}
@@ -731,8 +200,12 @@ function PhoneMockup() {
           {/* Header */}
           <div className="flex items-center justify-between px-1 pt-2 pb-1">
             <div>
-              <p className="text-xs text-text-secondary">Buenos días 👋</p>
-              <p className="text-sm font-black text-text">Mi negocio</p>
+              <p className="text-xs text-text-secondary">
+                {t("landing:mock.greeting")}
+              </p>
+              <p className="text-sm font-black text-text">
+                {t("landing:mock.business_name")}
+              </p>
             </div>
             <div className="w-8 h-8 rounded-full premium-gradient flex items-center justify-center">
               <Zap className="h-4 w-4 text-white" />
@@ -742,14 +215,24 @@ function PhoneMockup() {
           {/* KPI pills */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-card border border-border rounded-2xl p-3">
-              <p className="text-xs text-text-secondary mb-1">Ingresos</p>
-              <p className="text-sm font-black text-text">$135,500</p>
-              <p className="text-xs text-success font-bold">+18% este mes</p>
+              <p className="text-xs text-text-secondary mb-1">
+                {t("landing:mock.kpi_revenue")}
+              </p>
+              <p className="text-sm font-black text-text">{mockKpis[0].value}</p>
+              <p className="text-xs text-success font-bold">
+                {t("landing:mock.kpi_revenue_delta")}
+              </p>
             </div>
             <div className="bg-card border border-border rounded-2xl p-3">
-              <p className="text-xs text-text-secondary mb-1">Eventos</p>
-              <p className="text-sm font-black text-text">8 activos</p>
-              <p className="text-xs text-primary font-bold">3 esta semana</p>
+              <p className="text-xs text-text-secondary mb-1">
+                {t("landing:mock.kpi_events")}
+              </p>
+              <p className="text-sm font-black text-text">
+                {t("landing:mock.kpi_events_value")}
+              </p>
+              <p className="text-xs text-primary font-bold">
+                {t("landing:mock.kpi_events_delta")}
+              </p>
             </div>
           </div>
 
@@ -757,10 +240,10 @@ function PhoneMockup() {
           <div className="bg-card border border-border rounded-2xl overflow-hidden">
             <div className="px-3 py-2 border-b border-border">
               <p className="text-xs font-bold text-text-secondary">
-                Próximos eventos
+                {t("landing:mock.upcoming_events")}
               </p>
             </div>
-            {MOCK_EVENTS.map((event) => (
+            {mockEvents.map((event) => (
               <div
                 key={event.name}
                 className="px-3 py-2.5 flex items-center gap-2.5 border-b border-border last:border-0"
@@ -777,7 +260,9 @@ function PhoneMockup() {
                 <span
                   className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${event.status === "confirmed" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}
                 >
-                  {event.status === "confirmed" ? "Confirmado" : "Cotizado"}
+                  {event.status === "confirmed"
+                    ? t("landing:mock.status_confirmed")
+                    : t("landing:mock.status_quoted")}
                 </span>
               </div>
             ))}
@@ -806,56 +291,22 @@ function PhoneMockup() {
   );
 }
 
-// Mini dashboard mockup data
-const MOCK_EVENTS = [
-  {
-    name: "Boda Martínez",
-    date: "Sáb 15 Mar",
-    guests: 180,
-    status: "confirmed",
-    amount: "$45,000",
-  },
-  {
-    name: "Cumpleaños VIP",
-    date: "Dom 16 Mar",
-    guests: 60,
-    status: "quoted",
-    amount: "$12,500",
-  },
-  {
-    name: "Evento Corporativo",
-    date: "Vie 21 Mar",
-    guests: 250,
-    status: "confirmed",
-    amount: "$78,000",
-  },
-];
-
-const MOCK_KPIS = [
-  {
-    label: "Ingresos del mes",
-    value: "$135,500",
-    delta: "+18%",
-    color: "text-success",
-    bg: "bg-success/10",
-  },
-  {
-    label: "Eventos activos",
-    value: "8",
-    delta: "+3",
-    color: "text-primary",
-    bg: "bg-primary/10",
-  },
-  {
-    label: "Clientes totales",
-    value: "47",
-    delta: "+5",
-    color: "text-info",
-    bg: "bg-info/10",
-  },
-];
-
 function AppMockup() {
+  const { t } = useTranslation("landing");
+  const mockEvents = (
+    t("landing:mock.events", { returnObjects: true }) as {
+      name: string;
+      date: string;
+      amount: string;
+    }[]
+  ).map((event, i) => ({ ...event, ...MOCK_EVENT_META[i] }));
+  const mockKpis = (
+    t("landing:mock.kpis", { returnObjects: true }) as {
+      label: string;
+      value: string;
+      delta: string;
+    }[]
+  ).map((kpi, i) => ({ ...kpi, color: MOCK_KPI_COLORS[i] }));
   return (
     <div className="relative w-full max-w-2xl mx-auto select-none pointer-events-none">
       {/* Browser chrome */}
@@ -864,7 +315,7 @@ function AppMockup() {
         <span className="w-3 h-3 rounded-full bg-yellow-400" />
         <span className="w-3 h-3 rounded-full bg-green-400" />
         <div className="ml-3 flex-1 bg-surface/60 rounded-md px-3 py-1 text-xs text-text-tertiary font-mono">
-          app.solennix.com/dashboard
+          {t("landing:mock.browser_url")}
         </div>
       </div>
 
@@ -893,7 +344,7 @@ function AppMockup() {
           <div className="flex-1 p-4 overflow-hidden flex flex-col gap-3">
             {/* KPI row */}
             <div className="grid grid-cols-3 gap-2">
-              {MOCK_KPIS.map((kpi) => (
+              {mockKpis.map((kpi) => (
                 <div
                   key={kpi.label}
                   className="bg-card rounded-xl p-3 border border-border"
@@ -905,7 +356,7 @@ function AppMockup() {
                     {kpi.value}
                   </div>
                   <div className={`text-xs font-bold ${kpi.color} mt-0.5`}>
-                    {kpi.delta} este mes
+                    {t("landing:mock.this_month", { delta: kpi.delta })}
                   </div>
                 </div>
               ))}
@@ -915,14 +366,14 @@ function AppMockup() {
             <div className="bg-card rounded-xl border border-border overflow-hidden flex-1">
               <div className="px-3 py-2 border-b border-border flex items-center justify-between">
                 <span className="text-xs font-bold text-text-secondary">
-                  Próximos eventos
+                  {t("landing:mock.upcoming_events")}
                 </span>
                 <span className="text-xs text-primary font-semibold">
-                  Ver todos →
+                  {t("landing:mock.view_all")}
                 </span>
               </div>
               <div className="divide-y divide-border">
-                {MOCK_EVENTS.map((event) => (
+                {mockEvents.map((event) => (
                   <div
                     key={event.name}
                     className="px-3 py-2 flex items-center gap-2"
@@ -936,7 +387,8 @@ function AppMockup() {
                       </div>
                       <div className="text-xs text-text-secondary flex items-center gap-1">
                         <Clock className="h-2.5 w-2.5" />
-                        {event.date} · {event.guests} personas
+                        {event.date} ·{" "}
+                        {t("landing:mock.guests", { guests: event.guests })}
                       </div>
                     </div>
                     <div className="text-right shrink-0">
@@ -947,8 +399,8 @@ function AppMockup() {
                         className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${event.status === "confirmed" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}
                       >
                         {event.status === "confirmed"
-                          ? "Confirmado"
-                          : "Cotizado"}
+                          ? t("landing:mock.status_confirmed")
+                          : t("landing:mock.status_quoted")}
                       </span>
                     </div>
                   </div>
@@ -966,6 +418,72 @@ function AppMockup() {
 }
 
 export const Landing: React.FC = () => {
+  const { t } = useTranslation("landing");
+
+  // Localised arrays (labels from the `landing` namespace, merged with the
+  // visual config constants above by index).
+  const proofItems = t("landing:proof.items", {
+    returnObjects: true,
+  }) as string[];
+  const featureItems = t("landing:features.items", {
+    returnObjects: true,
+  }) as { title: string; description: string }[];
+  const features = FEATURE_STYLES.map((style, i) => ({
+    ...style,
+    ...featureItems[i],
+  }));
+  const stepItems = t("landing:how_it_works.steps", {
+    returnObjects: true,
+  }) as { title: string; description: string }[];
+  const steps = stepItems.map((step, i) => ({
+    number: STEP_NUMBERS[i],
+    ...step,
+  }));
+  const testimonialItems = t("landing:testimonials.items", {
+    returnObjects: true,
+  }) as { name: string; role: string; location: string; text: string }[];
+  const testimonials = TESTIMONIAL_META.map((meta, i) => ({
+    ...meta,
+    ...testimonialItems[i],
+  }));
+  const planItems = t("landing:pricing.plans", {
+    returnObjects: true,
+  }) as {
+    name: string;
+    price: string;
+    original_price: string | null;
+    period: string;
+    description: string;
+    promo: string | null;
+    features: string[];
+    cta: string;
+  }[];
+  const plans = planItems.map((plan, i) => ({
+    ...plan,
+    originalPrice: plan.original_price,
+    ...PLAN_META[i],
+  }));
+  const pillarItems = t("landing:inbound.pillars", {
+    returnObjects: true,
+  }) as { title: string; description: string }[];
+  const pillars = INBOUND_PILLAR_ICONS.map((icon, i) => ({
+    icon,
+    ...pillarItems[i],
+  }));
+  const chipLabels = t("landing:inbound.chips", {
+    returnObjects: true,
+  }) as string[];
+  const mobileFeatureTexts = t("landing:mobile_app.features", {
+    returnObjects: true,
+  }) as string[];
+  const mobileFeatures = MOBILE_FEATURE_ICONS.map((icon, i) => ({
+    icon,
+    text: mobileFeatureTexts[i],
+  }));
+  const faqs = t("landing:faq.items", {
+    returnObjects: true,
+  }) as { question: string; answer: string }[];
+
   useEffect(() => {
     void recordPageView("landing");
   }, []);
@@ -995,44 +513,44 @@ export const Landing: React.FC = () => {
                 href="#features"
                 className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
               >
-                Características
+                {t("landing:nav.features")}
               </a>
               <a
                 href="#how-it-works"
                 className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
               >
-                Cómo funciona
+                {t("landing:nav.how_it_works")}
               </a>
               <a
                 href="#pricing"
                 className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
               >
-                Precios
+                {t("landing:nav.pricing")}
               </a>
               <a
                 href="#app"
                 className="text-sm font-medium text-text-secondary hover:text-primary transition-colors flex items-center gap-1.5"
               >
                 <Smartphone className="h-3.5 w-3.5" aria-hidden="true" />
-                App Móvil
+                {t("landing:nav.app")}
               </a>
               <a
                 href="#faq"
                 className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
               >
-                FAQ
+                {t("landing:nav.faq")}
               </a>
               <Link
                 to={DIRECTORY_FROM_LANDING}
                 className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
               >
-                Buscar proveedores
+                {t("landing:nav.providers")}
               </Link>
               <Link
                 to="/help"
                 className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
               >
-                Ayuda
+                {t("landing:nav.help")}
               </Link>
             </div>
 
@@ -1041,7 +559,11 @@ export const Landing: React.FC = () => {
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden p-2.5 rounded-xl text-text-secondary hover:bg-surface-alt transition-colors border border-transparent hover:border-border"
-                aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+                aria-label={
+                  mobileMenuOpen
+                    ? t("landing:nav.close_menu")
+                    : t("landing:nav.open_menu")
+                }
                 aria-expanded={mobileMenuOpen}
               >
                 {mobileMenuOpen ? (
@@ -1056,8 +578,8 @@ export const Landing: React.FC = () => {
                 className="p-2.5 rounded-xl text-text-secondary hover:bg-surface-alt transition-colors border border-transparent hover:border-border"
                 aria-label={
                   theme === "dark"
-                    ? "Cambiar a modo claro"
-                    : "Cambiar a modo oscuro"
+                    ? t("landing:nav.theme_light")
+                    : t("landing:nav.theme_dark")
                 }
               >
                 {theme === "dark" ? (
@@ -1070,13 +592,13 @@ export const Landing: React.FC = () => {
                 to="/login"
                 className="hidden sm:inline-flex text-sm font-semibold text-text hover:text-primary transition-colors"
               >
-                Ingresar
+                {t("landing:nav.login")}
               </Link>
               <Link
                 to="/register"
                 className="premium-gradient text-white text-sm px-6 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:scale-[1.02]"
               >
-                Probar Gratis
+                {t("landing:nav.register_cta")}
               </Link>
             </div>
           </nav>
@@ -1092,21 +614,21 @@ export const Landing: React.FC = () => {
               className="block text-sm text-text-secondary py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Características
+              {t("landing:nav.features")}
             </a>
             <a
               href="#how-it-works"
               className="block text-sm text-text-secondary py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Cómo funciona
+              {t("landing:nav.how_it_works")}
             </a>
             <a
               href="#pricing"
               className="block text-sm text-text-secondary py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Precios
+              {t("landing:nav.pricing")}
             </a>
             <a
               href="#app"
@@ -1114,35 +636,35 @@ export const Landing: React.FC = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               <Smartphone className="h-4 w-4" aria-hidden="true" />
-              App Móvil
+              {t("landing:nav.app")}
             </a>
             <a
               href="#faq"
               className="block text-sm text-text-secondary py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              FAQ
+              {t("landing:nav.faq")}
             </a>
             <Link
               to={DIRECTORY_FROM_LANDING}
               className="block text-sm text-text-secondary py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Buscar proveedores
+              {t("landing:nav.providers")}
             </Link>
             <Link
               to="/help"
               className="block text-sm text-text-secondary py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Ayuda
+              {t("landing:nav.help")}
             </Link>
             <Link
               to="/login"
               className="block text-sm text-text-secondary py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Iniciar Sesión
+              {t("landing:nav.login_mobile")}
             </Link>
           </div>
         </div>
@@ -1161,20 +683,19 @@ export const Landing: React.FC = () => {
           <div className="text-center mb-14">
             <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-sm font-bold px-5 py-2 rounded-full mb-10 tracking-wide uppercase">
               <Zap className="h-4 w-4" />
-              <span>Control operativo completo</span>
+              <span>{t("landing:hero.badge")}</span>
             </div>
 
             <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black text-text mb-8 leading-[1.05] tracking-tight">
-              Cotizá, Cobrá,
+              {t("landing:hero.title_line1")}
               <br />
               <span className="text-transparent bg-clip-text premium-gradient animate-gradient">
-                Coordiná y Cumplí
+                {t("landing:hero.title_line2")}
               </span>
             </h1>
 
             <p className="text-lg sm:text-2xl text-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed">
-              Una plataforma para gestionar todo el ciclo de tus eventos: cotizaciones profesionales, cobros online, 
-              inventario, staff y Portal del cliente. Todo desde un solo lugar.
+              {t("landing:hero.subtitle")}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-5 justify-center mb-6">
@@ -1182,39 +703,39 @@ export const Landing: React.FC = () => {
                 to="/register"
                 className="premium-gradient text-white px-10 py-5 rounded-2xl font-black text-xl shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all hover:scale-[1.05] flex items-center justify-center gap-3"
               >
-                Empezar Gratis Ahora
+                {t("landing:hero.cta_primary")}
                 <ArrowRight className="h-6 w-6" />
               </Link>
               <Link
                 to="/login"
                 className="bg-card glass-card text-text px-10 py-5 rounded-2xl font-bold text-xl transition-all hover:bg-surface border border-border flex items-center justify-center"
               >
-                Ya tengo cuenta
+                {t("landing:hero.cta_secondary")}
               </Link>
             </div>
 
             <p className="mb-12 text-center text-base sm:text-lg text-text-secondary">
-              ¿Buscás un proveedor para tu evento?{" "}
+              {t("landing:hero.seeker_question")}{" "}
               <Link
                 to={DIRECTORY_FROM_LANDING}
                 className="font-bold text-primary hover:underline underline-offset-4"
               >
-                Busco un proveedor
+                {t("landing:hero.seeker_link")}
               </Link>
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-10 text-sm font-semibold text-text-secondary opacity-80">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-success" />
-                <span>Sin tarjeta de crédito</span>
+                <span>{t("landing:hero.trust_free")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-success" />
-                <span>Instala en 2 minutos</span>
+                <span>{t("landing:hero.trust_install")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-success" />
-                <span>Cancela cuando quieras</span>
+                <span>{t("landing:hero.trust_cancel")}</span>
               </div>
             </div>
 
@@ -1223,7 +744,7 @@ export const Landing: React.FC = () => {
               <div className="flex items-center gap-3 text-xs text-text-tertiary font-medium uppercase tracking-widest">
                 <span className="h-px w-10 bg-border" />
                 <Smartphone className="h-4 w-4" aria-hidden="true" />
-                <span>También disponible en</span>
+                <span>{t("landing:hero.stores_available")}</span>
                 <span className="h-px w-10 bg-border" />
               </div>
               <div className="flex flex-wrap items-center justify-center gap-4">
@@ -1242,26 +763,21 @@ export const Landing: React.FC = () => {
       <section className="premium-gradient py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center text-white mb-8">
-            <h3 className="text-2xl font-extrabold mb-2">Todo el ciclo operativo</h3>
-            <p className="text-white/80">De la cotizacion al cumplimiento</p>
+            <h3 className="text-2xl font-extrabold mb-2">
+              {t("landing:proof.title")}
+            </h3>
+            <p className="text-white/80">{t("landing:proof.subtitle")}</p>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            <div className="bg-white/10 rounded-2xl p-4">
-              <FileText className="h-8 w-8 mx-auto mb-2 text-white" />
-              <div className="text-white font-bold text-sm">Cotizaciones PDF</div>
-            </div>
-            <div className="bg-white/10 rounded-2xl p-4">
-              <CreditCard className="h-8 w-8 mx-auto mb-2 text-white" />
-              <div className="text-white font-bold text-sm">Cobros Online</div>
-            </div>
-            <div className="bg-white/10 rounded-2xl p-4">
-              <Send className="h-8 w-8 mx-auto mb-2 text-white" />
-              <div className="text-white font-bold text-sm">Portal Cliente</div>
-            </div>
-            <div className="bg-white/10 rounded-2xl p-4">
-              <UsersRound className="h-8 w-8 mx-auto mb-2 text-white" />
-              <div className="text-white font-bold text-sm">Gestion Staff</div>
-            </div>
+            {proofItems.map((label, i) => {
+              const Icon = PROOF_ICONS[i];
+              return (
+                <div key={label} className="bg-white/10 rounded-2xl p-4">
+                  <Icon className="h-8 w-8 mx-auto mb-2 text-white" />
+                  <div className="text-white font-bold text-sm">{label}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1271,20 +787,18 @@ export const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="inline-flex items-center space-x-2 bg-surface-alt text-text-secondary text-sm font-medium px-4 py-1.5 rounded-full mb-4">
-              <span>✨ Características</span>
+              <span>{t("landing:features.badge")}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text mb-4">
-              Todo lo que necesitas en un solo lugar
+              {t("landing:features.title")}
             </h2>
             <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto">
-              Deja de usar hojas de cálculo, WhatsApp y notas dispersas.
-              Centraliza toda tu operación en una plataforma diseñada para
-              organizadores de eventos.
+              {t("landing:features.subtitle")}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {FEATURES.map((feature) => (
+            {features.map((feature) => (
               <div
                 key={feature.title}
                 className="group p-6 rounded-2xl border border-border hover:border-brand-orange/30 hover:shadow-xl transition-all duration-300 bg-card"
@@ -1314,20 +828,18 @@ export const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-sm font-bold px-5 py-2 rounded-full mb-6 uppercase tracking-wider">
-              <span>📈 Conseguí clientes</span>
+              <span>{t("landing:inbound.badge")}</span>
             </div>
             <h2 className="text-3xl sm:text-5xl font-black text-text mb-6 tracking-tight">
-              Operá… y también crecé
+              {t("landing:inbound.title")}
             </h2>
             <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Además de gestionar eventos, Solennix te da herramientas de inbound:
-              perfil público, solicitudes de cotización y visibilidad en el directorio.
-              Facilitamos el contacto; el servicio y el pago del evento siguen siendo tuyos.
+              {t("landing:inbound.subtitle")}
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {INBOUND_PILLARS.map((pillar) => (
+            {pillars.map((pillar) => (
               <div
                 key={pillar.title}
                 className="p-6 rounded-2xl border border-border bg-card shadow-sm"
@@ -1345,16 +857,16 @@ export const Landing: React.FC = () => {
 
           <div className="mb-10">
             <p className="text-center text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">
-              ¿Qué buscan los clientes?
+              {t("landing:inbound.chips_title")}
             </p>
             <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-              {DIRECTORY_CATEGORY_CHIPS.map((chip) => (
+              {DIRECTORY_CATEGORY_CHIPS.map((chip, i) => (
                 <Link
                   key={chip.serviceCategory}
                   to={`/providers?service_category=${chip.serviceCategory}&from=landing`}
                   className="inline-flex items-center rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-text hover:border-primary/40 hover:text-primary transition-colors"
                 >
-                  {chip.label}
+                  {chipLabels[i]}
                 </Link>
               ))}
             </div>
@@ -1365,14 +877,14 @@ export const Landing: React.FC = () => {
               to="/register"
               className="premium-gradient text-white px-8 py-4 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all inline-flex items-center gap-2"
             >
-              Probar gratis
+              {t("landing:inbound.cta_primary")}
               <ArrowRight className="h-5 w-5" aria-hidden="true" />
             </Link>
             <Link
               to={DIRECTORY_FROM_LANDING}
               className="bg-card border border-border text-text px-8 py-4 rounded-2xl font-bold text-lg hover:bg-surface-alt transition-colors"
             >
-              Ver el directorio
+              {t("landing:inbound.cta_secondary")}
             </Link>
           </div>
         </div>
@@ -1386,21 +898,20 @@ export const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-20">
             <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-sm font-bold px-5 py-2 rounded-full mb-6 uppercase tracking-wider">
-              <span>🚀 Cómo funciona</span>
+              <span>{t("landing:how_it_works.badge")}</span>
             </div>
             <h2 className="text-3xl sm:text-5xl font-black text-text mb-6 tracking-tight">
-              Empieza en minutos, no en días
+              {t("landing:how_it_works.title")}
             </h2>
             <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Diseñamos la plataforma para que sea intuitiva y potente desde el
-              primer segundo.
+              {t("landing:how_it_works.subtitle")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-            {STEPS.map((step, index) => (
+            {steps.map((step, index) => (
               <div key={step.number} className="relative group">
-                {index < STEPS.length - 1 && (
+                {index < steps.length - 1 && (
                   <div className="hidden lg:block absolute top-11 left-[calc(50%+40px)] w-[calc(100%-80px)] h-1 bg-border/40 rounded-full" />
                 )}
                 <div className="relative text-center">
@@ -1428,21 +939,19 @@ export const Landing: React.FC = () => {
             <div>
               <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-sm font-bold px-5 py-2 rounded-full mb-8 uppercase tracking-wider">
                 <Smartphone className="h-4 w-4" aria-hidden="true" />
-                <span>App Móvil</span>
+                <span>{t("landing:mobile_app.badge")}</span>
               </div>
 
               <h2 className="text-3xl sm:text-5xl font-black text-text mb-6 tracking-tight leading-[1.1]">
-                Tu negocio en el bolsillo
+                {t("landing:mobile_app.title")}
               </h2>
 
               <p className="text-lg text-text-secondary mb-10 leading-relaxed">
-                Gestiona eventos, revisá pagos y confirmá inventario desde tu
-                iPhone. La misma potencia de la plataforma web, ahora disponible
-                donde estés.
+                {t("landing:mobile_app.subtitle")}
               </p>
 
               <ul className="space-y-4 mb-10">
-                {MOBILE_FEATURES.map((f) => (
+                {mobileFeatures.map((f) => (
                   <li key={f.text} className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                       <f.icon
@@ -1476,29 +985,30 @@ export const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="inline-flex items-center space-x-2 bg-surface-alt text-text-secondary text-sm font-medium px-4 py-1.5 rounded-full mb-4">
-              <span>💬 Testimonios</span>
+              <span>{t("landing:testimonials.badge")}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text mb-4">
-              Lo que dicen nuestros usuarios
+              {t("landing:testimonials.title")}
             </h2>
             <p className="text-base sm:text-lg text-text-secondary">
-              Más de 500 organizadores ya confían en Solennix para gestionar su
-              negocio.
+              {t("landing:testimonials.subtitle")}
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {TESTIMONIALS.map((t) => (
+            {testimonials.map((testimonial) => (
               <div
-                key={t.name}
+                key={testimonial.name}
                 className="bg-surface-alt rounded-2xl p-6 border border-border"
               >
                 <div
                   className="flex items-center gap-1 mb-4"
                   role="img"
-                  aria-label={`${t.rating} estrellas de 5`}
+                  aria-label={t("landing:testimonials.rating_aria", {
+                    rating: testimonial.rating,
+                  })}
                 >
-                  {Array.from({ length: t.rating }).map((_, i) => (
+                  {Array.from({ length: testimonial.rating }).map((_, i) => (
                     <Star
                       key={i}
                       className="h-4 w-4 text-yellow-400 fill-yellow-400"
@@ -1507,21 +1017,21 @@ export const Landing: React.FC = () => {
                   ))}
                 </div>
                 <p className="text-text-secondary text-sm leading-relaxed mb-6">
-                  "{t.text}"
+                  "{testimonial.text}"
                 </p>
                 <div className="flex items-center gap-3">
                   <div
-                    className={`${t.avatarColor} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0`}
+                    className={`${testimonial.avatarColor} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0`}
                   >
-                    {t.avatar}
+                    {testimonial.avatar}
                   </div>
                   <div>
                     <div className="font-semibold text-text text-sm">
-                      {t.name}
+                      {testimonial.name}
                     </div>
                     <div className="text-text-secondary text-xs flex items-center gap-1">
                       <MapPin className="h-3 w-3" aria-hidden="true" />
-                      {t.role} · {t.location}
+                      {testimonial.role} · {testimonial.location}
                     </div>
                   </div>
                 </div>
@@ -1539,18 +1049,18 @@ export const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
             <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-sm font-bold px-5 py-2 rounded-full mb-6 uppercase tracking-wider">
-              <span>💰 Precios</span>
+              <span>{t("landing:pricing.badge")}</span>
             </div>
             <h2 className="text-3xl sm:text-5xl font-black text-text mb-6 tracking-tight">
-              Planes para cada etapa
+              {t("landing:pricing.title")}
             </h2>
             <p className="text-base sm:text-xl text-text-secondary max-w-2xl mx-auto">
-              Comienza gratis y activa el plan Pro cuando lo necesites.
+              {t("landing:pricing.subtitle")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-stretch max-w-4xl mx-auto">
-            {PLANS.map((plan) => (
+            {plans.map((plan) => (
               <div
                 key={plan.name}
                 className={`relative rounded-3xl p-10 flex flex-col transition-all duration-300 border-2 ${
@@ -1562,7 +1072,7 @@ export const Landing: React.FC = () => {
                 {plan.highlighted && (
                   <div className="absolute -top-5 left-1/2 -translate-x-1/2 flex gap-2">
                     <span className="bg-primary text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-primary/30">
-                      Más popular
+                      {t("landing:pricing.most_popular")}
                     </span>
                     {plan.promo && (
                       <span className="bg-success text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-success/30">
@@ -1632,15 +1142,15 @@ export const Landing: React.FC = () => {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="inline-flex items-center space-x-2 bg-surface-alt text-text-secondary text-sm font-medium px-4 py-1.5 rounded-full mb-4">
-              <span>❓ Preguntas frecuentes</span>
+              <span>{t("landing:faq.badge")}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text mb-4">
-              Resolvemos tus dudas
+              {t("landing:faq.title")}
             </h2>
           </div>
 
           <div className="space-y-4">
-            {FAQS.map((faq, index) => (
+            {faqs.map((faq, index) => (
               <div
                 key={index}
                 className="border border-border rounded-xl overflow-hidden"
@@ -1650,7 +1160,11 @@ export const Landing: React.FC = () => {
                   className="w-full flex items-center justify-between p-5 text-left bg-card hover:bg-surface-alt transition-colors"
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
                   aria-expanded={openFaq === index}
-                  aria-label={`${faq.question} - ${openFaq === index ? "Cerrar" : "Abrir"} respuesta`}
+                  aria-label={
+                    openFaq === index
+                      ? t("landing:faq.aria_close", { question: faq.question })
+                      : t("landing:faq.aria_open", { question: faq.question })
+                  }
                 >
                   <span className="font-semibold text-text text-sm">
                     {faq.question}
@@ -1683,12 +1197,11 @@ export const Landing: React.FC = () => {
 
             <div className="relative z-10 max-w-4xl mx-auto">
               <h2 className="text-4xl sm:text-7xl font-black text-white mb-8 tracking-tight leading-[1.1]">
-                ¿Listo para escalar <br />
-                tu negocio?
+                {t("landing:cta.title_line1")} <br />
+                {t("landing:cta.title_line2")}
               </h2>
               <p className="text-lg sm:text-2xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
-                Únete a la nueva generación de organizadores que ya
-                profesionalizaron su operación.
+                {t("landing:cta.subtitle")}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
@@ -1696,39 +1209,39 @@ export const Landing: React.FC = () => {
                   to="/register"
                   className="bg-white text-primary px-8 sm:px-12 py-5 sm:py-6 rounded-2xl font-black text-xl sm:text-2xl shadow-xl hover:shadow-2xl transition-all hover:scale-[1.05] flex items-center justify-center gap-3 w-full sm:w-auto"
                 >
-                  Comenzar Gratis
+                  {t("landing:cta.primary")}
                   <ArrowRight className="h-6 w-6 sm:h-7 sm:w-7" />
                 </Link>
                 <Link
                   to="/login"
                   className="bg-white/10 backdrop-blur-md border-2 border-white/30 text-white px-8 sm:px-12 py-5 sm:py-6 rounded-2xl font-black text-xl sm:text-2xl hover:bg-white/20 transition-all flex items-center justify-center w-full sm:w-auto"
                 >
-                  Ya tengo cuenta
+                  {t("landing:cta.secondary")}
                 </Link>
               </div>
 
               <div className="mt-8 sm:mt-12 flex flex-wrap justify-center gap-x-4 sm:gap-x-8 gap-y-4 text-white/80 text-xs sm:text-sm font-bold uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-white" />
-                  <span>Sin tarjeta de crédito</span>
+                  <span>{t("landing:cta.trust_free")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-white" />
-                  <span>Cancela cuando quieras</span>
+                  <span>{t("landing:cta.trust_cancel")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-white" />
-                  <span>Soporte en español</span>
+                  <span>{t("landing:cta.trust_support")}</span>
                 </div>
               </div>
 
               <p className="mt-8 text-sm sm:text-base text-white/85 font-medium normal-case tracking-normal">
-                ¿Buscás un proveedor?{" "}
+                {t("landing:cta.seeker_question")}{" "}
                 <Link
                   to={DIRECTORY_FROM_LANDING}
                   className="font-bold text-white underline underline-offset-4 hover:text-white/90"
                 >
-                  Explorá el directorio
+                  {t("landing:cta.seeker_link")}
                 </Link>
               </p>
             </div>
@@ -1743,19 +1256,20 @@ export const Landing: React.FC = () => {
             <div className="md:col-span-3 xl:col-span-2">
               <Logo size={40} className="mb-4" />
               <p className="text-sm leading-relaxed max-w-xs">
-                La plataforma todo-en-uno para organizadores de eventos
-                profesionales en México y Latinoamérica.
+                {t("landing:footer.description")}
               </p>
             </div>
             <div>
-              <h4 className="text-text font-semibold text-sm mb-4">Producto</h4>
+              <h4 className="text-text font-semibold text-sm mb-4">
+                {t("landing:footer.product_title")}
+              </h4>
               <ul className="space-y-2 text-sm">
                 <li>
                   <a
                     href="#features"
                     className="hover:text-text transition-colors"
                   >
-                    Características
+                    {t("landing:footer.product_features")}
                   </a>
                 </li>
                 <li>
@@ -1763,7 +1277,7 @@ export const Landing: React.FC = () => {
                     href="#pricing"
                     className="hover:text-text transition-colors"
                   >
-                    Precios
+                    {t("landing:footer.product_pricing")}
                   </a>
                 </li>
                 <li>
@@ -1771,12 +1285,12 @@ export const Landing: React.FC = () => {
                     href="#how-it-works"
                     className="hover:text-text transition-colors"
                   >
-                    Cómo funciona
+                    {t("landing:footer.product_how")}
                   </a>
                 </li>
                 <li>
                   <a href="#faq" className="hover:text-text transition-colors">
-                    FAQ
+                    {t("landing:footer.product_faq")}
                   </a>
                 </li>
                 <li>
@@ -1784,7 +1298,7 @@ export const Landing: React.FC = () => {
                     to={DIRECTORY_FROM_LANDING}
                     className="hover:text-text transition-colors"
                   >
-                    Buscar proveedores
+                    {t("landing:footer.product_providers")}
                   </Link>
                 </li>
                 <li>
@@ -1792,7 +1306,7 @@ export const Landing: React.FC = () => {
                     href="#inbound"
                     className="hover:text-text transition-colors"
                   >
-                    Conseguí clientes
+                    {t("landing:footer.product_inbound")}
                   </a>
                 </li>
               </ul>
@@ -1800,7 +1314,7 @@ export const Landing: React.FC = () => {
             <div>
               <h4 className="text-text font-semibold text-sm mb-4 flex items-center gap-1.5">
                 <Smartphone className="h-3.5 w-3.5" aria-hidden="true" />
-                Descargar
+                {t("landing:footer.download_title")}
               </h4>
               <ul className="space-y-2 text-sm">
                 <li>
@@ -1810,7 +1324,7 @@ export const Landing: React.FC = () => {
                     rel="noopener noreferrer"
                     className="hover:text-text transition-colors flex items-center gap-1.5"
                   >
-                    iOS — App Store
+                    {t("landing:footer.download_ios")}
                   </a>
                 </li>
                 <li>
@@ -1820,20 +1334,22 @@ export const Landing: React.FC = () => {
                     rel="noopener noreferrer"
                     className="hover:text-text transition-colors"
                   >
-                    Android — Google Play
+                    {t("landing:footer.download_android")}
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="text-text font-semibold text-sm mb-4">Cuenta</h4>
+              <h4 className="text-text font-semibold text-sm mb-4">
+                {t("landing:footer.account_title")}
+              </h4>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link
                     to="/register"
                     className="hover:text-text transition-colors"
                   >
-                    Registrarse
+                    {t("landing:footer.account_register")}
                   </Link>
                 </li>
                 <li>
@@ -1841,7 +1357,7 @@ export const Landing: React.FC = () => {
                     to="/login"
                     className="hover:text-text transition-colors"
                   >
-                    Iniciar Sesión
+                    {t("landing:footer.account_login")}
                   </Link>
                 </li>
                 <li>
@@ -1849,20 +1365,22 @@ export const Landing: React.FC = () => {
                     to="/forgot-password"
                     className="hover:text-text transition-colors"
                   >
-                    Recuperar contraseña
+                    {t("landing:footer.account_forgot")}
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="text-text font-semibold text-sm mb-4">Legal</h4>
+              <h4 className="text-text font-semibold text-sm mb-4">
+                {t("landing:footer.legal_title")}
+              </h4>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link
                     to="/about"
                     className="hover:text-text transition-colors"
                   >
-                    Acerca de
+                    {t("landing:footer.legal_about")}
                   </Link>
                 </li>
                 <li>
@@ -1870,7 +1388,7 @@ export const Landing: React.FC = () => {
                     to="/help"
                     className="hover:text-text transition-colors"
                   >
-                    Ayuda
+                    {t("landing:footer.legal_help")}
                   </Link>
                 </li>
                 <li>
@@ -1878,7 +1396,7 @@ export const Landing: React.FC = () => {
                     to="/terms"
                     className="hover:text-text transition-colors"
                   >
-                    Términos y Condiciones
+                    {t("landing:footer.legal_terms")}
                   </Link>
                 </li>
                 <li>
@@ -1886,21 +1404,17 @@ export const Landing: React.FC = () => {
                     to="/privacy"
                     className="hover:text-text transition-colors"
                   >
-                    Política de Privacidad
+                    {t("landing:footer.legal_privacy")}
                   </Link>
                 </li>
               </ul>
             </div>
           </div>
           <div className="border-t border-border pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm">
-              © 2026 Solennix. Todos los derechos reservados.
-            </p>
+            <p className="text-sm">{t("landing:footer.copyright")}</p>
             <div className="flex items-center gap-2 text-sm">
               <Shield className="h-4 w-4 text-success" aria-hidden="true" />
-              <span>
-                Datos protegidos con encriptación de extremo a extremo
-              </span>
+              <span>{t("landing:footer.security")}</span>
             </div>
           </div>
         </div>
@@ -1910,7 +1424,7 @@ export const Landing: React.FC = () => {
       <button
         type="button"
         onClick={scrollToTop}
-        aria-label="Volver al inicio"
+        aria-label={t("landing:scroll_to_top")}
         className={`fixed bottom-8 right-8 z-50 w-12 h-12 rounded-full premium-gradient text-white shadow-lg shadow-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-primary/40 ${showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
       >
         <ArrowUp className="h-5 w-5" />
