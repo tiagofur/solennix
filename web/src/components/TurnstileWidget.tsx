@@ -71,7 +71,11 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
   const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
   const containerRef = useRef<HTMLDivElement>(null);
   const callbacksRef = useRef({ onVerify, onExpire, onError });
-  callbacksRef.current = { onVerify, onExpire, onError };
+
+  // Keep callbacks fresh without touching refs during render.
+  useEffect(() => {
+    callbacksRef.current = { onVerify, onExpire, onError };
+  });
 
   useEffect(() => {
     if (!siteKey || !containerRef.current) return;
