@@ -252,6 +252,10 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 
 	slog.Info("Stripe webhook signature verified", "event_id", event.ID, "event_type", event.Type)
 
+	// claimed tracks whether this delivery holds the idempotency claim;
+	// applyFailed tracks whether core state failed to apply and Stripe must
+	// retry (claim released + 5xx instead of a terminal 200).
+	claimed, applyFailed := false, false
 	if h.processedWebhookRepo != nil {
 		firstTime, err := h.processedWebhookRepo.TryInsert(r.Context(), event.ID, "stripe", string(event.Type))
 		if err != nil {
@@ -264,6 +268,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+		claimed = true
 	}
 
 	switch event.Type {
@@ -300,6 +305,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			}
 			if err := h.userRepo.UpdatePlanAndStripeID(r.Context(), userID, plan, customerID); err != nil {
 				slog.Error("Failed to update user plan after checkout", "error", err)
+				applyFailed = true
 			} else {
 				slog.Info("User upgraded via Stripe checkout", "user_id", userID, "plan", plan)
 
@@ -364,6 +370,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 				}
 				if err := h.subRepo.Upsert(r.Context(), subRecord); err != nil {
 					slog.Error("Failed to upsert subscription after checkout", "error", err)
+					applyFailed = true
 				}
 			}
 		}
@@ -392,11 +399,13 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 				if metaPlan == "pro" || metaPlan == "business" {
 					if err := h.subRepo.SyncPlanAndStatusByStripeCustomer(r.Context(), sub.Customer.ID, sub.ID, metaPlan, "active", &start, &end); err != nil {
 						slog.Error("Failed to sync plan and subscription status to active", "error", err, "customer", sub.Customer.ID, "plan", metaPlan)
+						applyFailed = true
 					} else {
 						slog.Info("Synced plan and subscription to active", "customer", sub.Customer.ID, "plan", metaPlan)
 					}
 				} else if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "active", &start, &end); err != nil {
 					slog.Error("Failed to update subscription status to active", "error", err)
+					applyFailed = true
 				}
 			}
 		case stripe.SubscriptionStatusPastDue:
@@ -404,6 +413,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			if h.subRepo != nil {
 				if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "past_due", nil, nil); err != nil {
 					slog.Error("Failed to update subscription status to past_due", "error", err)
+					applyFailed = true
 				}
 			}
 		case stripe.SubscriptionStatusCanceled:
@@ -411,12 +421,14 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			if h.subRepo != nil {
 				if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "canceled", nil, nil); err != nil {
 					slog.Error("Failed to update subscription status to canceled", "error", err)
+					applyFailed = true
 				}
 			}
 		case stripe.SubscriptionStatusUnpaid:
 			// Downgrade to basic
 			if err := h.userRepo.UpdatePlanByStripeCustomerID(r.Context(), sub.Customer.ID, "basic"); err != nil {
 				slog.Error("Failed to downgrade user after unpaid subscription", "error", err)
+				applyFailed = true
 			} else if h.rcService != nil {
 				// Revoke RevenueCat entitlement
 				if user, err := h.userRepo.GetByStripeCustomerID(r.Context(), sub.Customer.ID); err == nil {
@@ -428,6 +440,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			if h.subRepo != nil {
 				if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "canceled", nil, nil); err != nil {
 					slog.Error("Failed to update subscription status to canceled (unpaid)", "error", err)
+					applyFailed = true
 				}
 			}
 		}
@@ -440,6 +453,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 		}
 		if err := h.userRepo.UpdatePlanByStripeCustomerID(r.Context(), sub.Customer.ID, "basic"); err != nil {
 			slog.Error("Failed to downgrade user after subscription deletion", "error", err)
+			applyFailed = true
 		} else {
 			slog.Info("User downgraded to basic after Stripe subscription cancellation", "customer_id", sub.Customer.ID)
 
@@ -456,6 +470,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 		if h.subRepo != nil {
 			if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "canceled", nil, nil); err != nil {
 				slog.Error("Failed to update subscription record after deletion", "error", err)
+				applyFailed = true
 			}
 		}
 
@@ -469,10 +484,21 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 		if h.subRepo != nil && invoice.Subscription != nil {
 			if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), invoice.Subscription.ID, "past_due", nil, nil); err != nil {
 				slog.Error("Failed to update subscription status after payment failure", "error", err)
+				applyFailed = true
 			}
 		}
 	}
 
+	if applyFailed && claimed && h.processedWebhookRepo != nil {
+		// Core state was not applied: release the claim so the retry
+		// re-processes the event instead of being discarded as a duplicate;
+		// 5xx tells Stripe to retry.
+		if derr := h.processedWebhookRepo.Delete(r.Context(), event.ID); derr != nil {
+			slog.Error("Failed to release Stripe webhook idempotency claim", "event_id", event.ID, "error", derr)
+		}
+		writeError(w, http.StatusInternalServerError, "Failed to apply event; retry")
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -541,11 +567,16 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 	evt := rcEvent.Event
 	slog.Info("RevenueCat webhook received", "type", evt.Type, "app_user_id", evt.AppUserID, "store", evt.Store)
 
+	// claimed tracks whether this delivery holds the idempotency claim;
+	// applyFailed tracks whether core state failed to apply and RevenueCat
+	// must retry (claim released + 5xx instead of a terminal 200).
+	claimed, applyFailed := false, false
+	rcKey := ""
 	if h.processedWebhookRepo != nil {
 		// Prefer RevenueCat's unique event id (stable across retries, distinct per
 		// delivery so legitimate recurring events like RENEWAL are not collapsed).
 		// Fall back to a composite key only if the payload omits it.
-		rcKey := evt.ID
+		rcKey = evt.ID
 		if rcKey == "" {
 			rcKey = fmt.Sprintf("%s:%s:%s:%s", evt.AppUserID, evt.Type, evt.ProductID, evt.Store)
 		}
@@ -561,6 +592,7 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+		claimed = true
 	}
 
 	// The RevenueCat app_user_id is set to the user's UUID from our backend
@@ -580,6 +612,7 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 		// pro_access entitlement) — keep the user on pro and refresh the record.
 		if err := h.userRepo.UpdatePlanAndStripeID(r.Context(), userID, "pro", nil); err != nil {
 			slog.Error("Failed to upgrade user plan via RevenueCat", "user_id", userID, "error", err)
+			applyFailed = true
 		} else {
 			slog.Info("User upgraded to pro via RevenueCat", "user_id", userID, "store", evt.Store)
 		}
@@ -600,6 +633,7 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 			}
 			if err := h.subRepo.Upsert(r.Context(), subRecord); err != nil {
 				slog.Error("Failed to upsert subscription via RevenueCat", "user_id", userID, "error", err)
+				applyFailed = true
 			}
 		}
 
@@ -607,6 +641,7 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 		// Subscription ended or payment failed — downgrade to basic
 		if err := h.userRepo.UpdatePlanAndStripeID(r.Context(), userID, "basic", nil); err != nil {
 			slog.Error("Failed to downgrade user plan via RevenueCat", "user_id", userID, "error", err)
+			applyFailed = true
 		} else {
 			slog.Info("User downgraded to basic via RevenueCat", "user_id", userID, "event", evt.Type)
 		}
@@ -625,12 +660,22 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 			} else {
 				if err := h.subRepo.UpdateStatusByUserIDAndProvider(r.Context(), userID, rcProvider, status); err != nil {
 					slog.Error("Failed to update subscription status via RevenueCat", "user_id", userID, "provider", rcProvider, "error", err)
+					applyFailed = true
 				}
 			}
 		}
 
 	}
 
+	if applyFailed && claimed && h.processedWebhookRepo != nil {
+		// Core state was not applied: release the claim so the retry
+		// re-processes instead of being discarded; 5xx asks for retry.
+		if derr := h.processedWebhookRepo.Delete(r.Context(), rcKey); derr != nil {
+			slog.Error("Failed to release RevenueCat webhook idempotency claim", "app_user_id", evt.AppUserID, "error", derr)
+		}
+		writeError(w, http.StatusInternalServerError, "Failed to apply event; retry")
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 

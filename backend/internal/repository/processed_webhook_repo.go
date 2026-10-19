@@ -30,3 +30,16 @@ func (r *ProcessedWebhookRepo) TryInsert(ctx context.Context, eventID, provider,
 	}
 	return tag.RowsAffected() > 0, nil
 }
+
+// Delete releases an idempotency claim, typically because applying the event
+// failed and the provider must be allowed to retry it. Deleting a key that
+// was never claimed is a no-op success.
+func (r *ProcessedWebhookRepo) Delete(ctx context.Context, eventID string) error {
+	_, err := r.pool.Exec(ctx,
+		`DELETE FROM processed_webhook_events WHERE event_id = $1`,
+		eventID)
+	if err != nil {
+		return fmt.Errorf("processed_webhook_repo: Delete: %w", err)
+	}
+	return nil
+}
