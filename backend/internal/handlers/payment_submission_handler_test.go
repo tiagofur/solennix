@@ -439,6 +439,54 @@ func TestPaymentSubmissionCreatePublic_ClientIDCorrect(t *testing.T) {
 	}
 }
 
+// S2 (audit): non-finite amounts compare false against every threshold —
+// NaN passes `amount <= 0` AND `amount > maxAllowed`, reaching the repo as a
+// NaN NUMERIC row that corrupts SUM(amount), dashboards and deposit
+// auto-confirm. They must be rejected at parse, before any storage.
+func TestPaymentSubmissionCreatePublic_NonFiniteAmountRejected(t *testing.T) {
+	uploadDir := t.TempDir()
+	eventID := uuid.New()
+	clientID := uuid.New()
+
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+	handler.lookupPublicLink = func(_ context.Context, _ string) (*models.EventPublicLink, error) {
+		return &models.EventPublicLink{EventID: eventID, UserID: uuid.New(), Status: "active"}, nil
+	}
+	handler.lookupEvent = func(_ context.Context, _ uuid.UUID) (*models.Event, error) {
+		return &models.Event{ID: eventID, ClientID: clientID, TotalAmount: 10000}, nil
+	}
+	handler.sumPaymentsByEventID = func(_ context.Context, _, _ uuid.UUID) (float64, error) {
+		return 0, nil
+	}
+	submitted := false
+	handler.createSubmission = func(_ context.Context, ps *models.PaymentSubmission) error {
+		submitted = true
+		ps.ID = uuid.New()
+		return nil
+	}
+
+	for _, amount := range []string{"NaN", "Inf", "+Inf", "-Inf"} {
+		t.Run("amount="+amount, func(t *testing.T) {
+			submitted = false
+			body, contentType := buildMultipartBody(t, map[string]string{
+				"event_id":  eventID.String(),
+				"client_id": clientID.String(),
+				"amount":    amount,
+			})
+			req := httptest.NewRequest(http.MethodPost, "/api/public/events/tok/payment-submissions", body)
+			req.Header.Set("Content-Type", contentType)
+			req.SetPathValue("token", "tok")
+			w := httptest.NewRecorder()
+
+			handler.CreatePublic(w, req)
+
+			assert.Equal(t, http.StatusBadRequest, w.Code, "amount %q must be rejected at parse", amount)
+			assert.Contains(t, w.Body.String(), "amount must be a positive number")
+			assert.False(t, submitted, "no submission may be stored for amount %q", amount)
+		})
+	}
+}
+
 // B1: PaymentDate formatted in configured timezone.
 func TestPaymentSubmissionHandler_PaymentDateTimezone(t *testing.T) {
 	// Use a timezone where the date may differ from UTC (e.g. UTC-6 right after UTC midnight).

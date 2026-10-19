@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"html"
+	"math"
 	"strconv"
 	"strings"
 
@@ -194,8 +195,9 @@ func ValidateEvent(event *models.Event) error {
 
 // ValidatePayment validates all business rules for a payment
 func ValidatePayment(payment *models.Payment) error {
-	// Validate amount (minimum one cent)
-	if payment.Amount < 0.01 {
+	// Validate amount (minimum one cent). Non-finite values compare false
+	// against every threshold and must be rejected explicitly.
+	if math.IsNaN(payment.Amount) || math.IsInf(payment.Amount, 0) || payment.Amount < 0.01 {
 		return ValidationError{Field: "amount", Message: "must be at least 0.01"}
 	}
 

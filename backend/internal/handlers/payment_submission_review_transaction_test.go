@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -157,6 +158,49 @@ func TestPaymentSubmissionReviewSubmissionApproveTransactionalSuccess(t *testing
 	}
 	if envelope.Data.Status != "approved" || envelope.Data.LinkedPaymentID == nil {
 		t.Fatalf("unexpected response payload: %+v", envelope.Data)
+	}
+}
+
+// S2 (audit): a legacy submission row stored before the parse guard could
+// still carry a non-finite amount; approving it must never create a NaN
+// payment row (SUM(amount), dashboards and deposit auto-confirm corruption).
+func TestPaymentSubmissionReviewSubmissionApproveRejectsNonFiniteAmount(t *testing.T) {
+	organizerID := uuid.New()
+	submissionID := uuid.New()
+	now := time.Now().UTC().Add(-time.Hour)
+	store := &fakePaymentSubmissionReviewStore{
+		submission: &models.PaymentSubmission{
+			ID:          submissionID,
+			EventID:     uuid.New(),
+			ClientID:    uuid.New(),
+			UserID:      organizerID,
+			Amount:      math.NaN(),
+			Status:      "pending",
+			SubmittedAt: now,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+	}
+	handler := &PaymentSubmissionHandler{
+		beginReviewTx: func(context.Context) (paymentSubmissionReviewStore, error) {
+			return store, nil
+		},
+	}
+
+	req, w := reviewSubmissionRequest(t, submissionID, organizerID, map[string]any{"status": "approved"})
+	handler.ReviewSubmission(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, body = %s", w.Code, w.Body.String())
+	}
+	if store.createPaymentCalled {
+		t.Fatalf("no payment may be created for a non-finite amount")
+	}
+	if store.commitCalled {
+		t.Fatalf("review must not commit for a non-finite amount")
+	}
+	if !store.rollbackCalled {
+		t.Fatalf("review must roll back for a non-finite amount")
 	}
 }
 

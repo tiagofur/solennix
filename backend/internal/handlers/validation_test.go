@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"math"
 	"testing"
 
 	"github.com/google/uuid"
@@ -909,6 +910,30 @@ func TestValidateClient_StringLengthAndSanitization(t *testing.T) {
 			t.Errorf("name not sanitized: got %q, want %q", client.Name, want)
 		}
 	})
+}
+
+// S2 (audit): non-finite amounts compare false against every threshold, so
+// `Amount < 0.01` lets NaN/Inf through ValidatePayment. They must fail closed.
+func TestValidatePayment_NonFiniteAmountRejected(t *testing.T) {
+	amounts := map[string]float64{
+		"NaN":  math.NaN(),
+		"+Inf": math.Inf(1),
+		"-Inf": math.Inf(-1),
+	}
+	for name, amount := range amounts {
+		err := ValidatePayment(&models.Payment{Amount: amount, PaymentMethod: "cash"})
+		if err == nil {
+			t.Errorf("%s amount must be rejected, got nil error", name)
+			continue
+		}
+		ve, ok := err.(ValidationError)
+		if !ok {
+			t.Fatalf("expected ValidationError, got %T: %v", err, err)
+		}
+		if ve.Field != "amount" {
+			t.Errorf("expected field %q, got %q", "amount", ve.Field)
+		}
+	}
 }
 
 func TestValidatePayment_MethodEnum(t *testing.T) {
