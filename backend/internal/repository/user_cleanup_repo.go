@@ -208,9 +208,29 @@ func (r *UserCleanupRepo) BlockUserForInactivity(ctx context.Context, userID uui
 	return err
 }
 
-// HardDeleteUser performs a cascading delete of the user record and associated data.
-func (r *UserCleanupRepo) HardDeleteUser(ctx context.Context, userID uuid.UUID) error {
-	query := `DELETE FROM users WHERE id = $1`
+// AnonymizeUserForRetention replaces the previous cascading hard delete:
+// the users row is tombstoned with its PII scrubbed, while financial and
+// booking history (payments, payment_submissions, events, subscriptions,
+// ...) is preserved for tax and audit purposes instead of being destroyed by
+// ON DELETE CASCADE. The anonymized email is unique per user (id-based), so
+// the tombstone never collides with a real address.
+func (r *UserCleanupRepo) AnonymizeUserForRetention(ctx context.Context, userID uuid.UUID) error {
+	query := `
+		UPDATE users
+		SET email = 'deleted+' || id::text || '@anonymized.invalid',
+			password_hash = NULL,
+			name = 'Deleted user',
+			business_name = NULL,
+			logo_url = NULL,
+			cover_url = NULL,
+			brand_color = NULL,
+			contract_template = NULL,
+			email_verification_token_hash = NULL,
+			stripe_customer_id = NULL,
+			account_status = 'deleted',
+			deleted_at = NOW(),
+			updated_at = NOW()
+		WHERE id = $1`
 	_, err := r.pool.Exec(ctx, query, userID)
 	return err
 }
