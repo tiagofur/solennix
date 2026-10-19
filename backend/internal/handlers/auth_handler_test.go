@@ -1744,6 +1744,75 @@ func TestAuthHandler_UpdateProfile_WithAllFields(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+// S4 (audit): logo_url/cover_url are fetched server-side on PDF generation,
+// so UpdateProfile must reject values that can never be a legitimate image:
+// non-http(s) schemes, protocol-relative URLs, bare paths and traversal.
+func TestAuthHandler_UpdateProfile_RejectsUnsafeImageURLs(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		body  string
+		field string
+	}{
+		{"logo file scheme", `{"logo_url":"file:///etc/passwd"}`, "logo_url"},
+		{"logo javascript scheme", `{"logo_url":"javascript:alert(1)"}`, "logo_url"},
+		{"logo traversal", `{"logo_url":"/api/uploads/../../etc/passwd"}`, "logo_url"},
+		{"logo protocol relative", `{"logo_url":"//evil.example.com/x.png"}`, "logo_url"},
+		{"logo bare path", `{"logo_url":"uploads/evil.png"}`, "logo_url"},
+		{"logo overlong", `{"logo_url":"https://example.com/` + strings.Repeat("a", 2048) + `"}`, "logo_url"},
+		{"cover data URL", `{"cover_url":"data:image/png;base64,AAA"}`, "cover_url"},
+		{"cover traversal", `{"cover_url":"/api/v1/uploads/../secret.txt"}`, "cover_url"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepo := new(MockFullUserRepo)
+			h := &AuthHandler{userRepo: mockRepo}
+			userID := uuid.New()
+
+			// Maybe(): tolerated so the RED run fails on assertions instead of
+			// an unexpected-call panic; the fix must leave Update uncalled.
+			mockRepo.On("Update", mock.Anything, userID,
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				mock.Anything,
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				mock.Anything, mock.Anything,
+			).Return(&models.User{ID: userID}, nil).Maybe()
+
+			req := httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader(tc.body))
+			req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+			rr := httptest.NewRecorder()
+			h.UpdateProfile(rr, req)
+
+			assert.Equal(t, http.StatusBadRequest, rr.Code)
+			assert.Contains(t, rr.Body.String(), tc.field)
+			mockRepo.AssertNotCalled(t, "Update", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+		})
+	}
+
+	t.Run("logo https URL accepted", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{userRepo: mockRepo}
+
+		userID := uuid.New()
+		logo := "https://cdn.example.com/u/logo.png"
+		user := &models.User{ID: userID, Email: "logo@test.dev", Name: "Logo", LogoURL: &logo}
+		mockRepo.On("Update", mock.Anything, userID,
+			(*string)(nil), (*string)(nil), &logo, (*string)(nil), (*string)(nil), (*bool)(nil),
+			(*float64)(nil), (*float64)(nil), (*float64)(nil), (*string)(nil),
+			(*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil),
+			(*string)(nil), (*string)(nil),
+		).Return(user, nil)
+
+		body := `{"logo_url":"https://cdn.example.com/u/logo.png"}`
+		req := httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader(body))
+		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+		rr := httptest.NewRecorder()
+		h.UpdateProfile(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
 func TestAuthHandler_UpdateProfile_Paths(t *testing.T) {
 	t.Run("Success_ReturnsUpdatedUser", func(t *testing.T) {
 		mockRepo := new(MockFullUserRepo)

@@ -1289,6 +1289,21 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// logo_url is fetched server-side on PDF generation: reject values that
+	// can never be a legitimate image before they reach storage.
+	if req.LogoURL != nil {
+		if err := validateProfileImageURL(*req.LogoURL, "logo_url"); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+	if req.CoverURL != nil {
+		if err := validateProfileImageURL(*req.CoverURL, "cover_url"); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+
 	if req.ContractTemplate != nil {
 		if err := validateContractTemplate(*req.ContractTemplate); err != nil {
 			if validationErr, ok := err.(ValidationError); ok {
