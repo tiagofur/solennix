@@ -3305,10 +3305,17 @@ func mockGoogleValidator(sub, email, name string) validateGoogleTokenFunc {
 }
 
 // mockAppleValidator returns a validateAppleTokenFunc that always succeeds
-// with the provided claims.
+// with the provided claims. Tokens carrying an email are treated as verified,
+// matching Apple's first-authorization behavior.
 func mockAppleValidator(sub, email string) validateAppleTokenFunc {
+	return mockAppleValidatorWithVerification(sub, email, email != "")
+}
+
+// mockAppleValidatorWithVerification is mockAppleValidator with explicit
+// control over the email_verified claim.
+func mockAppleValidatorWithVerification(sub, email string, verified bool) validateAppleTokenFunc {
 	return func(_ string, _ []string) (*AppleIDTokenClaims, error) {
-		return &AppleIDTokenClaims{Subject: sub, Email: email}, nil
+		return &AppleIDTokenClaims{Subject: sub, Email: email, EmailVerified: verified}, nil
 	}
 }
 
@@ -3480,4 +3487,148 @@ func TestAuthHandler_AppleSignIn_AccountStatusGate(t *testing.T) {
 		mockRepo.AssertCalled(t, "CancelPendingDeletion", mock.Anything, user.ID)
 		mockRepo.AssertExpectations(t)
 	})
+}
+
+// ---------------------------------------------------------------------------
+// Apple email trust — a client-supplied email must never identify an account
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_AppleSignIn_BodyEmailNeverIdentifiesAccount(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	cfg := &config.Config{AppleClientIDs: []string{"com.solennix.app"}}
+
+	// Attacker holds a valid Apple token for their own Apple ID that carries
+	// no email claim (Apple omits it after first authorization) and passes the
+	// victim's address in the request body.
+	victim := &models.User{ID: uuid.New(), Email: "victim@test.dev", Name: "Victim"}
+	mockRepo := new(MockFullUserRepo)
+	mockRepo.On("GetByAppleUserID", mock.Anything, "attacker-apple-sub").Return(nil, repository.ErrUserNotFound).Once()
+	// Maybe(): tolerated so the RED run fails on assertions instead of an
+	// unexpected-call panic; the fix must leave these permanently uncalled.
+	mockRepo.On("GetByEmail", mock.Anything, "victim@test.dev").Return(victim, nil).Maybe()
+	mockRepo.On("LinkAppleAccount", mock.Anything, victim.ID, "attacker-apple-sub").Return(nil).Maybe()
+
+	h := &AuthHandler{
+		userRepo:           mockRepo,
+		authService:        authService,
+		cfg:                cfg,
+		validateAppleToken: mockAppleValidatorWithVerification("attacker-apple-sub", "", false),
+	}
+
+	body := `{"identity_token":"valid.token","email":"victim@test.dev"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/apple", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.AppleSignIn(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Apple did not provide")
+	mockRepo.AssertNotCalled(t, "GetByEmail", mock.Anything, "victim@test.dev")
+	mockRepo.AssertNotCalled(t, "LinkAppleAccount", mock.Anything, mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "CreateWithOAuth", mock.Anything, mock.Anything)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_AppleSignIn_UnverifiedTokenEmailNotTrusted(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	cfg := &config.Config{AppleClientIDs: []string{"com.solennix.app"}}
+
+	// Token carries an email but email_verified is false — matching by it
+	// would let an attacker link into the account that owns that address.
+	victim := &models.User{ID: uuid.New(), Email: "victim2@test.dev", Name: "Victim"}
+	mockRepo := new(MockFullUserRepo)
+	mockRepo.On("GetByAppleUserID", mock.Anything, "attacker-sub-2").Return(nil, repository.ErrUserNotFound).Once()
+	mockRepo.On("GetByEmail", mock.Anything, "victim2@test.dev").Return(victim, nil).Maybe()
+	mockRepo.On("LinkAppleAccount", mock.Anything, victim.ID, "attacker-sub-2").Return(nil).Maybe()
+
+	h := &AuthHandler{
+		userRepo:           mockRepo,
+		authService:        authService,
+		cfg:                cfg,
+		validateAppleToken: mockAppleValidatorWithVerification("attacker-sub-2", "victim2@test.dev", false),
+	}
+
+	body := `{"identity_token":"valid.token"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/apple", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.AppleSignIn(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Apple did not provide")
+	mockRepo.AssertNotCalled(t, "GetByEmail", mock.Anything, "victim2@test.dev")
+	mockRepo.AssertNotCalled(t, "LinkAppleAccount", mock.Anything, mock.Anything, mock.Anything)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_AppleSignIn_VerifiedTokenEmailLinksAccount(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	cfg := &config.Config{AppleClientIDs: []string{"com.solennix.app"}}
+
+	user := &models.User{ID: uuid.New(), Email: "legit@test.dev", Name: "Legit"}
+	mockRepo := new(MockFullUserRepo)
+	mockRepo.On("GetByAppleUserID", mock.Anything, "legit-sub").Return(nil, repository.ErrUserNotFound).Once()
+	mockRepo.On("GetByEmail", mock.Anything, "legit@test.dev").Return(user, nil).Once()
+	mockRepo.On("LinkAppleAccount", mock.Anything, user.ID, "legit-sub").Return(nil).Once()
+
+	h := &AuthHandler{
+		userRepo:           mockRepo,
+		authService:        authService,
+		cfg:                cfg,
+		validateAppleToken: mockAppleValidatorWithVerification("legit-sub", "legit@test.dev", true),
+	}
+
+	body := `{"identity_token":"valid.token","full_name":"Legit User"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/apple", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.AppleSignIn(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockRepo.AssertCalled(t, "LinkAppleAccount", mock.Anything, user.ID, "legit-sub")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_AppleSignIn_ExistingAppleUserWithoutTokenEmail(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	cfg := &config.Config{AppleClientIDs: []string{"com.solennix.app"}}
+
+	// Apple omits the email claim on every login after the first one; the
+	// apple_user_id match must keep working without any email.
+	appleSub := "existing-sub"
+	user := &models.User{ID: uuid.New(), Email: "known@test.dev", Name: "Known", AppleUserID: &appleSub}
+	mockRepo := new(MockFullUserRepo)
+	mockRepo.On("GetByAppleUserID", mock.Anything, appleSub).Return(user, nil).Once()
+
+	h := &AuthHandler{
+		userRepo:           mockRepo,
+		authService:        authService,
+		cfg:                cfg,
+		validateAppleToken: mockAppleValidatorWithVerification(appleSub, "", false),
+	}
+
+	body := `{"identity_token":"valid.token"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/apple", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.AppleSignIn(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestParseAppleEmailVerified(t *testing.T) {
+	assert.True(t, parseAppleEmailVerified(true))
+	assert.True(t, parseAppleEmailVerified("true"))
+	assert.True(t, parseAppleEmailVerified("TRUE"))
+	assert.False(t, parseAppleEmailVerified(false))
+	assert.False(t, parseAppleEmailVerified("false"))
+	assert.False(t, parseAppleEmailVerified("1"))
+	assert.False(t, parseAppleEmailVerified(nil))
+	assert.False(t, parseAppleEmailVerified(1))
+	assert.False(t, parseAppleEmailVerified("yes"))
+}
+
+func TestTrustedAppleEmail(t *testing.T) {
+	assert.Equal(t, "", trustedAppleEmail(nil))
+	assert.Equal(t, "", trustedAppleEmail(&AppleIDTokenClaims{Subject: "s", Email: "a@b.com"}))
+	assert.Equal(t, "", trustedAppleEmail(&AppleIDTokenClaims{Subject: "s", EmailVerified: true}))
+	assert.Equal(t, "", trustedAppleEmail(&AppleIDTokenClaims{Email: "  ", EmailVerified: true}))
+	assert.Equal(t, "a@b.com", trustedAppleEmail(&AppleIDTokenClaims{Email: "a@b.com", EmailVerified: true}))
 }

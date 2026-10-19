@@ -1767,7 +1767,6 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 		IdentityToken     string  `json:"identity_token"`
 		AuthorizationCode string  `json:"authorization_code"`
 		FullName          *string `json:"full_name,omitempty"`
-		Email             *string `json:"email,omitempty"`
 	}
 	if err := decodeJSON(w, r, &req); err != nil {
 		if isRequestBodyTooLarge(err) {
@@ -1795,10 +1794,10 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	appleUserID := claims.Subject
-	email := normalizeEmail(claims.Email)
-	if email == "" && req.Email != nil {
-		email = normalizeEmail(*req.Email)
-	}
+	// Email is trusted only when it comes from the signed id_token with
+	// email_verified=true; a client-supplied email must never identify an
+	// account (account takeover via attacker-owned Apple tokens).
+	email := trustedAppleEmail(claims)
 
 	name := ""
 	if req.FullName != nil && *req.FullName != "" {
@@ -1895,7 +1894,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 
 	// Create new user
 	if email == "" {
-		writeError(w, http.StatusBadRequest, "Apple did not provide an email address")
+		writeError(w, http.StatusBadRequest, "Apple did not provide a verified email address")
 		return
 	}
 
@@ -2031,7 +2030,6 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 			FirstName string `json:"firstName"`
 			LastName  string `json:"lastName"`
 		} `json:"name"`
-		Email string `json:"email"`
 	}
 	if userJSON != "" {
 		_ = json.Unmarshal([]byte(userJSON), &appleUser)
@@ -2094,10 +2092,9 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	appleUserID := claims.Subject
-	email := normalizeEmail(claims.Email)
-	if email == "" && appleUser.Email != "" {
-		email = normalizeEmail(appleUser.Email)
-	}
+	// The form-posted "user" object is browser-controlled and forgeable; only
+	// the verified email inside the signed id_token may identify the account.
+	email := trustedAppleEmail(claims)
 
 	fullName := ""
 	if appleUser.Name.FirstName != "" || appleUser.Name.LastName != "" {
@@ -2145,7 +2142,7 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if email == "" {
-		writeError(w, http.StatusBadRequest, "Apple did not provide an email address")
+		writeError(w, http.StatusBadRequest, "Apple did not provide a verified email address")
 		return
 	}
 	newUser := &models.User{
@@ -2206,8 +2203,38 @@ func (h *AuthHandler) generateAppleClientSecret(clientID string) (string, error)
 
 // AppleIDTokenClaims represents the claims from an Apple identity token
 type AppleIDTokenClaims struct {
-	Subject string `json:"sub"`
-	Email   string `json:"email"`
+	Subject       string `json:"sub"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+}
+
+// parseAppleEmailVerified normalizes Apple's email_verified claim, which can
+// arrive as a JSON bool or as the strings "true"/"false" depending on the
+// token version. Anything unrecognized fails closed (false).
+func parseAppleEmailVerified(v any) bool {
+	switch t := v.(type) {
+	case bool:
+		return t
+	case string:
+		return strings.EqualFold(t, "true")
+	default:
+		return false
+	}
+}
+
+// trustedAppleEmail returns the id_token email only when Apple attests it as
+// verified. Request-supplied emails must never be used for account matching:
+// an attacker holding a valid token for their own Apple ID could otherwise
+// name any victim address and link into their account.
+func trustedAppleEmail(claims *AppleIDTokenClaims) string {
+	if claims == nil {
+		return ""
+	}
+	email := normalizeEmail(claims.Email)
+	if email == "" || !claims.EmailVerified {
+		return ""
+	}
+	return email
 }
 
 // appleJWKS caches Apple's public keys for JWT signature verification
@@ -2375,8 +2402,9 @@ func validateAppleIDToken(identityToken string, appleClientIDs []string) (*Apple
 	}
 
 	return &AppleIDTokenClaims{
-		Subject: appleClaims.Subject,
-		Email:   appleClaims.Email,
+		Subject:       appleClaims.Subject,
+		Email:         appleClaims.Email,
+		EmailVerified: parseAppleEmailVerified(appleClaims.EmailVerified),
 	}, nil
 }
 
