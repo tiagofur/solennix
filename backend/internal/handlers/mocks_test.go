@@ -250,6 +250,11 @@ func (m *MockFullEventRepo) UpdateClientStats(ctx context.Context, clientID uuid
 	return args.Error(0)
 }
 
+func (m *MockFullEventRepo) UpdateEventWithSideEffects(ctx context.Context, e *models.Event, oldClientID uuid.UUID, stockTransition bool) error {
+	args := m.Called(ctx, e, oldClientID, stockTransition)
+	return args.Error(0)
+}
+
 func (m *MockFullEventRepo) GetProducts(ctx context.Context, eventID uuid.UUID) ([]models.EventProduct, error) {
 	args := m.Called(ctx, eventID)
 	if args.Get(0) == nil {

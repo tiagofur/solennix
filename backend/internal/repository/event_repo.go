@@ -374,6 +374,15 @@ func (r *EventRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 //   - total_spent: sum of total_amount for confirmed + completed only
 //     (quoted is a prospect; cancelled is excluded)
 func (r *EventRepo) UpdateClientStats(ctx context.Context, clientID uuid.UUID) error {
+	return updateClientStatsExec(ctx, r.pool, clientID)
+}
+
+// execQuerier is satisfied by both *pgxpool.Pool and pgx.Tx.
+type execQuerier interface {
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+}
+
+func updateClientStatsExec(ctx context.Context, q execQuerier, clientID uuid.UUID) error {
 	query := `UPDATE clients SET
 		total_events = (
 			SELECT COUNT(*) FROM events
@@ -385,8 +394,42 @@ func (r *EventRepo) UpdateClientStats(ctx context.Context, clientID uuid.UUID) e
 		),
 		updated_at = NOW()
 		WHERE id = $1`
-	_, err := r.pool.Exec(ctx, query, clientID)
+	_, err := q.Exec(ctx, query, clientID)
 	return err
+}
+
+// UpdateEventWithSideEffects atomically updates the event row, refreshes
+// client stats (new and old client), and — when the event transitions to
+// 'confirmed' — deducts supply stock through the idempotent per-event ledger.
+// Any failure rolls the whole update back so the saved status and the stock
+// can never silently diverge (S6).
+func (r *EventRepo) UpdateEventWithSideEffects(ctx context.Context, e *models.Event, oldClientID uuid.UUID, stockTransition bool) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin event update tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	if err := r.UpdateTx(ctx, tx, e); err != nil {
+		return fmt.Errorf("update event: %w", err)
+	}
+	if err := updateClientStatsExec(ctx, tx, e.ClientID); err != nil {
+		return fmt.Errorf("update client stats: %w", err)
+	}
+	if oldClientID != e.ClientID {
+		if err := updateClientStatsExec(ctx, tx, oldClientID); err != nil {
+			return fmt.Errorf("update old client stats: %w", err)
+		}
+	}
+	if stockTransition {
+		if _, err := tx.Exec(ctx, deductSupplyStockSQL, e.ID); err != nil {
+			return fmt.Errorf("deduct supply stock: %w", err)
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit event update: %w", err)
+	}
+	return nil
 }
 
 // -- Event Products --
@@ -1194,16 +1237,28 @@ func (r *EventRepo) GetSupplySuggestionsFromProducts(ctx context.Context, userID
 	return result, nil
 }
 
-// DeductSupplyStock decrements inventory stock for all event supplies with source='stock'.
+// deductSupplyStockSQL claims the per-(event, inventory) deduction in the
+// ledger — the ON CONFLICT DO NOTHING unique key is the idempotency guard —
+// and decrements stock only for newly claimed rows, WITHOUT GREATEST so
+// shortages stay visible as honest negative stock instead of being masked.
+const deductSupplyStockSQL = `WITH new_deductions AS (
+	INSERT INTO event_supply_deductions (event_id, inventory_id, quantity)
+	SELECT es.event_id, es.inventory_id, es.quantity
+	FROM event_supplies es
+	WHERE es.event_id = $1 AND es.source = 'stock'
+	ON CONFLICT (event_id, inventory_id) DO NOTHING
+	RETURNING inventory_id, quantity
+)
+UPDATE inventory i
+SET current_stock = i.current_stock - d.quantity,
+	last_updated = NOW()
+FROM new_deductions d
+WHERE i.id = d.inventory_id`
+
+// DeductSupplyStock decrements inventory stock for all event supplies with
+// source='stock'. Idempotent per (event, inventory) via the deduction ledger.
 func (r *EventRepo) DeductSupplyStock(ctx context.Context, eventID uuid.UUID) error {
-	query := `UPDATE inventory SET
-		current_stock = GREATEST(0, current_stock - es.quantity),
-		last_updated = NOW()
-		FROM event_supplies es
-		WHERE inventory.id = es.inventory_id
-		AND es.event_id = $1
-		AND es.source = 'stock'`
-	_, err := r.pool.Exec(ctx, query, eventID)
+	_, err := r.pool.Exec(ctx, deductSupplyStockSQL, eventID)
 	return err
 }
 

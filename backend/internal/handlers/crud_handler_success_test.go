@@ -305,9 +305,7 @@ func TestUpdateEvent_Success_SameClient(t *testing.T) {
 	}
 
 	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(existing, nil)
-	eventRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Event")).Return(nil)
-	eventRepo.On("UpdateClientStats", mock.Anything, clientID).Return(nil)
-	eventRepo.On("DeductSupplyStock", mock.Anything, eventID).Return(nil)
+	eventRepo.On("UpdateEventWithSideEffects", mock.Anything, mock.AnythingOfType("*models.Event"), clientID, true).Return(nil)
 
 	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
 
@@ -319,8 +317,9 @@ func TestUpdateEvent_Success_SameClient(t *testing.T) {
 	if rr.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
 	}
-	// UpdateClientStats should only be called once (same client)
-	eventRepo.AssertNumberOfCalls(t, "UpdateClientStats", 1)
+	// The atomic side-effect update (event + stats + stock deduction) must run
+	// exactly once for the confirm transition.
+	eventRepo.AssertNumberOfCalls(t, "UpdateEventWithSideEffects", 1)
 }
 
 func TestUpdateEvent_Success_ClientChanged(t *testing.T) {
@@ -337,10 +336,9 @@ func TestUpdateEvent_Success_ClientChanged(t *testing.T) {
 	}
 
 	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(existing, nil)
-	eventRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Event")).Return(nil)
-	eventRepo.On("UpdateClientStats", mock.Anything, newClientID).Return(nil)
-	eventRepo.On("UpdateClientStats", mock.Anything, oldClientID).Return(nil)
-	eventRepo.On("DeductSupplyStock", mock.Anything, eventID).Return(nil)
+	// oldClientID is passed so the atomic update refreshes BOTH clients' stats
+	// inside the transaction.
+	eventRepo.On("UpdateEventWithSideEffects", mock.Anything, mock.AnythingOfType("*models.Event"), oldClientID, true).Return(nil)
 
 	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
 
@@ -352,8 +350,7 @@ func TestUpdateEvent_Success_ClientChanged(t *testing.T) {
 	if rr.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
 	}
-	// UpdateClientStats should be called twice (old and new client)
-	eventRepo.AssertNumberOfCalls(t, "UpdateClientStats", 2)
+	eventRepo.AssertCalled(t, "UpdateEventWithSideEffects", mock.Anything, mock.AnythingOfType("*models.Event"), oldClientID, true)
 }
 
 func TestUpdateEvent_GetByIDError_Returns404(t *testing.T) {
@@ -437,7 +434,7 @@ func TestUpdateEvent_UpdateRepoError_Returns500(t *testing.T) {
 		Status: "quoted", TaxRate: 16, TaxAmount: 100, TotalAmount: 1000,
 	}
 	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(existing, nil)
-	eventRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Event")).Return(errTest)
+	eventRepo.On("UpdateEventWithSideEffects", mock.Anything, mock.AnythingOfType("*models.Event"), clientID, true).Return(errTest)
 
 	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
 
@@ -2920,7 +2917,11 @@ func TestCreatePayment_ValidationError_MissingPaymentMethod_Returns400(t *testin
 // UpdateEvent — client change with UpdateClientStats error (lines 311-318)
 // ---------------------------------------------------------------------------
 
-func TestUpdateEvent_ClientChange_UpdateClientStatsError_StillReturns200(t *testing.T) {
+// S6 (audit): side-effect failures no longer swallow with 200 — the atomic
+// update (event + client stats + stock deduction) fails closed with 500 so
+// status and stats can never silently diverge. (Previously a stats failure
+// returned 200 with stale client stats.)
+func TestUpdateEvent_ClientChange_OldClientStatsError_Returns500(t *testing.T) {
 	userID := uuid.New()
 	eventID := uuid.New()
 	oldClientID := uuid.New()
@@ -2934,11 +2935,8 @@ func TestUpdateEvent_ClientChange_UpdateClientStatsError_StillReturns200(t *test
 	}
 
 	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(existing, nil)
-	eventRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Event")).Return(nil)
-	// New client stats update succeeds, old client stats update fails
-	eventRepo.On("UpdateClientStats", mock.Anything, newClientID).Return(nil)
-	eventRepo.On("UpdateClientStats", mock.Anything, oldClientID).Return(errTest)
-	eventRepo.On("DeductSupplyStock", mock.Anything, eventID).Return(nil)
+	// Simulates the old-client stats update failing inside the transaction.
+	eventRepo.On("UpdateEventWithSideEffects", mock.Anything, mock.AnythingOfType("*models.Event"), oldClientID, true).Return(errTest)
 
 	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
 
@@ -2947,11 +2945,10 @@ func TestUpdateEvent_ClientChange_UpdateClientStatsError_StillReturns200(t *test
 	rr := httptest.NewRecorder()
 	h.UpdateEvent(rr, req)
 
-	assert.Equal(t, http.StatusOK, rr.Code, "response should be 200 even when UpdateClientStats fails")
-	eventRepo.AssertNumberOfCalls(t, "UpdateClientStats", 2)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code, "side-effect failures must roll the update back and return 500")
 }
 
-func TestUpdateEvent_ClientChange_NewClientStatsError_StillReturns200(t *testing.T) {
+func TestUpdateEvent_ClientChange_NewClientStatsError_Returns500(t *testing.T) {
 	userID := uuid.New()
 	eventID := uuid.New()
 	oldClientID := uuid.New()
@@ -2965,11 +2962,8 @@ func TestUpdateEvent_ClientChange_NewClientStatsError_StillReturns200(t *testing
 	}
 
 	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(existing, nil)
-	eventRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Event")).Return(nil)
-	// New client stats update fails — response should still be OK
-	eventRepo.On("UpdateClientStats", mock.Anything, newClientID).Return(errTest)
-	eventRepo.On("UpdateClientStats", mock.Anything, oldClientID).Return(nil)
-	eventRepo.On("DeductSupplyStock", mock.Anything, eventID).Return(nil)
+	// Simulates the new-client stats update failing inside the transaction.
+	eventRepo.On("UpdateEventWithSideEffects", mock.Anything, mock.AnythingOfType("*models.Event"), oldClientID, true).Return(errTest)
 
 	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
 
@@ -2978,8 +2972,7 @@ func TestUpdateEvent_ClientChange_NewClientStatsError_StillReturns200(t *testing
 	rr := httptest.NewRecorder()
 	h.UpdateEvent(rr, req)
 
-	assert.Equal(t, http.StatusOK, rr.Code, "response should be 200 even when UpdateClientStats fails for new client")
-	eventRepo.AssertNumberOfCalls(t, "UpdateClientStats", 2)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code, "side-effect failures must roll the update back and return 500")
 }
 
 // ---------------------------------------------------------------------------

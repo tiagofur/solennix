@@ -66,8 +66,7 @@ func buildUpdateEventHandlerForA7(
 	// These are the ONLY stubs for GetProducts/GetExtras — they return real items.
 	eventRepo.On("GetProducts", mock.Anything, eventID).Return(products, nil)
 	eventRepo.On("GetExtras", mock.Anything, eventID).Return(extras, nil)
-	eventRepo.On("Update", mock.Anything, mock.Anything).Return(nil).Maybe()
-	eventRepo.On("UpdateClientStats", mock.Anything, mock.Anything).Return(nil).Maybe()
+	eventRepo.On("UpdateEventWithSideEffects", mock.Anything, mock.Anything, mock.Anything, false).Return(nil).Maybe()
 	paymentRepo.On("GetByEventID", mock.Anything, mock.Anything, mock.Anything).Return([]models.Payment{}, nil).Maybe()
 	userRepo.On("GetByID", mock.Anything, mock.Anything).Return(&models.User{Plan: "pro"}, nil).Maybe()
 
@@ -133,8 +132,7 @@ func TestUpdateEvent_A7_PartialUpdateWithoutTotal_NotRejected(t *testing.T) {
 	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(existing, nil)
 	eventRepo.On("GetProducts", mock.Anything, eventID).Return(products, nil).Maybe()
 	eventRepo.On("GetExtras", mock.Anything, eventID).Return([]models.EventExtra{}, nil).Maybe()
-	eventRepo.On("Update", mock.Anything, mock.Anything).Return(nil).Maybe()
-	eventRepo.On("UpdateClientStats", mock.Anything, mock.Anything).Return(nil).Maybe()
+	eventRepo.On("UpdateEventWithSideEffects", mock.Anything, mock.Anything, mock.Anything, false).Return(nil).Maybe()
 	paymentRepo.On("GetByEventID", mock.Anything, mock.Anything, mock.Anything).Return([]models.Payment{}, nil).Maybe()
 	userRepo.On("GetByID", mock.Anything, mock.Anything).Return(&models.User{Plan: "pro"}, nil).Maybe()
 
@@ -184,8 +182,7 @@ func TestUpdateEvent_A7_NoLineItems_AcceptsAnyTotal(t *testing.T) {
 	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(existing, nil)
 	eventRepo.On("GetProducts", mock.Anything, eventID).Return([]models.EventProduct{}, nil)
 	eventRepo.On("GetExtras", mock.Anything, eventID).Return([]models.EventExtra{}, nil)
-	eventRepo.On("Update", mock.Anything, mock.Anything).Return(nil)
-	eventRepo.On("UpdateClientStats", mock.Anything, mock.Anything).Return(nil).Maybe()
+	eventRepo.On("UpdateEventWithSideEffects", mock.Anything, mock.Anything, mock.Anything, false).Return(nil)
 	paymentRepo.On("GetByEventID", mock.Anything, mock.Anything, mock.Anything).Return([]models.Payment{}, nil).Maybe()
 	userRepo.On("GetByID", mock.Anything, mock.Anything).Return(&models.User{Plan: "pro"}, nil).Maybe()
 
