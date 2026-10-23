@@ -93,8 +93,8 @@ Valores = runtime actual. Si cambian, actualizar **código + esta tabla + [[02_F
 
 | Feature | Gratis (`basic`) | Pro | Business | Enforcement |
 | :--- | :---: | :---: | :---: | :--- |
-| Eventos / mes calendario | **4** | ∞ | ∞ | `crud` create event |
-| Clientes | **20** | ∞ | ∞ | `crud` create client |
+| Eventos / mes calendario | **4** | ∞ | ∞ | `crud` create event + `request convert` |
+| Clientes | **20** | ∞ | ∞ | `crud` create client + `request convert` |
 | Productos | **15** | ∞ | ∞ | `crud` create product |
 | Inventario | **30** | ∞ | ∞ | `crud` create inventory |
 | Catálogo compuesto (productos + inventario) | **20** | ∞ | ∞ | advisory lock `catalog` |
@@ -103,6 +103,10 @@ Valores = runtime actual. Si cambian, actualizar **código + esta tabla + [[02_F
 
 > [!note] Staff Pro = 2
 > Código: `staff_handler` `case "pro": seatLimit = 2`. No documentar 3.
+
+> [!note] Conteo de eventos y conversión de solicitudes
+> - El conteo de "eventos / mes calendario" es por `event_date` dentro del mes calendario actual (`internal/planlimit.EventCountSQL`), no por `created_at`: los eventos fechados en otros meses no consumen cupo.
+> - La conversión de solicitudes públicas (`convert-to-event` manual y `submit_mode: auto_event`) aplica los mismos gates (eventos + clientes) con `internal/planlimit`. En `auto_event`, al llegar al límite el request queda **pendiente** en el inbox del organizador (fallback) en lugar de fallar el submit del visitante; la conversión manual devuelve `403 plan_limit_exceeded`.
 
 ### 2.2 Core ops (todos los planes, con límites de escala)
 

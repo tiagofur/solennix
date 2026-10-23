@@ -330,6 +330,25 @@ func TestRespondRequest_NegativeAmount_Returns400(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
+func TestConvertToEvent_PlanLimit_MapsTo403(t *testing.T) {
+	svc := new(mockPublicRequestService)
+	h := newReqHandler(svc, new(mockPublicRequestInboxStore))
+	uid := uuid.New()
+	rid := uuid.New()
+	svc.On("ConvertToEvent", mock.Anything, rid, uid).Return(nil, &services.PlanLimitError{Resource: "events", Current: 4, Limit: 4})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/organizers/me/requests/"+rid.String()+"/convert-to-event", nil)
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uid))
+	req.SetPathValue("id", rid.String())
+	w := httptest.NewRecorder()
+	h.ConvertToEvent(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.Contains(t, w.Body.String(), "plan_limit_exceeded")
+	assert.Contains(t, w.Body.String(), "\"events\"")
+	assert.Contains(t, w.Body.String(), "\"max\":4")
+}
+
 func TestConvertToEvent_AlreadyConverted_MapsTo409WithEventID(t *testing.T) {
 	svc := new(mockPublicRequestService)
 	h := newReqHandler(svc, new(mockPublicRequestInboxStore))
