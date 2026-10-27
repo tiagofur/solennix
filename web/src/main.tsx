@@ -15,7 +15,15 @@ if (sentryDsn) {
     environment: import.meta.env.MODE,
     integrations: [Sentry.browserTracingIntegration()],
     tracesSampleRate: import.meta.env.PROD ? 0.05 : 0,
-    sendDefaultPii: false,
+    // v11 removed `sendDefaultPii`; preserve its restrictive semantics
+    // explicitly — unset `dataCollection` would collect everything.
+    dataCollection: {
+      userInfo: false,
+      cookies: false,
+      httpHeaders: false,
+      httpBodies: [],
+      urlQueryParams: false,
+    },
   });
 }
 
