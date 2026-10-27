@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os.log
 import RevenueCat
 import SolennixCore
 import StoreKit
@@ -9,6 +10,8 @@ import StoreKit
 // frontier for the manage-subscription flow, not UI logic leaking into the
 // network layer. (#757)
 import UIKit
+
+private let logger = Logger(subsystem: SolennixLog.subsystem, category: "SubscriptionManager")
 
 // MARK: - Subscription Error
 
@@ -151,7 +154,10 @@ public final class SubscriptionManager {
             // Sync existing purchases from StoreKit (migration from direct StoreKit 2)
             _ = try? await Purchases.shared.syncPurchases()
         } catch {
-            // Non-fatal: user can still use the app, premium status from backend
+            // Non-fatal: user can still use the app, premium status from backend.
+            // Visible in the log because a failed logIn leaves purchases attached
+            // to an anonymous RevenueCat ID, so webhooks never see the user ID.
+            logger.error("RevenueCat logIn failed for user \(userID, privacy: .public): \(String(describing: error), privacy: .public)")
         }
     }
 
