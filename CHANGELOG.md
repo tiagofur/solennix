@@ -13,16 +13,6 @@ Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 | Android | 1.4.0 | 10 | android/app/build.gradle.kts |
 | Backend | 1.0.4 | - | backend/VERSION |
 
-## 2026-10-27 - iOS 1.5.1: suscripciones vinculadas a la cuenta y fechas exactas en la lista de eventos
-
-Dos fixes importantes detectados en producción: las compras dejaban de asociarse a la cuenta si se compraba tras iniciar sesión (quedaban anónimas en RevenueCat y el plan no se activaba), y la lista de eventos mostraba las fechas un día antes en zonas horarias UTC-negativas.
-
-### IOS
-- Suscripciones: `AuthManager.onSessionStart` conecta `SubscriptionManager.login` al iniciar sesión (email/Apple/Google/invitación de equipo); las compras ya no quedan como `$RCAnonymousID` y el plan se activa correctamente (caso prod: RJ COMPANY 22/10).
-- Eventos: los formatters de display de la lista (`formattedDisplayDate`/`formattedShortDate`) ahora se fijan a UTC, igualando el contrato de parseo UTC de `apiDateFormatter`; antes la medianoche UTC se mostraba en zona local (UTC-6) como el día anterior.
-- Tests: `EventListViewDateDisplayTests` cubre el round-trip parse→display en bordes de mes/año.
-- Deps: RevenueCat SDK 5.99.0.
-
 ## 2026-07-03 - Móvil 1.4.0: Judgment Day de calidad — bugs críticos, integridad financiera y endurecimiento
 
 Release pareado iOS + Android 1.4.0 tras una revisión 'Judgment Day' de la app iOS: corrige un crash de permiso de calendario, filtra URLs en logs de Release, integridad de cálculos financieros (margen, redondeo de pagos), migración versionada de cache y paridad de UX en borrados.
@@ -251,3 +241,19 @@ Se consolidaron mejoras de UX y fixes criticos en mobile y web para formulario, 
 ### BACKEND
 - Contratos de API y reglas de negocio alineados con los fixes de descuentos y pagos.
 - Refuerzo de consistencia para calculos mostrados en clientes API.
+
+## 2026-10-27 - iOS 1.5.1: suscripciones vinculadas a la cuenta y fechas exactas en la lista de eventos
+
+Fix de compras anonimas en RevenueCat (las compras se asocian a la cuenta al iniciar sesion) y del desfase de un dia en las fechas de la lista de eventos.
+
+### WEB
+
+### IOS
+- Suscripciones: AuthManager.onSessionStart conecta SubscriptionManager.login al iniciar sesion (email/Apple/Google/invitacion de equipo); las compras ya no quedan como $RCAnonymousID y el plan se activa (caso prod RJ COMPANY 22/10).
+- Eventos: los formatters de display de la lista (formattedDisplayDate/formattedShortDate) ahora se fijan a UTC, igualando el contrato parse UTC; antes mostraban la fecha un dia antes en zonas UTC-negativas.
+- Test de regresion EventListViewDateDisplayTests cubre el round-trip parse->display.
+- Bump RevenueCat SDK 5.99.0.
+
+### ANDROID
+
+### BACKEND
