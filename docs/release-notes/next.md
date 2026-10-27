@@ -1,23 +1,23 @@
 # Release Notes — Próxima versión
 
 Notas listas para copiar/pegar en App Store Connect y Google Play Console.
-Este archivo acompaña el release train **iOS 1.4.1 (10)**.
+Este archivo acompaña el release train **iOS 1.5.1 (10)**.
 
 - **Corta (< 500 chars)** — App Store / Play Store resumen breve
 - **Larga** — cuerpo completo de "What's New"
 
 El changelog técnico canónico vive en `versioning/releases.json` y genera `CHANGELOG.md`.
 
-> Pendiente antes de subir el build:
-> 1. Bumpar `MARKETING_VERSION` (→ 1.4.1) y `CURRENT_PROJECT_VERSION` (→ 10) en
->    `ios/project.yml` (aparece 3 veces: app, widget, notification extension).
->    Si el bump se hizo solo en Xcode, `xcodegen generate` lo pisa.
-> 2. Mergear `fix/ios-event-list-date-shift` (fecha un día antes en la lista)
->    o quitar esa viñeta de las notas.
+> Estado del tren (branch `fix/ios-event-list-date-shift`):
+> 1. ✅ Bump `MARKETING_VERSION` → 1.5.1 y `CURRENT_PROJECT_VERSION` → 10 en
+>    `ios/project.yml` (3 targets) + `xcodegen generate` (pbxproj actualizado).
+> 2. ✅ Fix de fecha de la lista incluido en este branch.
+> 3. ⏳ Crear la versión **1.5.1** en App Store Connect (la 1.5.0 ya está tomada),
+>    mergear el PR, archivar desde Xcode y subir.
 
 ---
 
-## iOS 1.4.1 (build 10)
+## iOS 1.5.1 (build 10)
 
 ### 🇲🇽 Español (LATAM) — versión corta
 

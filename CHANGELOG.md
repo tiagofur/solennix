@@ -2,16 +2,26 @@
 
 Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 
-Última actualización: 2026-07-03
+Última actualización: 2026-10-27
 
 ## Versiones actuales
 
 | Plataforma | Versión | Build | Source |
 | --- | --- | --- | --- |
 | Web | 1.0.1 | - | web/package.json |
-| iOS | 1.4.0 | 9 | ios/project.yml |
+| iOS | 1.5.1 | 10 | ios/project.yml |
 | Android | 1.4.0 | 10 | android/app/build.gradle.kts |
 | Backend | 1.0.4 | - | backend/VERSION |
+
+## 2026-10-27 - iOS 1.5.1: suscripciones vinculadas a la cuenta y fechas exactas en la lista de eventos
+
+Dos fixes importantes detectados en producción: las compras dejaban de asociarse a la cuenta si se compraba tras iniciar sesión (quedaban anónimas en RevenueCat y el plan no se activaba), y la lista de eventos mostraba las fechas un día antes en zonas horarias UTC-negativas.
+
+### IOS
+- Suscripciones: `AuthManager.onSessionStart` conecta `SubscriptionManager.login` al iniciar sesión (email/Apple/Google/invitación de equipo); las compras ya no quedan como `$RCAnonymousID` y el plan se activa correctamente (caso prod: RJ COMPANY 22/10).
+- Eventos: los formatters de display de la lista (`formattedDisplayDate`/`formattedShortDate`) ahora se fijan a UTC, igualando el contrato de parseo UTC de `apiDateFormatter`; antes la medianoche UTC se mostraba en zona local (UTC-6) como el día anterior.
+- Tests: `EventListViewDateDisplayTests` cubre el round-trip parse→display en bordes de mes/año.
+- Deps: RevenueCat SDK 5.99.0.
 
 ## 2026-07-03 - Móvil 1.4.0: Judgment Day de calidad — bugs críticos, integridad financiera y endurecimiento
 
