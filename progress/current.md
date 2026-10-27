@@ -52,3 +52,10 @@ Branch de trabajo: `feat/v2-geo-search-web` (sobre main con S13 + #1127).
 - Review + commit(s) + PR(s)
 - Regenerar OpenAPI types
 - S14 mobile inbox cuando toque
+
+## Estrategia de backup y recuperación — 2026-08-26
+
+- Documentada en `docs/Backend/Backup y Recuperación.md`.
+- Define RPO/RTO, retención, cifrado, roles, alertas y runbooks para PostgreSQL y medias.
+- Implementación propuesta: protección mínima en 24 h, PITR y medias S3 en 7 días, restore drills automatizados en 30 días.
+- Estado: estrategia aprobada; automatización todavía pendiente.
