@@ -83,7 +83,7 @@
     "vitest": "^4.1.11"
   },
   "overrides": {
-    "serialize-javascript": ">=7.0.5",
+    "serialize-javascript": ">=7.1.4",
     "js-yaml": "4.2.0",
     "@babel/core": "^7.29.6"
   }
