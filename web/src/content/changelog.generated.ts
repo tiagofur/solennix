@@ -2,15 +2,15 @@
 // Source: versioning/releases.json
 export const changelogData = {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-03",
+  "updatedAt": "2026-10-27",
   "currentVersions": {
     "web": {
       "version": "1.0.1",
       "source": "web/package.json"
     },
     "ios": {
-      "version": "1.4.0",
-      "build": "9",
+      "version": "1.5.1",
+      "build": "10",
       "source": "ios/project.yml"
     },
     "android": {
@@ -273,6 +273,20 @@ export const changelogData = {
         "backend": [
           "Contratos de API y reglas de negocio alineados con los fixes de descuentos y pagos.",
           "Refuerzo de consistencia para calculos mostrados en clientes API."
+        ]
+      }
+    },
+    {
+      "id": "2026-10-27-ios-1.5.1-subscriptions-and-event-dates",
+      "date": "2026-10-27",
+      "title": "iOS 1.5.1: suscripciones vinculadas a la cuenta y fechas exactas en la lista de eventos",
+      "summary": "Fix de compras anonimas en RevenueCat (las compras se asocian a la cuenta al iniciar sesion) y del desfase de un dia en las fechas de la lista de eventos.",
+      "platforms": {
+        "ios": [
+          "Suscripciones: AuthManager.onSessionStart conecta SubscriptionManager.login al iniciar sesion (email/Apple/Google/invitacion de equipo); las compras ya no quedan como $RCAnonymousID y el plan se activa (caso prod RJ COMPANY 22/10).",
+          "Eventos: los formatters de display de la lista (formattedDisplayDate/formattedShortDate) ahora se fijan a UTC, igualando el contrato parse UTC; antes mostraban la fecha un dia antes en zonas UTC-negativas.",
+          "Test de regresion EventListViewDateDisplayTests cubre el round-trip parse->display.",
+          "Bump RevenueCat SDK 5.99.0."
         ]
       }
     }

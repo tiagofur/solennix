@@ -2,14 +2,14 @@
 
 Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 
-Última actualización: 2026-07-03
+Última actualización: 2026-10-27
 
 ## Versiones actuales
 
 | Plataforma | Versión | Build | Source |
 | --- | --- | --- | --- |
 | Web | 1.0.1 | - | web/package.json |
-| iOS | 1.4.0 | 9 | ios/project.yml |
+| iOS | 1.5.1 | 10 | ios/project.yml |
 | Android | 1.4.0 | 10 | android/app/build.gradle.kts |
 | Backend | 1.0.4 | - | backend/VERSION |
 
@@ -241,3 +241,19 @@ Se consolidaron mejoras de UX y fixes criticos en mobile y web para formulario, 
 ### BACKEND
 - Contratos de API y reglas de negocio alineados con los fixes de descuentos y pagos.
 - Refuerzo de consistencia para calculos mostrados en clientes API.
+
+## 2026-10-27 - iOS 1.5.1: suscripciones vinculadas a la cuenta y fechas exactas en la lista de eventos
+
+Fix de compras anonimas en RevenueCat (las compras se asocian a la cuenta al iniciar sesion) y del desfase de un dia en las fechas de la lista de eventos.
+
+### WEB
+
+### IOS
+- Suscripciones: AuthManager.onSessionStart conecta SubscriptionManager.login al iniciar sesion (email/Apple/Google/invitacion de equipo); las compras ya no quedan como $RCAnonymousID y el plan se activa (caso prod RJ COMPANY 22/10).
+- Eventos: los formatters de display de la lista (formattedDisplayDate/formattedShortDate) ahora se fijan a UTC, igualando el contrato parse UTC; antes mostraban la fecha un dia antes en zonas UTC-negativas.
+- Test de regresion EventListViewDateDisplayTests cubre el round-trip parse->display.
+- Bump RevenueCat SDK 5.99.0.
+
+### ANDROID
+
+### BACKEND
