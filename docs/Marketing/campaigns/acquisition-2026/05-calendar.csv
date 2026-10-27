@@ -1,0 +1,37 @@
+week,day,campaign_id,pillar,segment,core_asset,instagram,facebook,tiktok,youtube,linkedin,pinterest,stories,cta,destination,owner,status
+1,Mon,acq26_w1_manifesto,brand,all,4:5 manifesto visual,Carousel,Feed post,Talking-head cut,Short,Founder manifesto,Manifesto Pin,Poll on scattered tools,Crea tu primer evento gratis,/register,Marketing,ready
+1,Tue,acq26_w1_chaos,problem,all,9:16 chaos diagnostic,Reel,Reel,Native POV,Short,,2:3 workflow Pin,Quiz WhatsApp vs Excel,Descubre una sola versión,/register,Marketing,ready
+1,Wed,acq26_w1_first_event,activation,all,screen demo,Reel,Feed video,Tutorial clip,Short + tutorial,Product lesson,,Three-step walkthrough,Empieza con un evento,/register,Product,ready
+1,Thu,acq26_w1_checklist,education,all,checklist carousel,Carousel,Group-first post,,,Document post,Checklist Pin,Checklist sticker,Guarda el checklist,/register,Marketing,ready
+1,Fri,acq26_w1_multiplatform,proof,all,multi-platform visual,Feed,Feed,15s demo,Short,Company post,,Device preference poll,Empieza gratis,/register,Design,ready
+1,Sat,acq26_w1_qa,community,all,Q&A stories,Stories,Group replies,TikTok Q&A,,,Idea Pin,Question box,Haz tu pregunta,/register,Community,ready
+2,Mon,acq26_w2_quotes,proof,planners,quote workflow,Reel,Feed video,Screen demo,Short + tutorial,Ops insight,Quote checklist Pin,Before-after quote,Crea tu primera cotización,/register,Product,planned
+2,Tue,acq26_w2_client,proof,planners,client context carousel,Carousel,Feed post,POV,Short,,Client follow-up Pin,Client context quiz,Organiza un cliente,/register,Marketing,planned
+2,Wed,acq26_w2_objection,conversion,all,do-not-migrate-everything video,Reel,Reel,Talking head,Short,Founder post,,Objection question,Empieza con tu próximo evento,/register,Founder,planned
+2,Thu,acq26_w2_weekly_review,education,all,weekly review checklist,Carousel,Group contribution,,,Document post,Review checklist Pin,Five-question quiz,Guarda la revisión,/register,Marketing,planned
+2,Fri,acq26_w2_live,activation,all,live setup session,Live,Live,TikTok Live,Live,Event post,,Countdown,Crea un evento conmigo,/register,Product,planned
+2,Sat,acq26_w2_recap,community,all,week recap,Stories,Feed recap,Reply video,Community post,,,Vote next demo,Elige el próximo flujo,/register,Community,planned
+3,Mon,acq26_w3_catering,segment,catering,catering workflow video,Reel,Feed video,TikTok native,Short + tutorial,Operations post,Recipe/stock Pin,Catering poll,Organiza tu próximo servicio,/register,Marketing,planned
+3,Tue,acq26_w3_inventory,proof,catering,inventory visual,Carousel,Feed post,Screen demo,Short,,Inventory checklist Pin,Stock quiz,Conecta inventario y eventos,/register,Product,planned
+3,Wed,acq26_w3_quote_mistakes,education,catering,quote mistakes carousel,Carousel,Group contribution,,,Document post,Quote guide Pin,Mistake poll,Guarda la guía,/register,Marketing,planned
+3,Thu,acq26_w3_creator,community,catering,creator collaboration,Collab Reel,Reel,Spark-ready creator clip,Short,Partner tag,,Behind scenes,Prueba el flujo,/register,Partnerships,blocked-evidence
+3,Fri,acq26_w3_demo,activation,catering,first catering event demo,Reel,Video,Screen tutorial,Short + tutorial,,,Step-by-step,Crea tu primer evento,/register,Product,planned
+3,Sat,acq26_w3_faq,conversion,catering,FAQ clips,Stories,FAQ post,Q&A replies,Shorts Q&A,,,Question box,Empieza gratis,/register,Community,planned
+4,Mon,acq26_w4_decor,segment,decorators,decor event POV,Reel,Feed video,Native POV,Short,,Decor inventory Pin,Double-booking poll,Organiza cada montaje,/register,Marketing,planned
+4,Tue,acq26_w4_availability,proof,decorators,availability carousel,Carousel,Feed post,Screen demo,Short,,Availability checklist,Date quiz,Consulta disponibilidad,/register,Product,planned
+4,Wed,acq26_w4_handoff,education,teams,handoff checklist,Carousel,Group post,,,Document post,Handoff Pin,Handoff question,Comparte una sola versión,/register,Marketing,planned
+4,Thu,acq26_w4_staff,proof,teams,staff workflow video,Reel,Feed video,Screen demo,Short + tutorial,Team ops post,,Role poll,Organiza tu equipo,/register,Product,planned
+4,Fri,acq26_w4_case_request,evidence,all,customer interview invitation,Feed,Feed,Founder video,,Founder post,,Question box,Participa en entrevista,/register,Research,planned
+4,Sat,acq26_w4_recap,community,all,best comments recap,Stories,Group replies,Reply compilation,Community post,,,Vote next segment,Elige el próximo tema,/register,Community,planned
+5,Mon,acq26_w5_dj,segment,dj-av,technical package video,Reel,Feed video,Native POV,Short,,Equipment Pin,Package poll,Organiza tu equipo técnico,/register,Marketing,planned
+5,Tue,acq26_w5_payments,proof,all,payment tracking explainer,Carousel,Feed post,Explainer clip,Short,Finance ops note,Payment checklist Pin,True-false quiz,Controla pagos y saldos,/register,Product,planned
+5,Wed,acq26_w5_system,education,all,one-source-of-truth diagram,Carousel,Group contribution,,,Document post,System diagram Pin,Tool stack poll,Reúne la operación,/register,Marketing,planned
+5,Thu,acq26_w5_founder,trust,all,founder build story,Reel,Feed video,TikTok native,Short,Founder post,,Ask the founder,Conoce por qué lo construimos,/register,Founder,planned
+5,Fri,acq26_w5_tutorial,activation,all,10-minute first event,Reel cut,Video cut,Clip,Long tutorial + Short,,,Countdown,Crea tu evento conmigo,/register,Product,planned
+5,Sat,acq26_w5_referral,referral,all,shareable checklist,Stories,Feed post,Reply video,Community post,,Checklist Pin,Share prompt,Compártelo con un colega,/register,Community,planned
+6,Mon,acq26_w6_venue,segment,venues,lead-to-event workflow,Reel,Feed video,Native demo,Short,Venue ops post,Lead checklist Pin,Lead follow-up poll,Organiza cada solicitud,/register,Marketing,planned
+6,Tue,acq26_w6_portal,proof,planners,client portal demo,Carousel,Feed video,Screen demo,Short + tutorial,,,Client experience poll,Muéstrate más profesional,/register,Product,planned
+6,Wed,acq26_w6_comparison,conversion,all,before-after system,Carousel,Feed post,POV transition,Short,Operations post,Before-after Pin,Before-after quiz,Prueba con un evento,/register,Marketing,planned
+6,Thu,acq26_w6_results,measurement,all,transparent learning report,Carousel,Feed post,Founder recap,Short,Build-in-public report,,Results Q&A,Conoce lo que aprendimos,/register,Analytics,blocked-data
+6,Fri,acq26_w6_winner,scale,winning-segment,winner iteration,Reel,Feed video,TikTok native,Short + tutorial,Adapted insight,Adapted Pin,Winner variant,Crea tu primer evento,/register,Marketing,blocked-data
+6,Sat,acq26_w6_next,community,all,next-cycle preview,Stories,Community post,Reply video,Community post,,,Vote next cycle,Únete a la comunidad,/register,Community,planned

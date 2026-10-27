@@ -7,7 +7,7 @@ aliases:
   - Marketing MOC
   - Brand Index
 status: active
-updated: 2026-08-05
+updated: 2026-09-01
 ---
 
 # Marketing — Map of Content
@@ -27,9 +27,8 @@ updated: 2026-08-05
 
 | Campaña | Entry |
 | :--- | :--- |
-| Estrategia social | [[campaigns/social-media-strategy]] |
-| Cada detalle importa | [[campaigns/cada-detalle-importa/README]] |
-| Con cariño | [[campaigns/con-cariño/README]] |
+| Adquisición 2026 — Tu talento crea. Solennix organiza. | [[campaigns/acquisition-2026/README]] |
+| Índice y archivo de campañas | [[campaigns/README]] |
 
 ## Video & YouTube
 
