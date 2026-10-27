@@ -315,7 +315,10 @@ public actor APIClient {
     /// - Returns: The decoded response of type `T`.
     public func put<T: Decodable>(
         _ endpoint: String,
-        body: some Encodable
+        // `& Sendable` keeps #IsolatedConformances quiet when callers pass the
+        // body across actor boundaries (AuthManager is @MainActor, APIClient
+        // is an actor); every request DTO is a plain Sendable struct.
+        body: some Encodable & Sendable
     ) async throws -> T {
         var request = try buildRequest(endpoint, method: "PUT")
         let bodyData = try encoder.encode(body)
