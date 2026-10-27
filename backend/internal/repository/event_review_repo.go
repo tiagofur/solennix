@@ -112,7 +112,7 @@ func (r *EventReviewRepo) ListPendingEmailCandidates(ctx context.Context, limit 
 			e.client_id,
 			COALESCE(c.name, '') AS client_name,
 			COALESCE(c.email, '') AS client_email,
-			e.event_date,
+			e.event_date::text AS event_date,
 			COALESCE(e.service_type, 'Evento') AS event_label,
 			COALESCE(u.business_name, u.name) AS organizer_name,
 			u.plan
