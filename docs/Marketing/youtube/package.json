@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "puppeteer": "^24.2.1"
+    "puppeteer": "^25.16.0"
   }
 }
