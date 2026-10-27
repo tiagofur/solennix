@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"html"
+	"math"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -192,10 +194,49 @@ func ValidateEvent(event *models.Event) error {
 	return nil
 }
 
+// MaxProfileImageURLLength caps stored profile image URLs.
+const MaxProfileImageURLLength = 2048
+
+// validateProfileImageURL rejects values that can never be a legitimate
+// profile image. logo_url is fetched server-side on PDF generation, so only
+// http(s) absolute URLs and /api/uploads/ relative paths are acceptable;
+// anything else (other schemes, embedded credentials, bare paths,
+// dot-dot segments) fails closed. Empty clears the image and is valid.
+func validateProfileImageURL(value, field string) error {
+	if value == "" {
+		return nil
+	}
+	if len(value) > MaxProfileImageURLLength {
+		return ValidationError{Field: field, Message: "must be 2048 characters or fewer"}
+	}
+	if u, err := url.Parse(value); err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != "" {
+		if u.User != nil {
+			return ValidationError{Field: field, Message: "must not embed credentials"}
+		}
+		return nil
+	}
+	for _, prefix := range []string{"/api/uploads/", "/api/v1/uploads/"} {
+		if strings.HasPrefix(value, prefix) {
+			rel := strings.TrimPrefix(value, prefix)
+			if rel == "" {
+				return ValidationError{Field: field, Message: "must be an https:// URL or an /api/uploads/ path"}
+			}
+			for _, seg := range strings.Split(rel, "/") {
+				if seg == ".." {
+					return ValidationError{Field: field, Message: "must not contain path traversal"}
+				}
+			}
+			return nil
+		}
+	}
+	return ValidationError{Field: field, Message: "must be an https:// URL or an /api/uploads/ path"}
+}
+
 // ValidatePayment validates all business rules for a payment
 func ValidatePayment(payment *models.Payment) error {
-	// Validate amount (minimum one cent)
-	if payment.Amount < 0.01 {
+	// Validate amount (minimum one cent). Non-finite values compare false
+	// against every threshold and must be rejected explicitly.
+	if math.IsNaN(payment.Amount) || math.IsInf(payment.Amount, 0) || payment.Amount < 0.01 {
 		return ValidationError{Field: "amount", Message: "must be at least 0.01"}
 	}
 

@@ -44,4 +44,6 @@ type PaymentRepository interface {
 // ProcessedWebhookRepository provides idempotency for inbound webhook events.
 type ProcessedWebhookRepository interface {
 	TryInsert(ctx context.Context, eventID, provider, eventType string) (bool, error)
+	// Delete releases an idempotency claim so a failed event can be retried.
+	Delete(ctx context.Context, eventID string) error
 }

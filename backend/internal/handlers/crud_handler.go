@@ -876,27 +876,19 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := h.eventRepo.Update(r.Context(), existing); err != nil {
+	// Atomic update: event row + client stats (old and new client) +, on the
+	// transition to 'confirmed', the idempotent stock deduction — all in one
+	// transaction so a failed deduction rolls the status back instead of
+	// silently overstating inventory (S6).
+	stockTransition := existing.Status == "confirmed" && oldStatus != "confirmed"
+	if err := h.eventRepo.UpdateEventWithSideEffects(r.Context(), existing, oldClientID, stockTransition); err != nil {
+		slog.Error("Failed to update event", "event_id", id, "error", err)
 		writeError(w, http.StatusInternalServerError, "Failed to update event")
 		return
 	}
 
-	// Update client stats (old and new client if changed)
-	if err := h.eventRepo.UpdateClientStats(r.Context(), existing.ClientID); err != nil {
-		slog.Warn("Failed to update client stats", "client_id", existing.ClientID, "error", err)
-	}
-	if oldClientID != existing.ClientID {
-		if err := h.eventRepo.UpdateClientStats(r.Context(), oldClientID); err != nil {
-			slog.Warn("Failed to update client stats", "client_id", oldClientID, "error", err)
-		}
-	}
-
-	// Deduct supply stock when event transitions to 'confirmed'
-	if existing.Status == "confirmed" && oldStatus != "confirmed" {
-		if err := h.eventRepo.DeductSupplyStock(r.Context(), id); err != nil {
-			slog.Warn("Failed to deduct supply stock", "event_id", id, "error", err)
-		}
-		// Send push notification for event confirmation (fire-and-forget)
+	// Send push notification for event confirmation (fire-and-forget)
+	if stockTransition {
 		if h.notifier != nil {
 			go func() {
 				_ = h.notifier.SendEventConfirmed(context.Background(), userID, *existing)

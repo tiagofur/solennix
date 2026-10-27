@@ -52,6 +52,7 @@ type FullEventRepository interface {
 	Create(ctx context.Context, e *models.Event) error
 	Delete(ctx context.Context, id, userID uuid.UUID) error
 	UpdateClientStats(ctx context.Context, clientID uuid.UUID) error
+	UpdateEventWithSideEffects(ctx context.Context, e *models.Event, oldClientID uuid.UUID, stockTransition bool) error
 	GetProducts(ctx context.Context, eventID uuid.UUID) ([]models.EventProduct, error)
 	GetExtras(ctx context.Context, eventID uuid.UUID) ([]models.EventExtra, error)
 	UpdateEventItems(ctx context.Context, eventID uuid.UUID, products []models.EventProduct, extras []models.EventExtra, equipment *[]models.EventEquipment, supplies *[]models.EventSupply, staff *[]models.EventStaff) error
@@ -64,7 +65,6 @@ type FullEventRepository interface {
 	GetEquipmentSuggestionsFromProducts(ctx context.Context, userID uuid.UUID, products []repository.ProductQuantity) ([]models.EquipmentSuggestion, error)
 	GetSupplies(ctx context.Context, eventID uuid.UUID) ([]models.EventSupply, error)
 	GetSupplySuggestionsFromProducts(ctx context.Context, userID uuid.UUID, products []repository.ProductQuantity) ([]models.SupplySuggestion, error)
-	DeductSupplyStock(ctx context.Context, eventID uuid.UUID) error
 	Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Event, error)
 	SearchEventsAdvanced(ctx context.Context, userID uuid.UUID, filters repository.EventSearchFilters) ([]models.Event, error)
 }

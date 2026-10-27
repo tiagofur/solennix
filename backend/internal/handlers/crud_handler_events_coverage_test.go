@@ -835,9 +835,7 @@ func TestUpdateEvent_TransitionToConfirmed_TriggersStockDeductAndNotifier(t *tes
 		TotalAmount: 1000,
 	}
 	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(existing, nil)
-	eventRepo.On("Update", mock.Anything, mock.Anything).Return(nil)
-	eventRepo.On("UpdateClientStats", mock.Anything, clientID).Return(nil)
-	eventRepo.On("DeductSupplyStock", mock.Anything, eventID).Return(nil)
+	eventRepo.On("UpdateEventWithSideEffects", mock.Anything, mock.Anything, clientID, true).Return(nil)
 
 	h := eventCoverageHandler(eventRepo)
 	h.SetNotifier(stubNotifier{})
@@ -849,6 +847,9 @@ func TestUpdateEvent_TransitionToConfirmed_TriggersStockDeductAndNotifier(t *tes
 	h.UpdateEvent(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	// The confirm transition must carry stockTransition=true so the deduction
+	// ledger runs inside the atomic update.
+	eventRepo.AssertCalled(t, "UpdateEventWithSideEffects", mock.Anything, mock.Anything, clientID, true)
 }
 
 func TestUpdateEvent_ClientChanged_UpdatesBothClients(t *testing.T) {
@@ -869,9 +870,8 @@ func TestUpdateEvent_ClientChanged_UpdatesBothClients(t *testing.T) {
 		TotalAmount: 500,
 	}
 	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(existing, nil)
-	eventRepo.On("Update", mock.Anything, mock.Anything).Return(nil)
-	eventRepo.On("UpdateClientStats", mock.Anything, newClient).Return(nil)
-	eventRepo.On("UpdateClientStats", mock.Anything, oldClient).Return(nil)
+	// oldClient is passed so the atomic update refreshes both clients' stats.
+	eventRepo.On("UpdateEventWithSideEffects", mock.Anything, mock.Anything, oldClient, false).Return(nil)
 
 	h := eventCoverageHandler(eventRepo)
 	body := `{"client_id":"` + newClient.String() + `","event_date":"2026-06-01","service_type":"catering","num_people":5,"status":"quoted","total_amount":500}`
@@ -880,8 +880,7 @@ func TestUpdateEvent_ClientChanged_UpdatesBothClients(t *testing.T) {
 	h.UpdateEvent(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
-	eventRepo.AssertCalled(t, "UpdateClientStats", mock.Anything, oldClient)
-	eventRepo.AssertCalled(t, "UpdateClientStats", mock.Anything, newClient)
+	eventRepo.AssertCalled(t, "UpdateEventWithSideEffects", mock.Anything, mock.Anything, oldClient, false)
 }
 
 func TestUpdateEvent_InvalidEventID(t *testing.T) {
@@ -931,7 +930,7 @@ func TestUpdateEvent_UpdateFails(t *testing.T) {
 		Status: "quoted", TotalAmount: 500,
 	}
 	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(existing, nil)
-	eventRepo.On("Update", mock.Anything, mock.Anything).Return(errTest)
+	eventRepo.On("UpdateEventWithSideEffects", mock.Anything, mock.Anything, clientID, false).Return(errTest)
 
 	h := eventCoverageHandler(eventRepo)
 	body := `{"client_id":"` + clientID.String() + `","event_date":"2026-06-01","service_type":"catering","num_people":5,"status":"quoted","total_amount":500}`

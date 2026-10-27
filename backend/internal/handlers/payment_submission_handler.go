@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -325,7 +326,10 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 
 	var amountFloat float64
 	_, err = fmt.Sscanf(amount, "%f", &amountFloat)
-	if err != nil || amountFloat <= 0 {
+	// Non-finite values compare false against every threshold (NaN <= 0 and
+	// NaN > cap are both false), so they must be rejected explicitly — a NaN
+	// stored as NUMERIC corrupts SUM(amount) and every downstream comparison.
+	if err != nil || math.IsNaN(amountFloat) || math.IsInf(amountFloat, 0) || amountFloat <= 0 {
 		writeError(w, http.StatusBadRequest, "amount must be a positive number")
 		return
 	}
@@ -696,6 +700,18 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 			PaymentDate:   time.Now().In(h.paymentDateLoc()).Format("2006-01-02"),
 			PaymentMethod: "transfer", // Always "transfer" for submissions
 			Notes:         ps.TransferRef,
+		}
+
+		// Defense in depth: a legacy row stored before the parse guard could
+		// still carry a non-finite amount; it must never become a payment.
+		if err := ValidatePayment(payment); err != nil {
+			var ve ValidationError
+			if errors.As(err, &ve) {
+				writeError(w, http.StatusBadRequest, fmt.Sprintf("%s: %s", ve.Field, ve.Message))
+				return
+			}
+			writeError(w, http.StatusBadRequest, "Invalid payment data")
+			return
 		}
 
 		if err := reviewStore.CreatePayment(ctx, payment); err != nil {

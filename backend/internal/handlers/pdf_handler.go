@@ -1,10 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
+	"net/netip"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -62,13 +66,110 @@ func servePDF(w http.ResponseWriter, filename string, data []byte) {
 	_, _ = w.Write(data)
 }
 
+// logoDeniedPrefixes are non-routable or sensitive ranges that isPublicIP
+// does not cover on its own (documentation, CGNAT, protocol assignments).
+var logoDeniedPrefixes = []netip.Prefix{
+	netip.MustParsePrefix("192.0.2.0/24"),
+	netip.MustParsePrefix("198.51.100.0/24"),
+	netip.MustParsePrefix("203.0.113.0/24"),
+	netip.MustParsePrefix("2001:db8::/32"),
+	netip.MustParsePrefix("100.64.0.0/10"),
+	netip.MustParsePrefix("192.0.0.0/24"),
+}
+
+// isPublicIP reports whether ip is a globally reachable unicast address.
+func isPublicIP(ip netip.Addr) bool {
+	if !ip.IsValid() || ip.IsPrivate() || ip.IsLoopback() ||
+		ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
+		ip.IsMulticast() || ip.IsUnspecified() || ip.IsInterfaceLocalMulticast() {
+		return false
+	}
+	for _, p := range logoDeniedPrefixes {
+		if p.Contains(ip) {
+			return false
+		}
+	}
+	return true
+}
+
+// checkLogoFetchTarget enforces the fetch policy for a logo URL: http(s)
+// scheme only, no embedded credentials, and a host that resolves exclusively
+// to public addresses. The DNS check stops direct internal targets; a
+// resolver race between check and connect (DNS rebinding) is out of scope.
+func checkLogoFetchTarget(target *url.URL) error {
+	if target == nil {
+		return fmt.Errorf("empty logo URL")
+	}
+	if target.Scheme != "http" && target.Scheme != "https" {
+		return fmt.Errorf("logo URL scheme %q is not allowed", target.Scheme)
+	}
+	if target.Host == "" {
+		return fmt.Errorf("logo URL has no host")
+	}
+	if target.User != nil {
+		return fmt.Errorf("logo URL must not embed credentials")
+	}
+	if logoFetchAllowPrivateHosts {
+		return nil
+	}
+	host := target.Hostname()
+	// Literal IP fast path (no DNS needed).
+	if ip, err := netip.ParseAddr(host); err == nil {
+		if !isPublicIP(ip) {
+			return fmt.Errorf("logo URL host %q is not public", host)
+		}
+		return nil
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+	if err != nil || len(addrs) == 0 {
+		return fmt.Errorf("logo URL host %q does not resolve", host)
+	}
+	for _, a := range addrs {
+		ip, _ := netip.AddrFromSlice(a.IP.To16())
+		if !isPublicIP(ip.Unmap()) {
+			return fmt.Errorf("logo URL host %q resolves to a non-public address", host)
+		}
+	}
+	return nil
+}
+
 // fetchLogoBytes downloads logo bytes from a URL. Returns nil (no error) when
 // the URL is empty or the download fails — logo is optional.
+//
+// logoFetchAllowPrivateHosts is a test-only hook: production must keep it
+// false so the fetch can never reach loopback/private/link-local targets.
+var logoFetchAllowPrivateHosts bool
+
+// maxLogoFetchBytes caps a single remote logo download (memory DoS guard).
+const maxLogoFetchBytes = 5 << 20
+
+// maxLocalLogoBytes caps a single local logo read.
+const maxLocalLogoBytes = 10 << 20
+
 func fetchLogoBytes(logoURL string) []byte {
 	if logoURL == "" {
 		return nil
 	}
-	client := &http.Client{Timeout: 10 * time.Second}
+	target, err := url.Parse(logoURL)
+	if err != nil {
+		slog.Warn("pdf: logo URL unparseable", "url", logoURL, "err", err)
+		return nil
+	}
+	if err := checkLogoFetchTarget(target); err != nil {
+		slog.Warn("pdf: logo URL rejected by fetch policy", "url", logoURL, "err", err)
+		return nil
+	}
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 3 {
+				return fmt.Errorf("stopped after 3 logo redirects")
+			}
+			return checkLogoFetchTarget(req.URL)
+		},
+	}
 	resp, err := client.Get(logoURL) //nolint:noctx
 	if err != nil {
 		slog.Warn("pdf: failed to fetch logo", "url", logoURL, "err", err)
@@ -79,9 +180,13 @@ func fetchLogoBytes(logoURL string) []byte {
 		slog.Warn("pdf: logo fetch non-200", "url", logoURL, "status", resp.StatusCode)
 		return nil
 	}
-	b, err := io.ReadAll(resp.Body)
+	b, err := io.ReadAll(io.LimitReader(resp.Body, maxLogoFetchBytes+1))
 	if err != nil {
 		slog.Warn("pdf: failed to read logo body", "url", logoURL, "err", err)
+		return nil
+	}
+	if int64(len(b)) > maxLogoFetchBytes {
+		slog.Warn("pdf: logo body exceeds size cap", "url", logoURL, "bytes", len(b))
 		return nil
 	}
 	return b
@@ -583,13 +688,23 @@ func (h *PDFHandler) logoURLToBytes(profile *models.User) []byte {
 		if strings.HasPrefix(logoURL, prefix) {
 			relPath := strings.TrimPrefix(logoURL, prefix)
 			filePath := filepath.Join(h.uploadDir, relPath)
-			slog.Info("pdf: logo debug — trying local path", "filePath", filePath)
-			b, err := os.ReadFile(filepath.Clean(filePath))
-			if err != nil {
-				slog.Warn("pdf: failed to read local logo", "path", filePath, "err", err)
+			// Containment: the cleaned path must stay inside uploadDir —
+			// Join+Cleans alone still escapes on "../" segments.
+			absBase, errBase := filepath.Abs(h.uploadDir)
+			absFile, errFile := filepath.Abs(filePath)
+			if errBase != nil || errFile != nil || (absFile != absBase && !strings.HasPrefix(absFile, absBase+string(os.PathSeparator))) {
+				slog.Warn("pdf: local logo path escapes upload dir", "url", logoURL)
 				return nil
 			}
-			slog.Info("pdf: logo debug — loaded local logo", "bytes", len(b))
+			if st, err := os.Stat(absFile); err != nil || st.IsDir() || st.Size() > maxLocalLogoBytes {
+				slog.Warn("pdf: local logo unavailable or oversized", "path", absFile, "err", err)
+				return nil
+			}
+			b, err := os.ReadFile(absFile)
+			if err != nil {
+				slog.Warn("pdf: failed to read local logo", "path", absFile, "err", err)
+				return nil
+			}
 			return b
 		}
 	}

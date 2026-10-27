@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"math"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -909,6 +911,77 @@ func TestValidateClient_StringLengthAndSanitization(t *testing.T) {
 			t.Errorf("name not sanitized: got %q, want %q", client.Name, want)
 		}
 	})
+}
+
+// S2 (audit): non-finite amounts compare false against every threshold, so
+// `Amount < 0.01` lets NaN/Inf through ValidatePayment. They must fail closed.
+func TestValidatePayment_NonFiniteAmountRejected(t *testing.T) {
+	amounts := map[string]float64{
+		"NaN":  math.NaN(),
+		"+Inf": math.Inf(1),
+		"-Inf": math.Inf(-1),
+	}
+	for name, amount := range amounts {
+		err := ValidatePayment(&models.Payment{Amount: amount, PaymentMethod: "cash"})
+		if err == nil {
+			t.Errorf("%s amount must be rejected, got nil error", name)
+			continue
+		}
+		ve, ok := err.(ValidationError)
+		if !ok {
+			t.Fatalf("expected ValidationError, got %T: %v", err, err)
+		}
+		if ve.Field != "amount" {
+			t.Errorf("expected field %q, got %q", "amount", ve.Field)
+		}
+	}
+}
+
+// S4 (audit): logo_url/cover_url are fetched server-side on PDF
+// generation, so only http(s) absolute URLs and /api/uploads/ relative
+// paths are acceptable stored values.
+func TestValidateProfileImageURL(t *testing.T) {
+	valid := []string{
+		"",
+		"https://example.com/logo.png",
+		"https://cdn.example.com/u/logo.png?x=1",
+		"http://example.com/logo.png",
+		"/api/uploads/550e8400-e29b-41d4-a716-446655440000/logo.png",
+		"/api/v1/uploads/550e8400-e29b-41d4-a716-446655440000/logo.png",
+	}
+	for _, v := range valid {
+		if err := validateProfileImageURL(v, "logo_url"); err != nil {
+			t.Errorf("validateProfileImageURL(%q) = %v, want nil", v, err)
+		}
+	}
+	invalid := map[string]string{
+		"file scheme":       "file:///etc/passwd",
+		"javascript":        "javascript:alert(1)",
+		"data URL":          "data:image/png;base64,AAA",
+		"ftp":               "ftp://example.com/logo.png",
+		"protocol relative": "//evil.example.com/x.png",
+		"bare path":         "uploads/evil.png",
+		"traversal":         "/api/uploads/../../etc/passwd",
+		"v1 traversal":      "/api/v1/uploads/../secret.txt",
+		"empty relative":    "/api/uploads/",
+		"userinfo":          "https://user:pass@example.com/logo.png",
+		"no host":           "https:///logo.png",
+		"overlong":          "https://example.com/" + strings.Repeat("a", 2048),
+	}
+	for name, v := range invalid {
+		err := validateProfileImageURL(v, "logo_url")
+		if err == nil {
+			t.Errorf("validateProfileImageURL(%q) = nil, want error (%s)", v, name)
+			continue
+		}
+		ve, ok := err.(ValidationError)
+		if !ok {
+			t.Fatalf("expected ValidationError, got %T", err)
+		}
+		if ve.Field != "logo_url" {
+			t.Errorf("expected field %q, got %q", "logo_url", ve.Field)
+		}
+	}
 }
 
 func TestValidatePayment_MethodEnum(t *testing.T) {
