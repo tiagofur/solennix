@@ -532,6 +532,13 @@ func (h *PublicRequestHandler) ConvertToEvent(w http.ResponseWriter, r *http.Req
 			})
 			return
 		}
+		// Basic-plan scale limit → standard 403 upgrade-prompt payload that
+		// all clients already render for CRUD plan limits.
+		var ple *services.PlanLimitError
+		if errors.As(err, &ple) {
+			writePlanLimitError(w, r, ple.Resource, ple.Current, ple.Limit)
+			return
+		}
 		writePublicRequestError(w, err)
 		return
 	}

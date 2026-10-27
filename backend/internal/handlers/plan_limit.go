@@ -7,11 +7,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/tiagofur/solennix-backend/internal/planlimit"
 )
 
 // ErrPlanLimitReached is returned by withPlanLimit when the user has hit their
 // plan quota. Callers should map this to a 403 response using writePlanLimitError.
-var ErrPlanLimitReached = errors.New("plan limit reached")
+// Aliased to the shared planlimit package so the CRUD gates and the
+// public-request conversion gate report one identical error.
+var ErrPlanLimitReached = planlimit.ErrLimitReached
 
 // withPlanLimit acquires a per-(user,resource) advisory lock, counts under it,
 // rejects if the limit is reached, and runs insertFn — all in one transaction.
@@ -50,21 +53,12 @@ func withPlanLimit(
 		}
 	}()
 
-	// Acquire a PostgreSQL advisory lock scoped to this transaction.
-	// hashtext($1) is deterministic and collides only within the same text
-	// value, which is unlikely across different (user, resource) combinations.
-	// Two concurrent requests for the same user + resource will serialize here.
-	lockKey := userID.String() + ":" + resourceKey
-	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext($1))`, lockKey); err != nil {
+	// Acquire the per-(user,resource) advisory lock and count under it in the
+	// shared planlimit helper: hashtext($1) is deterministic, and concurrent
+	// limit-gated writes for the same user + resource (CRUD creates vs.
+	// public-request conversions) serialize on it.
+	if _, err := planlimit.CheckTx(ctx, tx, userID, resourceKey, limit, countSQL); err != nil {
 		return err
-	}
-
-	var count int
-	if err := tx.QueryRow(ctx, countSQL, userID).Scan(&count); err != nil {
-		return err
-	}
-	if count >= limit {
-		return ErrPlanLimitReached
 	}
 
 	if err := insertFn(ctx, tx); err != nil {
@@ -79,6 +73,6 @@ func withPlanLimit(
 }
 
 // errPoolNil is a sentinel that signals withPlanLimit was called without a pool.
-// Handlers use this to fall back to non-transactional behaviour so that
+// Handlers use this to fall back to non-transactional behaviour so
 // existing mock-based unit tests remain unaffected.
 var errPoolNil = errors.New("pool is nil: falling back to non-transactional path")

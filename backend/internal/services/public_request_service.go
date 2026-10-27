@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/planlimit"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
@@ -27,6 +28,7 @@ type PublicRequestService struct {
 	profileRepo    PublicProfileLookup
 	productRepo    PublicProductLookup
 	userSlugLookup PublicUserSlugLookup
+	userLookup     PublicUserPlanLookup
 	pool           *pgxpool.Pool
 	pendingCap     int // max pending requests per organizer before 429 (PRD §3.4)
 	notifier       PublicRequestNotifier
@@ -73,6 +75,12 @@ type PublicUserSlugLookup interface {
 	GetByPublicSlug(ctx context.Context, slug string) (*models.User, error)
 }
 
+// PublicUserPlanLookup is the subset of *repository.UserRepo used to enforce
+// basic-plan limits on request conversion.
+type PublicUserPlanLookup interface {
+	GetByID(ctx context.Context, userID uuid.UUID) (*models.User, error)
+}
+
 // NewPublicRequestService wires the service with its dependencies.
 // pendingCap defaults to DefaultPendingRequestCap if <= 0.
 // linkRepo may be nil only if CreateFromLink is never called.
@@ -95,6 +103,13 @@ func NewPublicRequestService(
 		pool:           pool,
 		pendingCap:     pendingCap,
 	}
+}
+
+// SetUserLookup wires the user repository so conversion can enforce basic-plan
+// limits (events/month + clients). Optional: nil skips the gate (unit tests
+// that never convert for real); production always wires it in main.go.
+func (s *PublicRequestService) SetUserLookup(lookup PublicUserPlanLookup) {
+	s.userLookup = lookup
 }
 
 // SetLinkRepo wires public request link persistence (CreateFromLink + expire job).
@@ -132,7 +147,26 @@ var (
 	ErrLinkNotFound = errors.New("request link not found")
 	// ErrValidation: field validation failed → 400 (message via fmt.Errorf wrap).
 	ErrValidation = errors.New("validation failed")
+	// errConvertGateFailed wraps plan-gate infrastructure failures (lock,
+	// count, user lookup). Callers use it to tell "gate could not verify" apart
+	// from real conversion failures: manual convert surfaces it as 500, while
+	// auto_event falls back to a pending request so the lead is never lost.
+	errConvertGateFailed = errors.New("convert plan gate failed")
 )
+
+// PlanLimitError reports a basic-plan scale limit reached while converting a
+// public request. The handler maps it to the standard 403 plan_limit_exceeded
+// payload so all clients show the same upgrade prompt they already render for
+// CRUD limits.
+type PlanLimitError struct {
+	Resource string // "events" | "clients" — matches writePlanLimitError types
+	Current  int
+	Limit    int
+}
+
+func (e *PlanLimitError) Error() string {
+	return fmt.Sprintf("plan limit reached: %s %d/%d", e.Resource, e.Current, e.Limit)
+}
 
 // CreatePublicRequestInput is the validated payload for creating a request
 // (profile CTA or shared link).
@@ -456,7 +490,9 @@ func (s *PublicRequestService) CreateFromLink(ctx context.Context, token string,
 			return nil, err
 		}
 	case models.SubmitModeAutoEvent:
-		if _, err := s.convertToEventInTx(ctx, tx, req); err != nil {
+		// Plan-gated: falls back to a pending request when the organizer is
+		// at their basic-plan limits, so the visitor submission never fails.
+		if _, err := s.autoEventConvertTx(ctx, tx, req); err != nil {
 			return nil, err
 		}
 	default:
@@ -730,9 +766,63 @@ func (s *PublicRequestService) ConvertToEvent(ctx context.Context, requestID, or
 	return eventID, nil
 }
 
+// enforceConvertPlanLimits blocks basic-plan organizers from converting when
+// they already sit at the events-per-month or client scale limits, under the
+// same advisory locks the CRUD handlers use. Paid plans and a nil lookup
+// (unit tests that never convert for real) pass through. Infrastructure
+// failures are wrapped with errConvertGateFailed so callers can tell "gate
+// could not verify" apart from real conversion failures.
+func (s *PublicRequestService) enforceConvertPlanLimits(ctx context.Context, tx pgx.Tx, userID uuid.UUID) error {
+	if s.userLookup == nil {
+		return nil
+	}
+	user, err := s.userLookup.GetByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("%w: fetch user: %w", errConvertGateFailed, err)
+	}
+	if models.NormalizePlan(user.Plan) != "basic" {
+		return nil
+	}
+	if count, err := planlimit.CheckTx(ctx, tx, userID, planlimit.ResourceEvents, planlimit.BasicEventLimit, planlimit.EventCountSQL); err != nil {
+		if errors.Is(err, planlimit.ErrLimitReached) {
+			return &PlanLimitError{Resource: planlimit.ResourceEvents, Current: count, Limit: planlimit.BasicEventLimit}
+		}
+		return fmt.Errorf("%w: count events: %w", errConvertGateFailed, err)
+	}
+	if count, err := planlimit.CheckTx(ctx, tx, userID, planlimit.ResourceClients, planlimit.BasicClientLimit, planlimit.ClientCountSQL); err != nil {
+		if errors.Is(err, planlimit.ErrLimitReached) {
+			return &PlanLimitError{Resource: planlimit.ResourceClients, Current: count, Limit: planlimit.BasicClientLimit}
+		}
+		return fmt.Errorf("%w: count clients: %w", errConvertGateFailed, err)
+	}
+	return nil
+}
+
+// autoEventConvertTx converts for auto_event links. When the organizer hits
+// a basic-plan limit (or the gate cannot verify it), it falls back to the
+// pending request instead of failing the visitor's submission: the lead
+// stays in the organizer's inbox for manual conversion after upgrading.
+// Returns fellBack=true when no event was created.
+func (s *PublicRequestService) autoEventConvertTx(ctx context.Context, tx pgx.Tx, req *models.PublicRequest) (bool, error) {
+	_, err := s.convertToEventInTx(ctx, tx, req)
+	if err == nil {
+		return false, nil
+	}
+	var ple *PlanLimitError
+	if errors.As(err, &ple) || errors.Is(err, errConvertGateFailed) {
+		slog.WarnContext(ctx, "public_request: auto_event fell back to pending (organizer at plan limit)",
+			"organizer_user_id", req.OrganizerUserID, "request_id", req.ID, "error", err)
+		return true, nil
+	}
+	return false, err
+}
+
 // convertToEventInTx creates Client + Event + products and marks request booked.
 // Used by manual ConvertToEvent and auto_event submit_mode.
 func (s *PublicRequestService) convertToEventInTx(ctx context.Context, tx pgx.Tx, req *models.PublicRequest) (*uuid.UUID, error) {
+	if err := s.enforceConvertPlanLimits(ctx, tx, req.OrganizerUserID); err != nil {
+		return nil, err
+	}
 	clientEmail := req.ContactEmail
 	var emailPtr *string
 	if trimSpace(clientEmail) != "" {

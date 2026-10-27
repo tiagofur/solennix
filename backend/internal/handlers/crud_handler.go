@@ -24,6 +24,7 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/pdf"
+	"github.com/tiagofur/solennix-backend/internal/planlimit"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
@@ -200,9 +201,9 @@ func (h *CRUDHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	client.UserID = userID
 
 	if normalizePlan(user.Plan) == "basic" {
-		const limit = 20
-		const countSQL = `SELECT COUNT(*) FROM clients WHERE user_id = $1`
-		err := withPlanLimit(r.Context(), h.pool, userID, "clients", limit, countSQL,
+		limit := planlimit.BasicClientLimit
+		countSQL := planlimit.ClientCountSQL
+		err := withPlanLimit(r.Context(), h.pool, userID, planlimit.ResourceClients, limit, countSQL,
 			func(ctx context.Context, tx pgx.Tx) error {
 				return tx.QueryRow(ctx,
 					`INSERT INTO clients (user_id, name, phone, email, address, city, notes, photo_url)
@@ -715,11 +716,9 @@ func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if normalizePlan(user.Plan) == "basic" {
-		const limit = 4
-		const countSQL = `SELECT count(*) FROM events
-			WHERE user_id = $1
-			AND date_trunc('month', event_date) = date_trunc('month', CURRENT_DATE)`
-		err := withPlanLimit(r.Context(), h.pool, userID, "events", limit, countSQL,
+		limit := planlimit.BasicEventLimit
+		countSQL := planlimit.EventCountSQL
+		err := withPlanLimit(r.Context(), h.pool, userID, planlimit.ResourceEvents, limit, countSQL,
 			func(ctx context.Context, tx pgx.Tx) error {
 				return tx.QueryRow(ctx,
 					`INSERT INTO events (user_id, client_id, event_date, start_time, end_time,

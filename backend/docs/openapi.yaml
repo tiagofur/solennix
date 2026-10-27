@@ -7788,6 +7788,15 @@ paths:
           description: Request not found
         "409":
           description: already_converted (with event_id) or invalid status transition
+        "403":
+          description: >
+            Basic-plan scale limit reached (plan_limit_exceeded). Organizers on
+            the free tier at their events-per-month or client cap must upgrade
+            to convert; limit.type is "events" or "clients".
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/public/organizers/{slug}/reviews:
     get:
       security: []
