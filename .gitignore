@@ -70,3 +70,6 @@ backend/cookies.txt
 backend/login_cookies.txt
 backend/test_output.txt
 backend/tests_out.txt
+
+# Codegraph tooling artifact
+.codegraph/
