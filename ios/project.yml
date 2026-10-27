@@ -99,6 +99,13 @@ targets:
         SWIFT_VERSION: "5.9"
         GENERATE_INFOPLIST_FILE: YES
         CODE_SIGN_ENTITLEMENTS: SolennixNotificationServiceExtension/SolennixNotificationServiceExtension.entitlements
+    dependencies:
+      # The extension itself has no AppIntents code, but linking the system
+      # framework lets appintentsmetadataprocessor complete its (empty)
+      # extraction silently instead of warning "Metadata extraction skipped,
+      # no AppIntents.framework dependency found" on every build. Zero runtime
+      # cost: system framework, dynamically available on-device.
+      - sdk: AppIntents.framework
 
   SolennixWidgetExtension:
     type: app-extension

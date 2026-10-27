@@ -59,6 +59,7 @@
 		5E077F5738684DD5BB00DD8C /* PaymentClientModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 241B5EAF3AF1B568DD53A31E /* PaymentClientModelTests.swift */; };
 		5F007783634178490F0F2104 /* SolennixCore in Frameworks */ = {isa = PBXBuildFile; productRef = B6C6823DFAB04CC472F37EAE /* SolennixCore */; };
 		65C24C6648B287E44E177399 /* SessionCleanupUserDefaultsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3DA357ACBFB535C6FEEF32 /* SessionCleanupUserDefaultsTests.swift */; };
+		65DB8C85AC3054F6CB4817E0 /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CBC4247EAE3595370B83E6D3 /* AppIntents.framework */; };
 		66F6F5DFE0E5D087760F1B6A /* UpcomingEventsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451A5953A5F61726A9FA40A8 /* UpcomingEventsWidget.swift */; };
 		681F97FBFBFEAAB745539523 /* SidebarSplitLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFD6B263EC4549ED0AE7340A /* SidebarSplitLayout.swift */; };
 		68758DFBA61775F071AB5E46 /* QuickQuoteTransferDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F2D6D80468FACBB67534CF9 /* QuickQuoteTransferDataTests.swift */; };
@@ -300,6 +301,7 @@
 		C8C8CF363DBEEA04DF56E70F /* RequestLinksLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestLinksLocalizationTests.swift; sourceTree = "<group>"; };
 		CA57DB54D5DBF3930618AA7A /* SettingsLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsLocalizationTests.swift; sourceTree = "<group>"; };
 		CB729295B156CBB8B4B765E2 /* Solennix.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Solennix.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CBC4247EAE3595370B83E6D3 /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
 		CCDE53D42FC31925A920B98C /* SolennixWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixWidgets.swift; sourceTree = "<group>"; };
 		CDF2A0ED96EB0D2C7CA30A42 /* SolennixNetwork */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixNetwork; path = Packages/SolennixNetwork; sourceTree = SOURCE_ROOT; };
 		CE9496EB7FCC0E14B7EB9B7E /* DashboardFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardFormattingTests.swift; sourceTree = "<group>"; };
@@ -328,6 +330,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		2E9AA1A3DA33F569F0A32C36 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				65DB8C85AC3054F6CB4817E0 /* AppIntents.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		868030691E82B022703D39D7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -400,6 +410,7 @@
 		1816E0773163898C33F508D7 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				CBC4247EAE3595370B83E6D3 /* AppIntents.framework */,
 				580AA1774790AC2E21AD5C3E /* WidgetKit.framework */,
 			);
 			name = Frameworks;
@@ -787,6 +798,7 @@
 			buildConfigurationList = 7432136D8B65E44E65CA2085 /* Build configuration list for PBXNativeTarget "SolennixNotificationServiceExtension" */;
 			buildPhases = (
 				1C8032528E575B95527BF9D7 /* Sources */,
+				2E9AA1A3DA33F569F0A32C36 /* Frameworks */,
 			);
 			buildRules = (
 			);
