@@ -986,12 +986,12 @@ public struct EventListView: View {
             // In N days — show day count + short date.
             // dayDiff==1 (Mañana) is handled in the case above, so the minimum
             // here is 2 — "En 1 día" (singular) will never render here.
-            let shortDate = formattedShortDate(date)
+            let shortDate = Self.formattedShortDate(date)
             let inDays = FeatureL10n.plural("events.list.date.in_days", "In %lld days", count: dayDiff)
             return "\(inDays) · \(shortDate)"
         default:
             // Absolute date + time
-            let absDate = formattedDisplayDate(date)
+            let absDate = Self.formattedDisplayDate(date)
             return timeStr.isEmpty ? absDate : "\(absDate) · \(timeStr)"
         }
     }
@@ -1028,17 +1028,24 @@ public struct EventListView: View {
     }
 
     /// "15 mar 2026" — compact absolute date for beyond-7-days case.
-    private func formattedDisplayDate(_ date: Date) -> String {
+    /// UTC-pinned: `date` is parsed by `apiDateFormatter` at UTC midnight, so
+    /// display MUST also be UTC — a local-timezone formatter shifts the day
+    /// backward by the UTC offset (UTC-6 users see the previous day).
+    /// Static+internal so regression tests can pin the round-trip contract.
+    static func formattedDisplayDate(_ date: Date) -> String {
         let f = DateFormatter()
         f.locale = FeatureL10n.locale
+        f.timeZone = TimeZone(identifier: "UTC")
         f.setLocalizedDateFormatFromTemplate("dMMMyyyy")
         return f.string(from: date).capitalized(with: FeatureL10n.locale)
     }
 
     /// "15 mar" — short date without year, used for in-N-days proximity label.
-    private func formattedShortDate(_ date: Date) -> String {
+    /// UTC-pinned for the same reason as `formattedDisplayDate`.
+    static func formattedShortDate(_ date: Date) -> String {
         let f = DateFormatter()
         f.locale = FeatureL10n.locale
+        f.timeZone = TimeZone(identifier: "UTC")
         f.setLocalizedDateFormatFromTemplate("dMMM")
         return f.string(from: date).capitalized(with: FeatureL10n.locale)
     }
@@ -1054,10 +1061,10 @@ public struct EventListView: View {
     /// display-date-only string.
     private func formattedDisplayDateFromString(_ dateStr: String) -> String {
         if let date = Self.apiDateFormatter.date(from: dateStr) {
-            return formattedDisplayDate(date)
+            return Self.formattedDisplayDate(date)
         }
         if let date = Self.apiDateTimeFormatter.date(from: dateStr) {
-            return formattedDisplayDate(date)
+            return Self.formattedDisplayDate(date)
         }
         return dateStr
     }
