@@ -71,6 +71,19 @@ struct SolennixApp: App {
 
         auth.signOutDelegate = AppSignOutDelegate.shared
 
+        // Sync a freshly-established session to RevenueCat so a purchase made in
+        // the same session is attributed to the backend user ID instead of an
+        // anonymous $RCAnonymousID (purchase webhooks then carry the UUID).
+        auth.onSessionStart = { [subManager, client] user in
+            await subManager.login(userID: user.id)
+            // If backend says pro but RC doesn't know yet (web purchase),
+            // force premium status locally
+            if user.plan != .basic {
+                subManager.setBackendPremiumStatus(true)
+            }
+            await client.flushQueuedMutations()
+        }
+
         _authManager = State(initialValue: auth)
         _planLimitsManager = State(initialValue: limits)
         _subscriptionManager = State(initialValue: subManager)

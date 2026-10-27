@@ -122,6 +122,13 @@ public final class AuthManager {
     /// (e.g., unregistering the push device token). Set by the app layer after initialization.
     public weak var signOutDelegate: SignOutDelegate?
 
+    /// Called after an explicit sign-in establishes a session (email, Apple, Google,
+    /// team invite). The app wires this to RevenueCat identity sync: without it, a
+    /// user who signs in and purchases within the same session stays anonymous
+    /// (`$RCAnonymousID`) in RevenueCat, so purchase webhooks arrive without the
+    /// backend user ID. Must not throw — implementers handle their own errors.
+    public var onSessionStart: ((User) async -> Void)?
+
     /// Tracks whether biometric authentication has already been passed in this app session.
     /// Reset on sign-out or app relaunch (since `@Observable` state is re-created).
     private var biometricPassed: Bool = false
@@ -366,6 +373,7 @@ public final class AuthManager {
         setCurrentUser(response.user)
         authState = .authenticated(response.user)
         userTrackingDelegate?.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
+        await onSessionStart?(response.user)
         return response.user
     }
 
@@ -418,6 +426,7 @@ public final class AuthManager {
         setCurrentUser(response.user)
         authState = .authenticated(response.user)
         userTrackingDelegate?.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
+        await onSessionStart?(response.user)
         return response.user
     }
 
@@ -455,6 +464,7 @@ public final class AuthManager {
         setCurrentUser(response.user)
         authState = .authenticated(response.user)
         userTrackingDelegate?.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
+        await onSessionStart?(response.user)
         return response.user
     }
 
@@ -481,6 +491,7 @@ public final class AuthManager {
         setCurrentUser(response.user)
         authState = .authenticated(response.user)
         userTrackingDelegate?.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
+        await onSessionStart?(response.user)
         return response.user
     }
 
