@@ -361,7 +361,6 @@
     "Finanzas": {},
     "Firma": {},
     "Firma de EL CLIENTE": {},
-    "Formulario completado": {},
     "Fotos": {},
     "Fotos del Evento": {},
     "Fuente": {},
@@ -403,7 +402,6 @@
     "Lidera el equipo": {},
     "Limpiar": {},
     "Limpiar filtros": {},
-    "Links de Formulario": {},
     "Lista de Compras": {},
     "Listo": {},
     "Llamar": {},
@@ -629,7 +627,6 @@
     "Valor total en stock": {},
     "Vence el %@": {},
     "Ver Detalle": {},
-    "Ver Evento": {},
     "Ver todos los planes": {},
     "Versión": {},
     "Vigencia del link": {},
@@ -23202,7 +23199,8 @@
             "value": "Hasta 15 productos y 30 de inventario"
           }
         }
-      }
+      },
+      "extractionState": "stale"
     },
     "settings.subscription.feature.up_to_3_events": {
       "localizations": {
@@ -23218,7 +23216,8 @@
             "value": "Hasta 4 eventos por mes"
           }
         }
-      }
+      },
+      "extractionState": "stale"
     },
     "settings.subscription.feature.up_to_50_clients": {
       "localizations": {
@@ -23234,7 +23233,8 @@
             "value": "Hasta 20 clientes"
           }
         }
-      }
+      },
+      "extractionState": "stale"
     },
     "settings.subscription.features_included": {
       "localizations": {
