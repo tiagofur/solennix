@@ -71,7 +71,7 @@ final class StaffLocalizationTests: XCTestCase {
         XCTAssertEqual(StaffStrings.navTitleFallback, expected(spanish: "Personal", english: "Staff member"))
         XCTAssertEqual(StaffStrings.deleteError, expected(spanish: "Error al eliminar el personal", english: "Failed to delete staff member"))
         XCTAssertEqual(StaffStrings.emailNotifTitle, expected(spanish: "Avisos por email activados", english: "Email notifications enabled"))
-        XCTAssertEqual(StaffStrings.emailNotifSubtitle, expected(spanish: "Se activará en Phase 2 (Pro+). Por ahora queda registrada la preferencia.", english: "Will be activated in Phase 2 (Pro+). Preference is saved."))
+        XCTAssertEqual(StaffStrings.emailNotifSubtitle, expected(spanish: "Activo en planes Pro y Business.", english: "Active in Pro and Business plans."))
         XCTAssertEqual(StaffStrings.inviteAccess, expected(spanish: "Invitar acceso", english: "Invite access"))
         XCTAssertEqual(StaffStrings.inviting, expected(spanish: "Invitando...", english: "Inviting..."))
         XCTAssertEqual(StaffStrings.inviteLinkTitle, expected(spanish: "Link de invitación", english: "Invite link"))
@@ -108,7 +108,7 @@ final class StaffLocalizationTests: XCTestCase {
         XCTAssertEqual(StaffStrings.emailInvalidError, expected(spanish: "Email inválido", english: "Invalid email"))
         XCTAssertEqual(StaffStrings.sectionNotif, expected(spanish: "Avisos", english: "Notifications"))
         XCTAssertEqual(StaffStrings.notifToggleLabel, expected(spanish: "Avisarle por email al asignarlo a un evento", english: "Notify them by email when assigned to an event"))
-        XCTAssertEqual(StaffStrings.notifToggleSubtitle, expected(spanish: "Se activará en Phase 2 (Pro+). Por ahora guardamos la preferencia.", english: "Will be activated in Phase 2 (Pro+). Preference is saved."))
+        XCTAssertEqual(StaffStrings.notifToggleSubtitle, expected(spanish: "Disponible en planes Pro y Business — envía un aviso con fecha, lugar y rol.", english: "Available in Pro and Business plans — sends an alert with date, location, and role."))
         XCTAssertEqual(StaffStrings.notifEmailRequired, expected(spanish: "Para activar el aviso necesitás un email válido", english: "A valid email is required to enable notifications"))
         XCTAssertEqual(StaffStrings.sectionNotes, expected(spanish: "Notas", english: "Notes"))
     }
