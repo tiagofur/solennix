@@ -15,6 +15,9 @@ import {
   Calendar,
   Clock,
   Users,
+  CheckCircle2,
+  XCircle,
+  Ban,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -107,7 +110,18 @@ export const EventSummary: React.FC = () => {
   const { data: eventPhotosRaw = [] } = useEventPhotos(id);
   const eventPhotosCount = Array.isArray(eventPhotosRaw) ? eventPhotosRaw.length : 0;
   const { data: eventStaffRaw = [] } = useEventStaff(id);
-  const eventStaff = Array.isArray(eventStaffRaw) ? eventStaffRaw : [];
+  const eventStaff = useMemo(() => (Array.isArray(eventStaffRaw) ? eventStaffRaw : []), [eventStaffRaw]);
+  const attendanceSummary = useMemo(() => {
+    const summary = { total: eventStaff.length, confirmed: 0, pending: 0, declined: 0, cancelled: 0 };
+    for (const s of eventStaff) {
+      const st = s.status || 'pending';
+      if (st === 'confirmed') summary.confirmed++;
+      else if (st === 'declined') summary.declined++;
+      else if (st === 'cancelled') summary.cancelled++;
+      else summary.pending++;
+    }
+    return summary;
+  }, [eventStaff]);
   const { data: paymentsRaw = [] } = usePaymentsByEvent(id);
   const payments = Array.isArray(paymentsRaw) ? paymentsRaw : [];
   const deleteEventMutation = useDeleteEvent();
@@ -290,6 +304,10 @@ export const EventSummary: React.FC = () => {
       quantity: s.quantity || 0,
       unitCost: s.unit_cost || 0,
       excludeCost: s.exclude_cost ?? false,
+    })),
+    staff: (eventStaff as EventStaffType[]).map((s) => ({
+      feeAmount: s.fee_amount,
+      status: s.status,
     })),
     globalDiscountType: (event.discount_type as "percent" | "fixed") || "percent",
     globalDiscount: event.discount || 0,
@@ -671,49 +689,113 @@ export const EventSummary: React.FC = () => {
           {/* Staff section */}
           {eventStaff.length > 0 && (
             <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border mt-8">
-              <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-text">
-                <UserCog className="h-5 w-5 text-primary" />
-                {t('events:summary.assigned_staff')}
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-border">
+                <h2 className="text-lg font-bold flex items-center gap-2 text-text">
+                  <UserCog className="h-5 w-5 text-primary" />
+                  {t('events:summary.assigned_staff')}
+                </h2>
+                {/* Attendance KPI Summary */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium bg-surface-alt text-text border border-border">
+                    <span className="text-text-secondary">Total:</span>
+                    <span className="font-bold">{attendanceSummary.total}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{attendanceSummary.confirmed}</span>
+                    <span className="hidden sm:inline">{t('events:staff_status.confirmed', { defaultValue: 'Confirmados' })}</span>
+                  </span>
+                  {attendanceSummary.pending > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                      <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{attendanceSummary.pending}</span>
+                      <span className="hidden sm:inline">{t('events:staff_status.pending', { defaultValue: 'Pendientes' })}</span>
+                    </span>
+                  )}
+                  {attendanceSummary.declined > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
+                      <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{attendanceSummary.declined}</span>
+                      <span className="hidden sm:inline">{t('events:staff_status.declined', { defaultValue: 'Rechazados' })}</span>
+                    </span>
+                  )}
+                  {attendanceSummary.cancelled > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-surface-alt text-text-tertiary border border-border">
+                      <Ban className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{attendanceSummary.cancelled}</span>
+                      <span className="hidden sm:inline">{t('events:staff_status.cancelled', { defaultValue: 'Cancelados' })}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
               <div className="space-y-3">
-                {eventStaff.map((s: EventStaffType, idx) => (
-                  <button
-                    key={s.id || `staff-${idx}`}
-                    type="button"
-                    onClick={() => navigate(`/staff/${s.staff_id}`)}
-                    className="w-full flex items-center justify-between py-3 border-b border-border last:border-0 text-left hover:bg-surface-alt/50 rounded-md px-2 -mx-2 transition-colors cursor-pointer print:pointer-events-none print:hover:bg-transparent"
-                  >
-                    <div>
-                      <span className="font-bold text-text">{s.staff_name || t('common:staff')}</span>
-                      {(s.role_override || s.staff_role_label) && (
-                        <span className="text-text-secondary ml-2">· {s.role_override || s.staff_role_label}</span>
-                      )}
-                      {s.notes && (
-                        <p className="text-xs text-text-tertiary mt-0.5">{s.notes}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {s.staff_phone && (
-                        <a
-                          href={`tel:${s.staff_phone}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-xs text-primary hover:underline"
-                        >
-                          {s.staff_phone}
-                        </a>
-                      )}
-                      {s.fee_amount != null && s.fee_amount > 0 ? (
-                        <span className="font-bold text-warning">
-                          {s.fee_amount.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-surface-alt text-text-secondary">
-                          {t('events:summary.no_cost')}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                {eventStaff.map((s: EventStaffType, idx) => {
+                  const st = s.status || 'pending';
+                  return (
+                    <button
+                      key={s.id || `staff-${idx}`}
+                      type="button"
+                      onClick={() => navigate(`/staff/${s.staff_id}`)}
+                      className="w-full flex items-center justify-between py-3 border-b border-border last:border-0 text-left hover:bg-surface-alt/50 rounded-md px-2 -mx-2 transition-colors cursor-pointer print:pointer-events-none print:hover:bg-transparent"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-text">{s.staff_name || t('common:staff')}</span>
+                          {st === 'confirmed' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
+                              <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                              <span>{t('events:staff_status.confirmed', { defaultValue: 'Confirmado' })}</span>
+                            </span>
+                          )}
+                          {st === 'pending' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/25">
+                              <Clock className="h-3 w-3" aria-hidden="true" />
+                              <span>{t('events:staff_status.pending', { defaultValue: 'Sin confirmar' })}</span>
+                            </span>
+                          )}
+                          {st === 'declined' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/25">
+                              <XCircle className="h-3 w-3" aria-hidden="true" />
+                              <span>{t('events:staff_status.declined', { defaultValue: 'Rechazó' })}</span>
+                            </span>
+                          )}
+                          {st === 'cancelled' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-surface-alt text-text-tertiary border border-border">
+                              <Ban className="h-3 w-3" aria-hidden="true" />
+                              <span>{t('events:staff_status.cancelled', { defaultValue: 'Cancelado' })}</span>
+                            </span>
+                          )}
+                          {(s.role_override || s.staff_role_label) && (
+                            <span className="text-text-secondary text-sm">· {s.role_override || s.staff_role_label}</span>
+                          )}
+                        </div>
+                        {s.notes && (
+                          <p className="text-xs text-text-tertiary mt-0.5">{s.notes}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {s.staff_phone && (
+                          <a
+                            href={`tel:${s.staff_phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs text-primary hover:underline"
+                          >
+                            {s.staff_phone}
+                          </a>
+                        )}
+                        {s.fee_amount != null && s.fee_amount > 0 ? (
+                          <span className="font-bold text-warning">
+                            {s.fee_amount.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-surface-alt text-text-secondary">
+                            {t('events:summary.no_cost')}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -731,6 +813,10 @@ export const EventSummary: React.FC = () => {
             currentStatus={currentStatus}
             isDownpaymentMet={isDownpaymentMet}
             depositPercent={event.deposit_percent || 0}
+            productCost={financials.productCost}
+            suppliesCost={financials.suppliesCost}
+            staffCost={financials.staffCost}
+            margin={margin}
             onRegisterDeposit={(amount) => {
               setPaymentInitialAmount(amount);
               setAutoOpenPayment(true);

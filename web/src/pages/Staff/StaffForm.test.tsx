@@ -12,6 +12,7 @@ vi.mock("@/hooks/queries/useStaffQueries", () => ({
   useStaffMember: vi.fn(),
   useCreateStaff: vi.fn(),
   useUpdateStaff: vi.fn(),
+  useStaffLimits: vi.fn(() => ({ data: { used: 0, max: 5, unlimited: false, plan: 'pro' }, isLoading: false })),
 }));
 
 vi.mock("@/hooks/useToast", () => ({

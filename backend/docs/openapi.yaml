@@ -3716,6 +3716,78 @@ components:
           type: integer
         total_pages:
           type: integer
+    StaffLimitsResponse:
+      type: object
+      required:
+        - used
+        - unlimited
+        - plan
+      properties:
+        used:
+          type: integer
+        max:
+          type: integer
+          nullable: true
+        unlimited:
+          type: boolean
+        plan:
+          type: string
+    StaffAttendanceSummary:
+      type: object
+      required:
+        - total
+        - confirmed
+        - pending
+        - declined
+        - cancelled
+      properties:
+        total:
+          type: integer
+        confirmed:
+          type: integer
+        pending:
+          type: integer
+        declined:
+          type: integer
+        cancelled:
+          type: integer
+    EventFinancialResult:
+      type: object
+      properties:
+        products_subtotal:
+          type: number
+        normal_extras_subtotal:
+          type: number
+        pass_through_extras_subtotal:
+          type: number
+        discountable_base:
+          type: number
+        discount_amount:
+          type: number
+        after_discount:
+          type: number
+        tax_amount:
+          type: number
+        total:
+          type: number
+        product_cost:
+          type: number
+        extras_cost:
+          type: number
+        supplies_cost:
+          type: number
+        staff_cost:
+          type: number
+        total_cost:
+          type: number
+        revenue:
+          type: number
+        net_profit:
+          type: number
+        adjusted_revenue:
+          type: number
+        profit_margin:
+          type: number
     StaffInviteRequest:
       type: object
       properties:
@@ -5080,6 +5152,28 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Event not found
+  /api/events/{id}/financials:
+    get:
+      operationId: getEventFinancials
+      summary: Get event financial breakdown including product, extra, supply, and staff costs with profit margin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Event financial breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventFinancialResult"
+        "400":
+          description: Invalid event ID
+        "404":
+          description: Event not found
   /api/events/{id}/photos:
     get:
       operationId: getEventPhotos
@@ -5277,6 +5371,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event not found
+  /api/events/{id}/staff:
+    get:
+      operationId: getEventStaff
+      summary: Get staff assigned to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Event staff list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventStaff"
+        "400":
+          description: Invalid event ID
+        "404":
+          description: Event not found
+  /api/events/{id}/staff/summary:
+    get:
+      operationId: getEventStaffSummary
+      summary: Get attendance RSVP summary of staff assigned to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Attendance status counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffAttendanceSummary"
+        "400":
+          description: Invalid event ID
         "404":
           description: Event not found
   /api/events/equipment/conflicts:
@@ -6581,6 +6721,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/reports/accounting/export:
+    get:
+      operationId: exportAccountingCSV
+      summary: Export accounting and financial data as UTF-8 BOM CSV (Excel ready)
+      description: Gated to paid plans (Pro and Business). Returns event financials, client data, payment totals, staff costs, and balances.
+      parameters:
+        - name: start_date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Optional start of date range (YYYY-MM-DD)
+        - name: end_date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Optional end of date range (YYYY-MM-DD)
+      responses:
+        "200":
+          description: CSV file download
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Unauthorized
+        "403":
+          description: Paid plan required
+        "500":
+          description: Server error
   /api/admin/stats:
     get:
       operationId: getAdminStats
@@ -8554,6 +8728,21 @@ paths:
           description: Staff member not found
         "500":
           description: Failed to revoke invite
+  /api/staff/limits:
+    get:
+      operationId: getStaffLimits
+      summary: Get organizer's staff seat limits and current usage
+      responses:
+        "200":
+          description: Staff seat limits and usage
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffLimitsResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
   /api/staff/availability:
     get:
       operationId: getStaffAvailability

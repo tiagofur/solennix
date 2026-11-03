@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, Crown, Plus, Trash2, UserCog, Users } from 'lucide-react';
+import { CheckCircle2, Clock, Crown, Plus, Trash2, UserCog, Users, XCircle } from 'lucide-react';
 import type { AssignmentStatus, Staff } from '../../../types/entities';
 import { useStaffAvailability, useStaffTeams } from '@/hooks/queries/useStaffQueries';
 import { Modal } from '@/components/Modal';
@@ -112,11 +112,52 @@ export const EventStaff: React.FC<EventStaffProps> = ({
     setShiftExpanded((prev) => ({ ...prev, [index]: !prev[index] }));
   };
 
+  const attendanceSummary = useMemo(() => {
+    const summary = { total: selectedStaff.length, confirmed: 0, pending: 0, declined: 0, cancelled: 0 };
+    for (const s of selectedStaff) {
+      const st = s.status || 'confirmed';
+      if (st === 'confirmed') summary.confirmed++;
+      else if (st === 'declined') summary.declined++;
+      else if (st === 'cancelled') summary.cancelled++;
+      else summary.pending++;
+    }
+    return summary;
+  }, [selectedStaff]);
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-2">
-        <UserCog className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-medium text-text">{t('events:staff.title')}</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+        <div className="flex items-center gap-2">
+          <UserCog className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-medium text-text">{t('events:staff.title')}</h3>
+        </div>
+        {selectedStaff.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-medium bg-surface-alt text-text border border-border">
+              <span className="text-text-secondary">Total:</span>
+              <span className="font-bold">{attendanceSummary.total}</span>
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+              <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+              <span>{attendanceSummary.confirmed}</span>
+              <span className="hidden sm:inline">{t('events:staff_status.confirmed', { defaultValue: 'Confirmados' })}</span>
+            </span>
+            {attendanceSummary.pending > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                <Clock className="h-3 w-3" aria-hidden="true" />
+                <span>{attendanceSummary.pending}</span>
+                <span className="hidden sm:inline">{t('events:staff_status.pending', { defaultValue: 'Pendientes' })}</span>
+              </span>
+            )}
+            {attendanceSummary.declined > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
+                <XCircle className="h-3 w-3" aria-hidden="true" />
+                <span>{attendanceSummary.declined}</span>
+                <span className="hidden sm:inline">{t('events:staff_status.declined', { defaultValue: 'Rechazados' })}</span>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <p className="text-sm text-text-tertiary">

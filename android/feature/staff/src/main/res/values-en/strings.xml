@@ -8,7 +8,7 @@
     <string name="staff_form_email_label">Email</string>
     <string name="staff_form_notes_label">Notes (usual rate, specialty, availability...)</string>
     <string name="staff_form_notification_title">Notify by email when assigned to an event</string>
-    <string name="staff_form_notification_description">Pro plan feature (coming soon). The toggle is saved now so it is ready when Phase 2 is activated.</string>
+    <string name="staff_form_notification_description">Available in Pro and Business plans — sends an alert with date, location, and role.</string>
     <string name="staff_form_save_changes">Save changes</string>
     <string name="staff_form_create">Create collaborator</string>
     <string name="staff_cd_edit">Edit</string>
@@ -54,7 +54,7 @@
     <string name="staff_detail_not_provided">Not provided</string>
     <string name="staff_detail_role_label">Role</string>
     <string name="staff_detail_email_notifications_title">Email notifications</string>
-    <string name="staff_detail_email_notifications_enabled">Enabled — they will activate automatically in Phase 2 (Pro+)</string>
+    <string name="staff_detail_email_notifications_enabled">Enabled (Pro and Business plans)</string>
     <string name="staff_detail_email_notifications_disabled">Disabled</string>
     <string name="staff_detail_invite_link_title">Invite link</string>
     <string name="staff_detail_copy_link">Copy link</string>

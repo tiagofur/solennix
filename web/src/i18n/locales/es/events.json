@@ -407,6 +407,12 @@
       "declined": "Rechazado",
       "cancelled": "Cancelado"
     },
+    "staff_status": {
+      "pending": "Sin confirmar",
+      "confirmed": "Confirmado",
+      "declined": "Rechazó",
+      "cancelled": "Cancelado"
+    },
     "delete_confirm_title": "¿Quitar personal?",
     "delete_confirm_desc": "¿Quitar a \"{{name}}\" de este evento?"
   },
@@ -489,5 +495,21 @@
       "phone_min": "El teléfono debe tener al menos 10 dígitos",
       "email_invalid": "Email inválido"
     }
+  },
+  "export_accounting": {
+    "title": "Exportación Contable",
+    "toolbar_btn": "Contabilidad",
+    "description": "Descarga un archivo Excel (.csv) con el balance detallado de eventos, pagos, saldos pendientes y costos de personal.",
+    "period": "Período",
+    "from_date": "Desde",
+    "to_date": "Hasta",
+    "plan_required_title": "Función de planes Pro y Business",
+    "plan_required_desc": "La exportación contable para Excel está disponible a partir del plan Pro.",
+    "upgrade_cta": "Ver planes Pro y Business",
+    "excel_ready": "Formato nativo para Microsoft Excel",
+    "excel_desc": "Codificado con UTF-8 BOM para abrir directamente en Excel o Numbers con acentos, columnas y montos.",
+    "action_download": "Descargar Excel (CSV)",
+    "success": "Reporte contable descargado con éxito.",
+    "error": "Error al generar el reporte contable."
   }
 }

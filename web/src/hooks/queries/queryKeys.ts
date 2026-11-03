@@ -39,6 +39,7 @@ export const queryKeys = {
   },
   staff: {
     all: ['staff'] as const,
+    limits: ['staff', 'limits'] as const,
     paginated: (page?: number, limit?: number, sort?: string, order?: string) =>
       ['staff', 'paginated', { page, limit, sort, order }] as const,
     detail: (id: string) => ['staff', id] as const,

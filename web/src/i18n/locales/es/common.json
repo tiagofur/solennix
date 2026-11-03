@@ -355,6 +355,11 @@
         "title": "Catálogo",
         "plural": "productos e ítems de inventario",
         "metric": "Ítems en catálogo"
+      },
+      "staff": {
+        "title": "Personal",
+        "plural": "colaboradores",
+        "metric": "Colaboradores en catálogo"
       }
     }
   },

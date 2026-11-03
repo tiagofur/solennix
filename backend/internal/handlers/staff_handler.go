@@ -130,6 +130,54 @@ func (h *StaffHandler) ListStaff(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, staff)
 }
 
+// StaffLimitsResponse describes the staff seat quotas for the current user.
+type StaffLimitsResponse struct {
+	Used      int    `json:"used"`
+	Max       *int   `json:"max"` // nil when unlimited
+	Unlimited bool   `json:"unlimited"`
+	Plan      string `json:"plan"`
+}
+
+// GetStaffLimits returns the organizer's current staff seat usage and max capacity.
+// GET /api/staff/limits
+func (h *StaffHandler) GetStaffLimits(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	user, err := h.userRepo.GetByID(r.Context(), userID)
+	if err != nil {
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "crud.fetch_user_limits_failed")
+		return
+	}
+
+	count, err := h.staffRepo.CountByUserID(r.Context(), userID)
+	if err != nil {
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.verify_limits_failed")
+		return
+	}
+
+	plan := normalizePlan(user.Plan)
+	resp := StaffLimitsResponse{
+		Used: count,
+		Plan: plan,
+	}
+
+	switch plan {
+	case "basic":
+		max := 1
+		resp.Max = &max
+		resp.Unlimited = false
+	case "pro":
+		max := 5
+		resp.Max = &max
+		resp.Unlimited = false
+	default:
+		// business and any paid/enterprise plan: unlimited
+		resp.Max = nil
+		resp.Unlimited = true
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
 // GetStaff returns one staff member by id.
 // GET /api/staff/{id}
 func (h *StaffHandler) GetStaff(w http.ResponseWriter, r *http.Request) {
@@ -150,7 +198,7 @@ func (h *StaffHandler) GetStaff(w http.ResponseWriter, r *http.Request) {
 // CreateStaff creates a new staff member.
 // POST /api/staff
 //
-// Staff seats are gated by plan: Gratis=1, Pro=2, Business=∞.
+// Staff seats are gated by plan: Gratis=1, Pro=5, Business=∞.
 // Phase 2 gates `notification_email_opt_in` to Pro+; Phase 3 gates the
 // invitation flow to Pro+.
 func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
@@ -185,7 +233,7 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 	case "basic":
 		seatLimit = 1
 	case "pro":
-		seatLimit = 2
+		seatLimit = 5
 	default:
 		// business and any unknown paid plans: unlimited — skip atomic path.
 		seatLimit = 0

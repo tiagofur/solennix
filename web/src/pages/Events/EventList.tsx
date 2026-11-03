@@ -51,6 +51,7 @@ import { EventsToolbar, type EventsViewMode } from "./components/EventsToolbar";
 import { EventFiltersBar, type StatusFilter } from "./components/EventFiltersBar";
 import { EventsTable, type EventWithClient } from "./components/EventsTable";
 import { EventsCalendarView } from "./components/EventsCalendarView";
+import { AccountingExportModal } from "./components/AccountingExportModal";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -93,6 +94,7 @@ export const EventList: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState<Date>(startOfMonth(normalizedToday));
   const [isManagingBlocks, setIsManagingBlocks] = useState(false);
   const [isExportingIcal, setIsExportingIcal] = useState(false);
+  const [isAccountingExportOpen, setIsAccountingExportOpen] = useState(false);
   const [isConfirmingUnblock, setIsConfirmingUnblock] = useState(false);
   const [contextMenuDate, setContextMenuDate] = useState<string | undefined>();
 
@@ -457,6 +459,7 @@ export const EventList: React.FC = () => {
           setIsManagingBlocks(true);
         }}
         onExportCsv={handleExportCsv}
+        onOpenAccountingExport={() => setIsAccountingExportOpen(true)}
         csvRowCount={csvRows.length}
       />
 
@@ -606,6 +609,12 @@ export const EventList: React.FC = () => {
           onClose={closeCtxMenu}
         />
       )}
+
+      {/* Accounting Export Modal (Pro / Business) */}
+      <AccountingExportModal
+        isOpen={isAccountingExportOpen}
+        onClose={() => setIsAccountingExportOpen(false)}
+      />
     </div>
   );
 };

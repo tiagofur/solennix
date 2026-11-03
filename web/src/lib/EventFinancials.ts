@@ -24,6 +24,11 @@ export interface SupplyRow {
   excludeCost?: boolean;
 }
 
+export interface StaffRow {
+  feeAmount?: number | null;
+  status?: string | null;
+}
+
 export interface EventFinancialResult {
   productsSubtotal: number;
   normalExtrasSubtotal: number;
@@ -36,6 +41,7 @@ export interface EventFinancialResult {
   productCost: number;
   extrasCost: number;
   suppliesCost: number;
+  staffCost: number;
   totalCost: number;
   revenue: number;
   netProfit: number;
@@ -60,6 +66,7 @@ export function computeEventFinancials(params: {
   products: ProductRow[];
   extras: ExtraRow[];
   supplies?: SupplyRow[];
+  staff?: StaffRow[];
   globalDiscountType: DiscountType;
   globalDiscount: number;
   requiresInvoice: boolean;
@@ -69,6 +76,7 @@ export function computeEventFinancials(params: {
     products,
     extras,
     supplies = [],
+    staff = [],
     globalDiscountType,
     globalDiscount,
     requiresInvoice,
@@ -110,7 +118,12 @@ export function computeEventFinancials(params: {
   const suppliesCost = supplies
     .filter((s) => !s.excludeCost)
     .reduce((sum, s) => sum + s.quantity * s.unitCost, 0);
-  const totalCost = productCost + extrasCost + suppliesCost;
+
+  const staffCost = staff
+    .filter((s) => s.status !== 'cancelled')
+    .reduce((sum, s) => sum + (s.feeAmount && s.feeAmount > 0 ? s.feeAmount : 0), 0);
+
+  const totalCost = productCost + extrasCost + suppliesCost + staffCost;
 
   const revenue = total - (requiresInvoice ? taxAmount : 0);
   const netProfit = revenue - totalCost;
@@ -130,6 +143,7 @@ export function computeEventFinancials(params: {
     productCost: round2(productCost),
     extrasCost: round2(extrasCost),
     suppliesCost: round2(suppliesCost),
+    staffCost: round2(staffCost),
     totalCost: round2(totalCost),
     revenue: round2(revenue),
     netProfit: round2(netProfit),

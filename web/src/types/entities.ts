@@ -183,6 +183,13 @@ export interface Staff {
     updated_at: string
 }
 
+export interface StaffLimitsResponse {
+    used: number
+    max: number | null
+    unlimited: boolean
+    plan: string
+}
+
 export type StaffInsert = Omit<Staff, 'id' | 'user_id' | 'created_at' | 'updated_at'>
 export type StaffUpdate = Partial<StaffInsert>
 
@@ -199,6 +206,14 @@ export interface StaffInviteResponse {
 // Status de una asignación Staff↔Evento. Default backend: 'confirmed'.
 // En writes: null/omit = preservar el valor actual en upsert.
 export type AssignmentStatus = 'pending' | 'confirmed' | 'declined' | 'cancelled'
+
+export interface StaffAttendanceSummary {
+    total: number
+    confirmed: number
+    pending: number
+    declined: number
+    cancelled: number
+}
 
 // EventStaff: asignación de un Staff a un evento.
 export interface EventStaff {

@@ -7,7 +7,7 @@ interface UpgradeBannerProps {
   type: 'limit-reached' | 'upsell';
   currentUsage?: number;
   limit?: number;
-  resource?: 'events' | 'clients' | 'catalog';
+  resource?: 'events' | 'clients' | 'catalog' | 'staff';
   className?: string;
 }
 

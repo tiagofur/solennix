@@ -30,6 +30,11 @@
     "error_delete": "Error deleting staff member",
     "error_respond_assignment": "Could not respond to assignment.",
     "error_mark_read": "Could not update read status.",
+    "seats_usage": "Seats: {{current}} of {{max}}",
+    "unlimited_seats": "Unlimited collaborators",
+    "upgrade_prompt": "Upgrade plan",
+    "limit_reached_title": "Collaborator limit reached",
+    "limit_reached_desc": "You have reached the {{max}} collaborator limit for your current plan. Upgrade your plan to add more staff.",
     "delete_confirm": {
       "title": "Delete staff member",
       "description": "They will be removed from the catalog and any assigned events. This action cannot be undone.",
@@ -51,7 +56,7 @@
       "email": "Email",
       "notes": "Notes",
       "notifications": "Email notifications",
-      "notifications_desc": "Opted in · will be activated when feature is released (Pro+).",
+      "notifications_desc": "Active · sends automatic email notification with event details (Pro and Business plans).",
       "notifications_off": "Not opted in."
     },
     "upcoming": {
@@ -78,7 +83,7 @@
     "loading": "Loading staff member…",
     "title_new": "New staff member",
     "title_edit": "Edit staff member",
-    "help_text": "Phase 2 will activate email notifications when assigned to an event. The toggle is already being saved.",
+    "help_text": "Automatic email notifications are sent when assigning staff in Pro and Business plans.",
     "fields": {
       "name": "Name",
       "name_placeholder": "Maria Lopez",
@@ -91,7 +96,7 @@
       "notes": "Notes",
       "notes_placeholder": "Typical rate, specialty, availability…",
       "notifications": "Notify by email when assigned to an event.",
-      "notifications_help": "Pro plan feature (coming soon) — toggle is saved from now."
+      "notifications_help": "Available in Pro and Business plans — sends an alert with date, location, and role."
     },
     "errors": {
       "name_required": "Name is required.",

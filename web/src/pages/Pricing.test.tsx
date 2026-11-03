@@ -86,7 +86,7 @@ describe('Pricing', () => {
 
       // Pro features
       expect(screen.getByText(/Eventos, clientes, catálogo y links de solicitud ilimitados/i)).toBeInTheDocument();
-      expect(screen.getByText(/2 seats de personal/i)).toBeInTheDocument();
+      expect(screen.getByText(/5 seats de personal/i)).toBeInTheDocument();
       expect(screen.getByText(/Perfil público full/i)).toBeInTheDocument();
       expect(screen.getByText(/Inbound analytics/i)).toBeInTheDocument();
       expect(screen.getByText('Todo lo anterior, y además:')).toBeInTheDocument();

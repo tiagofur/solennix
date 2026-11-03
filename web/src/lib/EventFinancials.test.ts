@@ -80,6 +80,24 @@ describe('EventFinancials', () => {
     expect(result.total).toBe(0);
   });
 
+  it('includes staff fees in totalCost and excludes cancelled staff', () => {
+    const result = computeEventFinancials({
+      products: [],
+      extras: [],
+      staff: [
+        { feeAmount: 350, status: 'confirmed' },
+        { feeAmount: 450, status: 'pending' },
+        { feeAmount: 200, status: 'cancelled' },
+      ],
+      globalDiscountType: 'fixed',
+      globalDiscount: 0,
+      requiresInvoice: false,
+      taxRate: 16,
+    });
+    expect(result.staffCost).toBe(800);
+    expect(result.totalCost).toBe(800);
+  });
+
   it('rounds to cent precision', () => {
     expect(round2(100.005)).toBe(100.01);
     expect(round2(100.4)).toBe(100.4);

@@ -1159,6 +1159,7 @@ func TestGetEventFinancials_Success(t *testing.T) {
 	eventRepo.On("GetSupplies", mock.Anything, eventID).Return([]models.EventSupply{
 		{Quantity: 1, UnitCost: 20},
 	}, nil)
+	eventRepo.On("GetStaff", mock.Anything, eventID).Return([]models.EventStaff{}, nil)
 	productRepo.On("GetIngredientsForProducts", mock.Anything, mock.AnythingOfType("[]uuid.UUID")).Return([]models.ProductIngredient{
 		{ProductID: productID, Type: &ingType, UnitCost: &unitCost, QuantityRequired: 1},
 	}, nil)

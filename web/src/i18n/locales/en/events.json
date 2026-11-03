@@ -581,6 +581,12 @@
       "declined": "Declined",
       "cancelled": "Cancelled"
     },
+    "staff_status": {
+      "pending": "Unconfirmed",
+      "confirmed": "Confirmed",
+      "declined": "Declined",
+      "cancelled": "Cancelled"
+    },
     "delete_confirm_title": "Remove staff?",
     "delete_confirm_desc": "Remove \"{{name}}\" from this event?"
   },
@@ -663,5 +669,21 @@
       "phone_min": "Phone must be at least 10 digits",
       "email_invalid": "Invalid email"
     }
+  },
+  "export_accounting": {
+    "title": "Accounting Export",
+    "toolbar_btn": "Accounting",
+    "description": "Download an Excel-friendly CSV with full balance, client info, payments, balances, and staff costs.",
+    "period": "Period",
+    "from_date": "From",
+    "to_date": "To",
+    "plan_required_title": "Pro and Business Feature",
+    "plan_required_desc": "Excel accounting export is available on Pro and Business plans.",
+    "upgrade_cta": "View Pro and Business plans",
+    "excel_ready": "Native format for Microsoft Excel",
+    "excel_desc": "Encoded with UTF-8 BOM to open directly in Excel or Numbers with complete accents and column formatting.",
+    "action_download": "Download Excel (CSV)",
+    "success": "Accounting report downloaded successfully.",
+    "error": "Error generating accounting report."
   }
 }

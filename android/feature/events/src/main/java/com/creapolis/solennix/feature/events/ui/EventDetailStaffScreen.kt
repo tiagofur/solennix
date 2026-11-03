@@ -125,6 +125,39 @@ fun EventStaffScreen(
                                 color = SolennixTheme.colors.primary
                             )
                         }
+
+                        val confirmed = staff.count { it.status == "confirmed" }
+                        val pending = staff.count { it.status == "pending" || it.status == null }
+                        val declined = staff.count { it.status == "declined" }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "$confirmed confirmados",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = SolennixTheme.colors.success,
+                                fontWeight = FontWeight.Medium
+                            )
+                            if (pending > 0) {
+                                Text(
+                                    text = "· $pending pendientes",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = SolennixTheme.colors.warning,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            if (declined > 0) {
+                                Text(
+                                    text = "· $declined rechazados",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = SolennixTheme.colors.error,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
                     }
                 }
 

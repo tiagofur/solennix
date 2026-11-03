@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Download, CalendarPlus, Zap, Lock } from "lucide-react";
+import { Download, CalendarPlus, Zap, Lock, FileSpreadsheet } from "lucide-react";
 
 import { DesktopToolbar } from "../../../components/DesktopToolbar";
 import { Button } from "../../../components/Button";
@@ -32,6 +32,7 @@ export interface EventsToolbarProps {
   isExportingIcal: boolean;
   onManageBlocks: () => void;
   onExportCsv: () => void;
+  onOpenAccountingExport?: () => void;
   /** Rows available for CSV export — the export button hides when this is 0. */
   csvRowCount: number;
 }
@@ -80,8 +81,9 @@ const GlobalActions: React.FC<{
   isExportingIcal: boolean;
   onManageBlocks: () => void;
   onExportCsv: () => void;
+  onOpenAccountingExport?: () => void;
   csvRowCount: number;
-}> = ({ viewMode, onExportIcal, isExportingIcal, onManageBlocks, onExportCsv, csvRowCount }) => {
+}> = ({ viewMode, onExportIcal, isExportingIcal, onManageBlocks, onExportCsv, onOpenAccountingExport, csvRowCount }) => {
   const { t } = useTranslation(["events", "calendar"]);
   return (
     <>
@@ -125,6 +127,18 @@ const GlobalActions: React.FC<{
         </button>
       )}
 
+      {viewMode === "list" && onOpenAccountingExport && (
+        <button
+          type="button"
+          onClick={onOpenAccountingExport}
+          className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+          title={t("events:export_accounting.title", { defaultValue: "Exportación Contable" })}
+        >
+          <FileSpreadsheet className="h-4 w-4 mr-2 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+          {t("events:export_accounting.toolbar_btn", { defaultValue: "Contabilidad" })}
+        </button>
+      )}
+
       <Link
         to="/cotizacion-rapida"
         className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-bold rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
@@ -152,6 +166,7 @@ export const EventsToolbar: React.FC<EventsToolbarProps> = ({
   isExportingIcal,
   onManageBlocks,
   onExportCsv,
+  onOpenAccountingExport,
   csvRowCount,
 }) => {
   const { t } = useTranslation(["events"]);
@@ -170,6 +185,7 @@ export const EventsToolbar: React.FC<EventsToolbarProps> = ({
               isExportingIcal={isExportingIcal}
               onManageBlocks={onManageBlocks}
               onExportCsv={onExportCsv}
+              onOpenAccountingExport={onOpenAccountingExport}
               csvRowCount={csvRowCount}
             />
           </>
@@ -198,6 +214,7 @@ export const EventsToolbar: React.FC<EventsToolbarProps> = ({
             isExportingIcal={isExportingIcal}
             onManageBlocks={onManageBlocks}
             onExportCsv={onExportCsv}
+            onOpenAccountingExport={onOpenAccountingExport}
             csvRowCount={csvRowCount}
           />
         </div>

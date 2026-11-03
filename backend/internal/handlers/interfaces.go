@@ -159,6 +159,7 @@ type FullPaymentRepository interface {
 	GetByEventID(ctx context.Context, userID, eventID uuid.UUID) ([]models.Payment, error)
 	GetByDateRange(ctx context.Context, userID uuid.UUID, start, end string) ([]models.Payment, error)
 	GetByEventIDs(ctx context.Context, userID uuid.UUID, eventIDs []uuid.UUID) ([]models.Payment, error)
+	SumByEventID(ctx context.Context, userID, eventID uuid.UUID) (float64, error)
 	Update(ctx context.Context, userID uuid.UUID, p *models.Payment) error
 	Delete(ctx context.Context, id, userID uuid.UUID) error
 }
