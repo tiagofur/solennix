@@ -115,7 +115,7 @@ export const EventStaff: React.FC<EventStaffProps> = ({
   const attendanceSummary = useMemo(() => {
     const summary = { total: selectedStaff.length, confirmed: 0, pending: 0, declined: 0, cancelled: 0 };
     for (const s of selectedStaff) {
-      const st = s.status || 'confirmed';
+      const st = s.status || 'pending';
       if (st === 'confirmed') summary.confirmed++;
       else if (st === 'declined') summary.declined++;
       else if (st === 'cancelled') summary.cancelled++;
@@ -156,6 +156,12 @@ export const EventStaff: React.FC<EventStaffProps> = ({
                 <span className="hidden sm:inline">{t('events:staff_status.declined', { defaultValue: 'Rechazados' })}</span>
               </span>
             )}
+            {attendanceSummary.cancelled > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-surface-alt text-text-tertiary border border-border">
+                <span>{attendanceSummary.cancelled}</span>
+                <span className="hidden sm:inline">{t('events:staff_status.cancelled', { defaultValue: 'Cancelados' })}</span>
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -180,7 +186,7 @@ export const EventStaff: React.FC<EventStaffProps> = ({
             );
             const isShiftOpen =
               shiftExpanded[index] || !!item.shift_start || !!item.shift_end;
-            const statusValue: AssignmentStatus = item.status ?? 'confirmed';
+            const statusValue: AssignmentStatus = item.status ?? 'pending';
 
             return (
               <div

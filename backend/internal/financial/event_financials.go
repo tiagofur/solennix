@@ -111,7 +111,7 @@ func ComputeEventFinancials(
 
 		staffCost := 0.0
 		for _, s := range staff {
-			if s.Status != nil && *s.Status == "cancelled" {
+			if s.Status != nil && (*s.Status == "cancelled" || *s.Status == "declined") {
 				continue
 			}
 			if s.FeeAmount != nil && *s.FeeAmount > 0 {

@@ -25,7 +25,7 @@ func TestExportAccountingCSV_BasicPlan_Returns403(t *testing.T) {
 	h.ExportAccountingCSV(rr, req)
 
 	assert.Equal(t, http.StatusForbidden, rr.Code)
-	assert.Contains(t, rr.Body.String(), "Accounting export requires a paid plan")
+	assert.Contains(t, rr.Body.String(), "Accounting export requires an active paid plan")
 }
 
 func TestExportAccountingCSV_ProPlan_Success(t *testing.T) {
@@ -140,4 +140,68 @@ func TestExportAccountingCSV_WithDateRange(t *testing.T) {
 	assert.Contains(t, bodyStr, "1200.00") // staff cost
 	assert.Contains(t, bodyStr, "Pagado")
 	eventRepo.AssertCalled(t, "GetByDateRange", mock.Anything, userID, startDate, endDate)
+}
+
+func TestExportAccountingCSV_MitigatesFormulaInjection(t *testing.T) {
+	userID := uuid.New()
+	eventID := uuid.New()
+	userRepo := new(MockFullUserRepo)
+	eventRepo := new(MockFullEventRepo)
+	paymentRepo := new(MockFullPaymentRepo)
+
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "pro"}, nil)
+
+	events := []models.Event{
+		{
+			ID:          eventID,
+			UserID:      userID,
+			EventDate:   "2026-06-15",
+			ServiceType: "=SUM(1+1)",
+			NumPeople:   50,
+			TotalAmount: 1000.0,
+			Currency:    "MXN",
+			Status:      "confirmed",
+			Client: &models.Client{
+				Name:  "@danger_user",
+				Phone: "+52 55 1234",
+			},
+		},
+	}
+
+	eventRepo.On("GetAll", mock.Anything, userID).Return(events, nil)
+	paymentRepo.On("SumByEventID", mock.Anything, userID, eventID).Return(1000.0, nil)
+	eventRepo.On("GetStaff", mock.Anything, eventID).Return([]models.EventStaff{}, nil)
+
+	h := &CRUDHandler{
+		userRepo:    userRepo,
+		eventRepo:   eventRepo,
+		paymentRepo: paymentRepo,
+	}
+
+	req := makeReqWithUserID(http.MethodGet, "/api/reports/accounting/export", "", userID)
+	rr := httptest.NewRecorder()
+
+	h.ExportAccountingCSV(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	bodyStr := rr.Body.String()
+	// Should be escaped with leading single quote
+	assert.Contains(t, bodyStr, "'=SUM(1+1)")
+	assert.Contains(t, bodyStr, "'@danger_user")
+	assert.Contains(t, bodyStr, "'+52 55 1234")
+}
+
+func TestExportAccountingCSV_PartialDateRange_Returns400(t *testing.T) {
+	userID := uuid.New()
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "pro"}, nil)
+
+	h := &CRUDHandler{userRepo: userRepo}
+	req := makeReqWithUserID(http.MethodGet, "/api/reports/accounting/export?start_date=2026-01-01", "", userID)
+	rr := httptest.NewRecorder()
+
+	h.ExportAccountingCSV(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Both start_date and end_date are required")
 }

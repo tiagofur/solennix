@@ -45,5 +45,5 @@ export async function downloadAccountingExport(params?: { startDate?: string; en
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

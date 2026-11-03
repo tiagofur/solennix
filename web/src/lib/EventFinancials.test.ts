@@ -80,7 +80,7 @@ describe('EventFinancials', () => {
     expect(result.total).toBe(0);
   });
 
-  it('includes staff fees in totalCost and excludes cancelled staff', () => {
+  it('includes staff fees in totalCost and excludes cancelled and declined staff', () => {
     const result = computeEventFinancials({
       products: [],
       extras: [],
@@ -88,6 +88,7 @@ describe('EventFinancials', () => {
         { feeAmount: 350, status: 'confirmed' },
         { feeAmount: 450, status: 'pending' },
         { feeAmount: 200, status: 'cancelled' },
+        { feeAmount: 300, status: 'declined' },
       ],
       globalDiscountType: 'fixed',
       globalDiscount: 0,

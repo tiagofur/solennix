@@ -29,6 +29,13 @@ export const AccountingExportModal: React.FC<AccountingExportModalProps> = ({
   const [endDate, setEndDate] = useState(`${currentYear}-12-31`);
   const [isExporting, setIsExporting] = useState(false);
 
+  const formatLocalDate = (d: Date): string => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
   const handlePresetChange = (newPreset: RangePreset) => {
     setPreset(newPreset);
     const now = new Date();
@@ -42,8 +49,8 @@ export const AccountingExportModal: React.FC<AccountingExportModalProps> = ({
       const qMonth = Math.floor(now.getMonth() / 3) * 3;
       const qStart = new Date(now.getFullYear(), qMonth, 1);
       const qEnd = new Date(now.getFullYear(), qMonth + 3, 0);
-      setStartDate(qStart.toISOString().slice(0, 10));
-      setEndDate(qEnd.toISOString().slice(0, 10));
+      setStartDate(formatLocalDate(qStart));
+      setEndDate(formatLocalDate(qEnd));
     }
   };
 

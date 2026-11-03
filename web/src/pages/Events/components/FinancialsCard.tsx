@@ -114,19 +114,19 @@ export const FinancialsCard: React.FC<FinancialsCardProps> = ({
           <div className="mt-6 pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-3 gap-3 relative z-10 text-xs">
             {productCost != null && productCost > 0 && (
               <div className="bg-surface-alt/60 rounded-xl p-3 border border-border">
-                <span className="text-text-secondary block mb-1">Insumos de cocina</span>
+                <span className="text-text-secondary block mb-1">{t('events:financials.kitchen_supplies', { defaultValue: 'Insumos de cocina' })}</span>
                 <span className="font-bold text-text text-sm">{money(productCost)}</span>
               </div>
             )}
             {suppliesCost != null && suppliesCost > 0 && (
               <div className="bg-surface-alt/60 rounded-xl p-3 border border-border">
-                <span className="text-text-secondary block mb-1">Insumos operativos</span>
+                <span className="text-text-secondary block mb-1">{t('events:financials.operational_supplies', { defaultValue: 'Insumos operativos' })}</span>
                 <span className="font-bold text-text text-sm">{money(suppliesCost)}</span>
               </div>
             )}
             {staffCost != null && staffCost > 0 && (
               <div className="bg-surface-alt/60 rounded-xl p-3 border border-border">
-                <span className="text-text-secondary block mb-1">Personal / Staff</span>
+                <span className="text-text-secondary block mb-1">{t('events:financials.staff_cost', { defaultValue: 'Personal / Staff' })}</span>
                 <span className="font-bold text-text text-sm">{money(staffCost)}</span>
               </div>
             )}

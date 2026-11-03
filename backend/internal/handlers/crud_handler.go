@@ -645,20 +645,33 @@ func icalEscape(s string) string {
 	return s
 }
 
+// sanitizeCSVCell neutralizes CSV formula injection (CWE-1236) by prepending a single quote
+// if the string begins with =, +, -, @, tab, or carriage return.
+func sanitizeCSVCell(val string) string {
+	trimmed := strings.TrimSpace(val)
+	if len(trimmed) > 0 {
+		switch trimmed[0] {
+		case '=', '+', '-', '@', '\t', '\r':
+			return "'" + val
+		}
+	}
+	return val
+}
+
 // ExportAccountingCSV exports accounting and financial data in Excel-friendly CSV.
 // GET /api/reports/accounting/export or GET /api/events/accounting/export
 // Gated to paid plans (Pro or Business).
 func (h *CRUDHandler) ExportAccountingCSV(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
-	// Plan gate: paid tier required
+	// Plan gate: paid tier required and must not be expired
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to load user")
 		return
 	}
-	if normalizePlan(user.Plan) == "basic" {
-		writeError(w, http.StatusForbidden, "Accounting export requires a paid plan (Pro or Business)")
+	if normalizePlan(user.Plan) == "basic" || !IsPlanActive(user) {
+		writeError(w, http.StatusForbidden, "Accounting export requires an active paid plan (Pro or Business)")
 		return
 	}
 
@@ -672,6 +685,11 @@ func (h *CRUDHandler) ExportAccountingCSV(w http.ResponseWriter, r *http.Request
 	}
 
 	var events []models.Event
+	if (start != "" && end == "") || (start == "" && end != "") {
+		writeError(w, http.StatusBadRequest, "Both start_date and end_date are required when filtering by date range")
+		return
+	}
+
 	if start != "" && end != "" {
 		startDate, err := normalizeDateParam(start)
 		if err != nil {
@@ -681,6 +699,10 @@ func (h *CRUDHandler) ExportAccountingCSV(w http.ResponseWriter, r *http.Request
 		endDate, err := normalizeDateParam(end)
 		if err != nil {
 			writeError(w, http.StatusBadRequest, "Invalid end date")
+			return
+		}
+		if startDate > endDate {
+			writeError(w, http.StatusBadRequest, "start_date must be before or equal to end_date")
 			return
 		}
 		events, err = h.eventRepo.GetByDateRange(r.Context(), userID, startDate, endDate)
@@ -726,20 +748,28 @@ func (h *CRUDHandler) ExportAccountingCSV(w http.ResponseWriter, r *http.Request
 	})
 
 	for _, e := range events {
-		totalPaid, _ := h.paymentRepo.SumByEventID(r.Context(), userID, e.ID)
+		totalPaid, pErr := h.paymentRepo.SumByEventID(r.Context(), userID, e.ID)
+		if pErr != nil {
+			slog.Warn("export: failed to sum payments for event", "error", pErr, "event_id", e.ID)
+			totalPaid = 0
+		}
 		pending := e.TotalAmount - totalPaid
 		if pending < 0 {
 			pending = 0
 		}
 
 		staffCost := 0.0
-		staffList, _ := h.eventRepo.GetStaff(r.Context(), e.ID)
-		for _, s := range staffList {
-			if s.Status != nil && *s.Status == "cancelled" {
-				continue
-			}
-			if s.FeeAmount != nil && *s.FeeAmount > 0 {
-				staffCost += *s.FeeAmount
+		staffList, sErr := h.eventRepo.GetStaff(r.Context(), e.ID)
+		if sErr != nil {
+			slog.Warn("export: failed to get staff for event", "error", sErr, "event_id", e.ID)
+		} else {
+			for _, s := range staffList {
+				if s.Status != nil && (*s.Status == "cancelled" || *s.Status == "declined") {
+					continue
+				}
+				if s.FeeAmount != nil && *s.FeeAmount > 0 {
+					staffCost += *s.FeeAmount
+				}
 			}
 		}
 
@@ -770,17 +800,17 @@ func (h *CRUDHandler) ExportAccountingCSV(w http.ResponseWriter, r *http.Request
 		_ = csvWriter.Write([]string{
 			e.EventDate,
 			e.ID.String(),
-			e.ServiceType,
-			clientName,
-			clientPhone,
+			sanitizeCSVCell(e.ServiceType),
+			sanitizeCSVCell(clientName),
+			sanitizeCSVCell(clientPhone),
 			strconv.Itoa(e.NumPeople),
 			fmt.Sprintf("%.2f", e.TotalAmount),
 			fmt.Sprintf("%.2f", totalPaid),
 			fmt.Sprintf("%.2f", pending),
 			fmt.Sprintf("%.2f", staffCost),
-			currency,
+			sanitizeCSVCell(currency),
 			paymentStatus,
-			e.Status,
+			sanitizeCSVCell(e.Status),
 			invoiceReq,
 		})
 	}

@@ -9622,6 +9622,70 @@
         }
       }
     },
+    "events.detail.staff.summary.confirmed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d confirmed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d confirmados"
+          }
+        }
+      }
+    },
+    "events.detail.staff.summary.pending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d pending"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d pendientes"
+          }
+        }
+      }
+    },
+    "events.detail.staff.summary.declined": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d declined"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d rechazados"
+          }
+        }
+      }
+    },
+    "events.detail.staff.summary.cancelled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d cancelled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d cancelados"
+          }
+        }
+      }
+    },
     "events.detail.staff.empty.message": {
       "localizations": {
         "en": {
@@ -23737,13 +23801,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Will be activated in Phase 2 (Pro+). Preference is saved."
+            "value": "Active in Pro and Business plans."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se activará en Phase 2 (Pro+). Por ahora queda registrada la preferencia."
+            "value": "Activo en planes Pro y Business."
           }
         }
       }
@@ -24281,13 +24345,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Will be activated in Phase 2 (Pro+). Preference is saved."
+            "value": "Available in Pro and Business plans — sends an alert with date, location, and role."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se activará en Phase 2 (Pro+). Por ahora guardamos la preferencia."
+            "value": "Disponible en planes Pro y Business — envía un aviso con fecha, lugar y rol."
           }
         }
       }

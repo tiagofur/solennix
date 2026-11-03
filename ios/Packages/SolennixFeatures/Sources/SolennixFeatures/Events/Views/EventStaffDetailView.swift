@@ -115,6 +115,7 @@ public struct EventStaffDetailView: View {
         let confirmed = assignments.filter { $0.assignmentStatus == .confirmed }.count
         let pending = assignments.filter { $0.assignmentStatus == .pending }.count
         let declined = assignments.filter { $0.assignmentStatus == .declined }.count
+        let cancelled = assignments.filter { $0.assignmentStatus == .cancelled }.count
 
         return HStack(spacing: Spacing.xs) {
             HStack(spacing: 3) {
@@ -157,6 +158,19 @@ public struct EventStaffDetailView: View {
                 .padding(.horizontal, Spacing.xs)
                 .padding(.vertical, 3)
                 .background(SolennixColors.errorBg)
+                .clipShape(Capsule())
+            }
+
+            if cancelled > 0 {
+                HStack(spacing: 3) {
+                    Text(String(format: tr("events.detail.staff.summary.cancelled", "%d cancelados"), cancelled))
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, 3)
+                .background(SolennixColors.surfaceAlt)
                 .clipShape(Capsule())
             }
 

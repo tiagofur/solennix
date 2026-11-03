@@ -174,6 +174,10 @@
     <string name="events_detail_staff_status_confirmed">Confirmed</string>
     <string name="events_detail_staff_status_declined">Declined</string>
     <string name="events_detail_staff_status_cancelled">Cancelled</string>
+    <string name="events_detail_staff_summary_confirmed">%1$d confirmed</string>
+    <string name="events_detail_staff_summary_pending">· %1$d pending</string>
+    <string name="events_detail_staff_summary_declined">· %1$d declined</string>
+    <string name="events_detail_staff_summary_cancelled">· %1$d cancelled</string>
     <string name="events_detail_staff_shift_range">%1$s – %2$s</string>
     <string name="events_detail_staff_shift_from">From %1$s</string>
     <string name="events_detail_staff_shift_until">Until %1$s</string>

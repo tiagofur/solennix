@@ -120,7 +120,7 @@ export function computeEventFinancials(params: {
     .reduce((sum, s) => sum + s.quantity * s.unitCost, 0);
 
   const staffCost = staff
-    .filter((s) => s.status !== 'cancelled')
+    .filter((s) => s.status !== 'cancelled' && s.status !== 'declined')
     .reduce((sum, s) => sum + (s.feeAmount && s.feeAmount > 0 ? s.feeAmount : 0), 0);
 
   const totalCost = productCost + extrasCost + suppliesCost + staffCost;

@@ -121,13 +121,16 @@ func TestIngredientAndSupplyCostsBothCounted(t *testing.T) {
 		fee1 := 350.0
 		fee2 := 450.0
 		cancelledFee := 200.0
+		declinedFee := 300.0
 		statusConfirmed := "confirmed"
 		statusCancelled := "cancelled"
+		statusDeclined := "declined"
 
 		staff := []models.EventStaff{
 			{FeeAmount: &fee1, Status: &statusConfirmed},
 			{FeeAmount: &fee2, Status: nil},
 			{FeeAmount: &cancelledFee, Status: &statusCancelled}, // should be ignored
+			{FeeAmount: &declinedFee, Status: &statusDeclined},   // should be ignored
 		}
 
 		result := ComputeEventFinancials(

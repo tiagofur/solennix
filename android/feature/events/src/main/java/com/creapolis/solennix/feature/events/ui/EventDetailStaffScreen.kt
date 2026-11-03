@@ -129,6 +129,7 @@ fun EventStaffScreen(
                         val confirmed = staff.count { it.status == "confirmed" }
                         val pending = staff.count { it.status == "pending" || it.status == null }
                         val declined = staff.count { it.status == "declined" }
+                        val cancelled = staff.count { it.status == "cancelled" }
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
@@ -136,14 +137,14 @@ fun EventStaffScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "$confirmed confirmados",
+                                text = stringResource(R.string.events_detail_staff_summary_confirmed, confirmed),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = SolennixTheme.colors.success,
                                 fontWeight = FontWeight.Medium
                             )
                             if (pending > 0) {
                                 Text(
-                                    text = "· $pending pendientes",
+                                    text = stringResource(R.string.events_detail_staff_summary_pending, pending),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = SolennixTheme.colors.warning,
                                     fontWeight = FontWeight.Medium
@@ -151,9 +152,17 @@ fun EventStaffScreen(
                             }
                             if (declined > 0) {
                                 Text(
-                                    text = "· $declined rechazados",
+                                    text = stringResource(R.string.events_detail_staff_summary_declined, declined),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = SolennixTheme.colors.error,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            if (cancelled > 0) {
+                                Text(
+                                    text = stringResource(R.string.events_detail_staff_summary_cancelled, cancelled),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = SolennixTheme.colors.secondaryText,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
