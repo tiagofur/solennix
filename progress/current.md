@@ -4,28 +4,30 @@
 
 ### Implementación Fase 1: Personal Potenciado + P&L y Exportación Contable Business (2026-11-03)
 
-Siguiendo la secuencia normativa **Backend → Web → Verificación → Mobile**, con diseño UI/UX guiado por `$impeccable` (Modo Operate):
+Siguiendo la secuencia normativa **Backend → Web → Verificación → Mobile**, con diseño UI/UX guiado por `$impeccable` (Modo Operate), revisión independiente dual adversarial (Judgment Day) y PR #1350:
 
 1. **Personal & Asientos (Issues #1340, #1341, #1342, #1344)**:
    - **Backend**: Límite Pro de `staff_seats` ampliado de 2 a 5 (`staff_handler.go:188`). Nuevo endpoint `GET /api/staff/limits` retornando `{ used, max, unlimited, plan }`.
    - **Web**: En `StaffList.tsx`, badge de cupo en la cabecera ("X de 5 colaboradores" / "Colaboradores ilimitados"). Al llegar al cupo, banner y botón con CTA a `/pricing`. En `StaffForm.tsx`, gating proactivo con `UpgradeBanner`.
-   - **Copy stale**: Corregido copy "Phase 2 (próximamente)" en Web (`staff.json`), iOS (`StaffStrings.swift`) y Android (`strings.xml`), reflejando que los emails automáticos ya están activos en Pro/Business. Actualizado `pricing.json` a "5 seats de personal".
+   - **Copy stale**: Corregido copy "Phase 2 (próximamente)" en Web (`staff.json`), iOS (`StaffStrings.swift`, `Localizable.xcstrings`, `StaffLocalizationTests.swift`) y Android (`strings.xml`), reflejando que los emails automáticos ya están activos en Pro/Business. Actualizado `pricing.json` a "5 seats de personal".
 2. **Resumen de Asistencia de Personal en Eventos (Issue #1346)**:
    - **Backend**: Struct `StaffAttendanceSummary` y función `ComputeAttendanceSummary`. Nuevo endpoint `GET /api/events/{id}/staff/summary`.
-   - **Web**: Barra de KPIs de asistencia en la cabecera de la sección Personal de `EventSummary.tsx` (Total, Confirmados en verde esmeralda, Pendientes en ámbar, Rechazados en rose). Badges de estado con iconos en cada fila de colaborador. Barra de asistencia en vivo en `EventStaff.tsx` (paso 4).
+   - **Web**: Barra de KPIs de asistencia en la cabecera de la sección Personal de `EventSummary.tsx` (Total, Confirmados en verde esmeralda, Pendientes en ámbar, Rechazados en rose, Cancelados). Badges de estado con iconos en cada fila de colaborador. Barra de asistencia en vivo en `EventStaff.tsx` (paso 4).
    - **Mobile**: Chips de conteo por estado en iOS `EventStaffDetailView.swift` y Android `EventDetailStaffScreen.kt`.
 3. **Rentabilidad por Evento (P&L por Evento)**:
-   - **Backend**: `ComputeEventFinancials` ahora incluye `StaffCost` a partir de las asignaciones de personal. Retorna `staff_cost`, incorporado a `total_cost` y deduciendo del margen neto. `GetEventFinancials` carga y procesa staff.
+   - **Backend**: `ComputeEventFinancials` ahora incluye `StaffCost` a partir de las asignaciones de personal activas (excluyendo cancelados y rechazados). Retorna `staff_cost`, incorporado a `total_cost` y deduciendo del margen neto. `GetEventFinancials` carga y procesa staff.
    - **Web**: `FinancialsCard.tsx` ahora presenta desglose ejecutivo de costos (Insumos de cocina, Insumos operativos, Personal de servicio) y badge con porcentaje de margen bruto coloreado semánticamente.
 4. **Exportación Contable para Excel / CSV**:
-   - **Backend**: Endpoint `GET /api/reports/accounting/export` (y `/api/events/accounting/export`). Gated a planes pagos (Pro/Business). Genera CSV estructurado con BOM UTF-8 (compatibilidad nativa con Excel) con eventos, clientes, montos contratados, cobrados, saldos pendientes y costo de personal.
-   - **Web**: Diálogo `AccountingExportModal.tsx` con presets de fecha (Año actual, Trimestre, Historial completo, Rango personalizado) y botón de acceso directo en el toolbar de Eventos.
+   - **Backend**: Endpoint `GET /api/reports/accounting/export` (y `/api/events/accounting/export`). Gated a planes pagos (Pro/Business), sanitización contra CSV formula injection (CWE-1236) y BOM UTF-8 para apertura nativa en Microsoft Excel y Google Sheets.
+   - **Web**: Diálogo `AccountingExportModal.tsx` con presets de fecha (Año actual, Trimestre sin desfasaje UTC, Historial completo, Rango personalizado) y botón de acceso directo en el toolbar de Eventos.
 5. **Calidad y Verificación**:
    - Impeccable detector ejecutado: 0 defectos de diseño.
    - 100% de tests Go pasando (`go test ./...`).
    - 100% de linters y tests Web pasando (`npm run lint`, 176 test files, 1666 tests unitarios en verde).
-   - Compilación exitosa en iOS (`SolennixFeatures`) y Android Gradle (`compileDebugKotlin`).
+   - Compilación y tests exitosos en iOS (`SolennixFeatures` y `SolennixTests/StaffLocalizationTests`).
+   - Compilación exitosa en Android Gradle (`compileDebugKotlin`).
    - `./init.sh` en verde al 100%.
+   - PR [#1350](https://github.com/tiagofur/solennix/pull/1350) en branch `feat/business-plan-phase-1`.
 
 ### Review Personal/Equipos + plan de mejoras (2026-11-02)
 
