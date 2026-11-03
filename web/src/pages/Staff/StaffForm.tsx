@@ -5,7 +5,9 @@ import {
   useStaffMember,
   useCreateStaff,
   useUpdateStaff,
+  useStaffLimits,
 } from "@/hooks/queries/useStaffQueries";
+import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { useToast } from "@/hooks/useToast";
 import { useTranslation } from "react-i18next";
 import type { StaffInsert } from "@/types/entities";
@@ -27,8 +29,11 @@ export const StaffForm: React.FC = () => {
   const { addToast } = useToast();
 
   const { data: existing, isLoading } = useStaffMember(isEdit ? id : undefined);
+  const { data: limits } = useStaffLimits();
   const createMut = useCreateStaff();
   const updateMut = useUpdateStaff();
+
+  const isAtLimit = Boolean(!isEdit && limits && !limits.unlimited && limits.max !== null && limits.used >= limits.max);
 
   const [form, setForm] = useState<StaffInsert>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -86,6 +91,22 @@ export const StaffForm: React.FC = () => {
 
   if (isEdit && isLoading) {
     return <div className="text-text-secondary">{t("staff:form.loading")}</div>;
+  }
+
+  if (isAtLimit) {
+    return (
+      <div className="max-w-2xl space-y-6">
+        <Link to="/staff" className="inline-flex items-center text-sm text-primary hover:underline">
+          <ArrowLeft className="h-4 w-4 mr-1" /> {t("staff:form.back")}
+        </Link>
+        <UpgradeBanner
+          type="limit-reached"
+          resource="staff"
+          currentUsage={limits?.used ?? 1}
+          limit={limits?.max ?? 1}
+        />
+      </div>
+    );
   }
 
   return (

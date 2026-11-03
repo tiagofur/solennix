@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -644,6 +645,179 @@ func icalEscape(s string) string {
 	return s
 }
 
+// sanitizeCSVCell neutralizes CSV formula injection (CWE-1236) by prepending a single quote
+// if the string begins with =, +, -, @, tab, or carriage return.
+func sanitizeCSVCell(val string) string {
+	trimmed := strings.TrimSpace(val)
+	if len(trimmed) > 0 {
+		switch trimmed[0] {
+		case '=', '+', '-', '@', '\t', '\r':
+			return "'" + val
+		}
+	}
+	return val
+}
+
+// ExportAccountingCSV exports accounting and financial data in Excel-friendly CSV.
+// GET /api/reports/accounting/export or GET /api/events/accounting/export
+// Gated to paid plans (Pro or Business).
+func (h *CRUDHandler) ExportAccountingCSV(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	// Plan gate: paid tier required and must not be expired
+	user, err := h.userRepo.GetByID(r.Context(), userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to load user")
+		return
+	}
+	if normalizePlan(user.Plan) == "basic" || !IsPlanActive(user) {
+		writeError(w, http.StatusForbidden, "Accounting export requires an active paid plan (Pro or Business)")
+		return
+	}
+
+	start := r.URL.Query().Get("start_date")
+	if start == "" {
+		start = r.URL.Query().Get("start")
+	}
+	end := r.URL.Query().Get("end_date")
+	if end == "" {
+		end = r.URL.Query().Get("end")
+	}
+
+	var events []models.Event
+	if (start != "" && end == "") || (start == "" && end != "") {
+		writeError(w, http.StatusBadRequest, "Both start_date and end_date are required when filtering by date range")
+		return
+	}
+
+	if start != "" && end != "" {
+		startDate, err := normalizeDateParam(start)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "Invalid start date")
+			return
+		}
+		endDate, err := normalizeDateParam(end)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "Invalid end date")
+			return
+		}
+		if startDate > endDate {
+			writeError(w, http.StatusBadRequest, "start_date must be before or equal to end_date")
+			return
+		}
+		events, err = h.eventRepo.GetByDateRange(r.Context(), userID, startDate, endDate)
+		if err != nil {
+			slog.Error("failed to get events for accounting export", "error", err, "user_id", userID)
+			writeError(w, http.StatusInternalServerError, "Failed to load events")
+			return
+		}
+	} else {
+		events, err = h.eventRepo.GetAll(r.Context(), userID)
+		if err != nil {
+			slog.Error("failed to get all events for accounting export", "error", err, "user_id", userID)
+			writeError(w, http.StatusInternalServerError, "Failed to load events")
+			return
+		}
+	}
+
+	filename := fmt.Sprintf("solennix_contabilidad_%s.csv", time.Now().Format("2006-01-02"))
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+
+	// Write UTF-8 BOM so Excel opens accented characters cleanly without manual import
+	w.Write([]byte("\xEF\xBB\xBF"))
+
+	csvWriter := csv.NewWriter(w)
+
+	// CSV Header
+	_ = csvWriter.Write([]string{
+		"Fecha",
+		"ID Evento",
+		"Servicio",
+		"Cliente",
+		"Teléfono",
+		"Invitados",
+		"Total Contratado",
+		"Total Cobrado",
+		"Saldo Pendiente",
+		"Costo Personal",
+		"Moneda",
+		"Estado Pago",
+		"Estado Evento",
+		"Factura Requerida",
+	})
+
+	for _, e := range events {
+		totalPaid, pErr := h.paymentRepo.SumByEventID(r.Context(), userID, e.ID)
+		if pErr != nil {
+			slog.Warn("export: failed to sum payments for event", "error", pErr, "event_id", e.ID)
+			totalPaid = 0
+		}
+		pending := e.TotalAmount - totalPaid
+		if pending < 0 {
+			pending = 0
+		}
+
+		staffCost := 0.0
+		staffList, sErr := h.eventRepo.GetStaff(r.Context(), e.ID)
+		if sErr != nil {
+			slog.Warn("export: failed to get staff for event", "error", sErr, "event_id", e.ID)
+		} else {
+			for _, s := range staffList {
+				if s.Status != nil && (*s.Status == "cancelled" || *s.Status == "declined") {
+					continue
+				}
+				if s.FeeAmount != nil && *s.FeeAmount > 0 {
+					staffCost += *s.FeeAmount
+				}
+			}
+		}
+
+		paymentStatus := "Pendiente"
+		if totalPaid >= e.TotalAmount-0.01 && e.TotalAmount > 0 {
+			paymentStatus = "Pagado"
+		} else if totalPaid > 0 {
+			paymentStatus = "Parcial"
+		}
+
+		invoiceReq := "No"
+		if e.RequiresInvoice {
+			invoiceReq = "Sí"
+		}
+
+		clientName := ""
+		clientPhone := ""
+		if e.Client != nil {
+			clientName = e.Client.Name
+			clientPhone = e.Client.Phone
+		}
+
+		currency := e.Currency
+		if currency == "" {
+			currency = "MXN"
+		}
+
+		_ = csvWriter.Write([]string{
+			e.EventDate,
+			e.ID.String(),
+			sanitizeCSVCell(e.ServiceType),
+			sanitizeCSVCell(clientName),
+			sanitizeCSVCell(clientPhone),
+			strconv.Itoa(e.NumPeople),
+			fmt.Sprintf("%.2f", e.TotalAmount),
+			fmt.Sprintf("%.2f", totalPaid),
+			fmt.Sprintf("%.2f", pending),
+			fmt.Sprintf("%.2f", staffCost),
+			sanitizeCSVCell(currency),
+			paymentStatus,
+			sanitizeCSVCell(e.Status),
+			invoiceReq,
+		})
+	}
+
+	csvWriter.Flush()
+}
+
 func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	var event models.Event
@@ -1021,13 +1195,18 @@ func (h *CRUDHandler) GetEventFinancials(w http.ResponseWriter, r *http.Request)
 		writeError(w, http.StatusInternalServerError, "Failed to fetch event extras")
 		return
 	}
-	supplies, err := h.eventRepo.GetSupplies(r.Context(), eventID)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch event supplies")
-		return
-	}
+		supplies, err := h.eventRepo.GetSupplies(r.Context(), eventID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to fetch event supplies")
+			return
+		}
+		staff, err := h.eventRepo.GetStaff(r.Context(), eventID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to fetch event staff")
+			return
+		}
 
-	productIDs := make([]uuid.UUID, 0, len(products))
+		productIDs := make([]uuid.UUID, 0, len(products))
 	seen := make(map[uuid.UUID]bool, len(products))
 	for _, p := range products {
 		if seen[p.ProductID] {
@@ -1053,8 +1232,8 @@ func (h *CRUDHandler) GetEventFinancials(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	result := financial.ComputeEventFinancials(*event, products, extras, supplies, unitCosts)
-	writeJSON(w, http.StatusOK, result)
+		result := financial.ComputeEventFinancials(*event, products, extras, supplies, staff, unitCosts)
+		writeJSON(w, http.StatusOK, result)
 }
 
 func (h *CRUDHandler) UpdateEventItems(w http.ResponseWriter, r *http.Request) {
@@ -1247,6 +1426,26 @@ func (h *CRUDHandler) GetEventStaff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, staff)
+}
+
+func (h *CRUDHandler) GetEventStaffSummary(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	eventID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid event ID")
+		return
+	}
+	if _, err := h.eventRepo.GetByID(r.Context(), eventID, userID); err != nil {
+		writeError(w, http.StatusNotFound, "Event not found")
+		return
+	}
+	staff, err := h.eventRepo.GetStaff(r.Context(), eventID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch event staff")
+		return
+	}
+	summary := models.ComputeAttendanceSummary(staff)
+	writeJSON(w, http.StatusOK, summary)
 }
 
 func (h *CRUDHandler) GetEventEquipment(w http.ResponseWriter, r *http.Request) {

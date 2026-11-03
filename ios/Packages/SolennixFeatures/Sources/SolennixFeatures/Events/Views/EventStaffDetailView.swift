@@ -78,15 +78,18 @@ public struct EventStaffDetailView: View {
                         }
                     }
                 } else {
-                    HStack {
-                        Text(FeatureL10n.plural("events.detail.staff.assigned_count", "%d colaboradores asignados", count: assignments.count))
-                            .font(.subheadline)
-                            .foregroundStyle(SolennixColors.textSecondary)
-                        Spacer()
-                        Text(String(format: tr("events.detail.staff.total_fee", "Total: %@"), totalFee.asMXN))
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(SolennixColors.primary)
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        HStack {
+                            Text(FeatureL10n.plural("events.detail.staff.assigned_count", "%d colaboradores asignados", count: assignments.count))
+                                .font(.subheadline)
+                                .foregroundStyle(SolennixColors.textSecondary)
+                            Spacer()
+                            Text(String(format: tr("events.detail.staff.total_fee", "Total: %@"), totalFee.asMXN))
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(SolennixColors.primary)
+                        }
+                        attendanceSummaryCard
                     }
                     .padding(Spacing.md)
                     .background(SolennixColors.primaryLight)
@@ -104,6 +107,75 @@ public struct EventStaffDetailView: View {
             .padding(.vertical, Spacing.lg)
         }
         .refreshable { await loadData() }
+    }
+
+    // MARK: - Attendance Summary Card
+
+    private var attendanceSummaryCard: some View {
+        let confirmed = assignments.filter { $0.assignmentStatus == .confirmed }.count
+        let pending = assignments.filter { $0.assignmentStatus == .pending }.count
+        let declined = assignments.filter { $0.assignmentStatus == .declined }.count
+        let cancelled = assignments.filter { $0.assignmentStatus == .cancelled }.count
+
+        return HStack(spacing: Spacing.xs) {
+            HStack(spacing: 3) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.caption2)
+                    .foregroundStyle(SolennixColors.success)
+                Text(String(format: tr("events.detail.staff.summary.confirmed", "%d confirmados"), confirmed))
+                    .font(.caption2)
+                    .fontWeight(.medium)
+            }
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, 3)
+            .background(SolennixColors.successBg)
+            .clipShape(Capsule())
+
+            if pending > 0 {
+                HStack(spacing: 3) {
+                    Image(systemName: "clock.fill")
+                        .font(.caption2)
+                        .foregroundStyle(SolennixColors.warning)
+                    Text(String(format: tr("events.detail.staff.summary.pending", "%d pendientes"), pending))
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                }
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, 3)
+                .background(SolennixColors.warningBg)
+                .clipShape(Capsule())
+            }
+
+            if declined > 0 {
+                HStack(spacing: 3) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(SolennixColors.error)
+                    Text(String(format: tr("events.detail.staff.summary.declined", "%d rechazados"), declined))
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                }
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, 3)
+                .background(SolennixColors.errorBg)
+                .clipShape(Capsule())
+            }
+
+            if cancelled > 0 {
+                HStack(spacing: 3) {
+                    Text(String(format: tr("events.detail.staff.summary.cancelled", "%d cancelados"), cancelled))
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, 3)
+                .background(SolennixColors.surfaceAlt)
+                .clipShape(Capsule())
+            }
+
+            Spacer()
+        }
     }
 
     // MARK: - Assignment Row

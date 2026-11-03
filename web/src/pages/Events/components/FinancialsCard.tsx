@@ -17,6 +17,10 @@ export interface FinancialsCardProps {
   currentStatus: EventStatus;
   isDownpaymentMet: boolean;
   depositPercent: number;
+  productCost?: number;
+  suppliesCost?: number;
+  staffCost?: number;
+  margin?: number;
   /** Called with (depositAmount - totalPaid) when the user clicks "register deposit". */
   onRegisterDeposit: (amount: number) => void;
   /** Called when the user clicks "add payment". */
@@ -44,6 +48,10 @@ export const FinancialsCard: React.FC<FinancialsCardProps> = ({
   currentStatus,
   isDownpaymentMet,
   depositPercent,
+  productCost,
+  suppliesCost,
+  staffCost,
+  margin,
   onRegisterDeposit,
   onAddPayment,
 }) => {
@@ -78,7 +86,19 @@ export const FinancialsCard: React.FC<FinancialsCardProps> = ({
             <p className="text-xl font-black text-error">{money(totalCost)}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('events:financials.net_profit')}</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('events:financials.net_profit')}</p>
+              {margin != null && (
+                <span className={clsx(
+                  "text-xs px-2 py-0.5 rounded-full font-bold",
+                  margin >= 25 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+                  margin >= 10 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" :
+                  "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                )}>
+                  {margin.toFixed(1)}%
+                </span>
+              )}
+            </div>
             <p className="text-xl font-black text-success">{money(profit)}</p>
           </div>
           <div className="space-y-1">
@@ -88,6 +108,30 @@ export const FinancialsCard: React.FC<FinancialsCardProps> = ({
             </p>
           </div>
         </div>
+
+        {/* Cost breakdown by category (P&L) */}
+        {((staffCost != null && staffCost > 0) || (productCost != null && productCost > 0) || (suppliesCost != null && suppliesCost > 0)) && (
+          <div className="mt-6 pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-3 gap-3 relative z-10 text-xs">
+            {productCost != null && productCost > 0 && (
+              <div className="bg-surface-alt/60 rounded-xl p-3 border border-border">
+                <span className="text-text-secondary block mb-1">{t('events:financials.kitchen_supplies', { defaultValue: 'Insumos de cocina' })}</span>
+                <span className="font-bold text-text text-sm">{money(productCost)}</span>
+              </div>
+            )}
+            {suppliesCost != null && suppliesCost > 0 && (
+              <div className="bg-surface-alt/60 rounded-xl p-3 border border-border">
+                <span className="text-text-secondary block mb-1">{t('events:financials.operational_supplies', { defaultValue: 'Insumos operativos' })}</span>
+                <span className="font-bold text-text text-sm">{money(suppliesCost)}</span>
+              </div>
+            )}
+            {staffCost != null && staffCost > 0 && (
+              <div className="bg-surface-alt/60 rounded-xl p-3 border border-border">
+                <span className="text-text-secondary block mb-1">{t('events:financials.staff_cost', { defaultValue: 'Personal / Staff' })}</span>
+                <span className="font-bold text-text text-sm">{money(staffCost)}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Payment Progress Bar */}
         {totalCharged > 0 && (

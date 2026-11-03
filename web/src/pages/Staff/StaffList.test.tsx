@@ -5,6 +5,7 @@ import { StaffList } from './StaffList';
 
 vi.mock('@/hooks/queries/useStaffQueries', () => ({
   useStaff: vi.fn(() => ({ data: [], isLoading: false })),
+  useStaffLimits: vi.fn(() => ({ data: { used: 0, max: 5, unlimited: false, plan: 'pro' }, isLoading: false })),
   useStaffPaginated: vi.fn(() => ({
     data: { data: [], page: 1, total_pages: 1, total: 0 },
     isLoading: false,

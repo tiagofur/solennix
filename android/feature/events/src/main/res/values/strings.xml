@@ -176,6 +176,10 @@
     <string name="events_detail_staff_status_confirmed">Confirmado</string>
     <string name="events_detail_staff_status_declined">Rechazó</string>
     <string name="events_detail_staff_status_cancelled">Cancelado</string>
+    <string name="events_detail_staff_summary_confirmed">%1$d confirmados</string>
+    <string name="events_detail_staff_summary_pending">· %1$d pendientes</string>
+    <string name="events_detail_staff_summary_declined">· %1$d rechazados</string>
+    <string name="events_detail_staff_summary_cancelled">· %1$d cancelados</string>
     <string name="events_detail_staff_shift_range">%1$s – %2$s</string>
     <string name="events_detail_staff_shift_from">Desde %1$s</string>
     <string name="events_detail_staff_shift_until">Hasta %1$s</string>

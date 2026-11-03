@@ -766,6 +766,11 @@ func (m *MockFullPaymentRepo) GetByEventIDs(ctx context.Context, userID uuid.UUI
 	return args.Get(0).([]models.Payment), args.Error(1)
 }
 
+func (m *MockFullPaymentRepo) SumByEventID(ctx context.Context, userID, eventID uuid.UUID) (float64, error) {
+	args := m.Called(ctx, userID, eventID)
+	return args.Get(0).(float64), args.Error(1)
+}
+
 func (m *MockFullPaymentRepo) Update(ctx context.Context, userID uuid.UUID, p *models.Payment) error {
 	args := m.Called(ctx, userID, p)
 	return args.Error(0)

@@ -10,6 +10,7 @@ import type {
   StaffAvailability,
   StaffInsert,
   StaffInviteResponse,
+  StaffLimitsResponse,
   TeamMemberAssignment,
   TeamMemberChangeEvent,
   TeamTimelineMarkReadResponse,
@@ -22,6 +23,10 @@ import type {
 export const staffService = {
   async getAll(): Promise<Staff[]> {
     return api.get<Staff[]>('/staff');
+  },
+
+  async getLimits(): Promise<StaffLimitsResponse> {
+    return api.get<StaffLimitsResponse>('/staff/limits');
   },
 
   async getPage(params: PaginationParams = {}): Promise<PaginatedResponse<Staff>> {

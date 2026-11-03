@@ -64,7 +64,7 @@ enum StaffStrings {
     static var deleteError: String { FeatureL10n.text("staff.detail.delete_error", "Error al eliminar el personal") }
     static var moreActions: String { FeatureL10n.text("staff.detail.more_actions", "Acciones del personal") }
     static var emailNotifTitle: String { FeatureL10n.text("staff.detail.email_notif_title", "Avisos por email activados") }
-    static var emailNotifSubtitle: String { FeatureL10n.text("staff.detail.email_notif_subtitle", "Se activará en Phase 2 (Pro+). Por ahora queda registrada la preferencia.") }
+    static var emailNotifSubtitle: String { FeatureL10n.text("staff.detail.email_notif_subtitle", "Activo en planes Pro y Business.") }
     static var inviteAccess: String { FeatureL10n.text("staff.detail.invite_access", "Invitar acceso") }
     static var inviting: String { FeatureL10n.text("staff.detail.inviting", "Invitando...") }
     static var inviteLinkTitle: String { FeatureL10n.text("staff.detail.invite_link_title", "Link de invitación") }
@@ -104,7 +104,7 @@ enum StaffStrings {
     static var emailInvalidError: String { FeatureL10n.text("staff.form.email_invalid_error", "Email inválido") }
     static var sectionNotif: String { FeatureL10n.text("staff.form.section_notif", "Avisos") }
     static var notifToggleLabel: String { FeatureL10n.text("staff.form.notif_toggle_label", "Avisarle por email al asignarlo a un evento") }
-    static var notifToggleSubtitle: String { FeatureL10n.text("staff.form.notif_toggle_subtitle", "Se activará en Phase 2 (Pro+). Por ahora guardamos la preferencia.") }
+    static var notifToggleSubtitle: String { FeatureL10n.text("staff.form.notif_toggle_subtitle", "Disponible en planes Pro y Business — envía un aviso con fecha, lugar y rol.") }
     static var notifEmailRequired: String { FeatureL10n.text("staff.form.notif_email_required", "Para activar el aviso necesitás un email válido") }
     static var sectionNotes: String { FeatureL10n.text("staff.form.section_notes", "Notas") }
     static var validationNameMin: String { FeatureL10n.text("staff.form.validation.name_min", "El nombre debe tener al menos 2 caracteres") }

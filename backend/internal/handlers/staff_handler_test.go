@@ -216,7 +216,7 @@ func TestCreateStaff_ProPlanLimitReached_Returns403(t *testing.T) {
 	staffRepo := new(MockStaffRepo)
 	userRepo := new(MockFullUserRepo)
 	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "pro"}, nil)
-	staffRepo.On("CountByUserID", mock.Anything, userID).Return(2, nil)
+	staffRepo.On("CountByUserID", mock.Anything, userID).Return(5, nil)
 
 	h := NewStaffHandler(staffRepo, userRepo)
 	body := `{"name":"Maria"}`
@@ -228,6 +228,74 @@ func TestCreateStaff_ProPlanLimitReached_Returns403(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "plan_limit_exceeded")
 	assert.Contains(t, rr.Body.String(), "staff_seats")
 	staffRepo.AssertNotCalled(t, "Create", mock.Anything, mock.Anything)
+}
+
+func TestGetStaffLimits_BasicPlan(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "basic"}, nil)
+	staffRepo.On("CountByUserID", mock.Anything, userID).Return(1, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/limits", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffLimits(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	var resp StaffLimitsResponse
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, resp.Used)
+	assert.NotNil(t, resp.Max)
+	assert.Equal(t, 1, *resp.Max)
+	assert.False(t, resp.Unlimited)
+	assert.Equal(t, "basic", resp.Plan)
+}
+
+func TestGetStaffLimits_ProPlan(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "pro"}, nil)
+	staffRepo.On("CountByUserID", mock.Anything, userID).Return(3, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/limits", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffLimits(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	var resp StaffLimitsResponse
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, 3, resp.Used)
+	assert.NotNil(t, resp.Max)
+	assert.Equal(t, 5, *resp.Max)
+	assert.False(t, resp.Unlimited)
+	assert.Equal(t, "pro", resp.Plan)
+}
+
+func TestGetStaffLimits_BusinessPlan(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "business"}, nil)
+	staffRepo.On("CountByUserID", mock.Anything, userID).Return(12, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/limits", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffLimits(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	var resp StaffLimitsResponse
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, 12, resp.Used)
+	assert.Nil(t, resp.Max)
+	assert.True(t, resp.Unlimited)
+	assert.Equal(t, "business", resp.Plan)
 }
 
 // ---------------------------------------------------------------------------

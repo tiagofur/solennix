@@ -10,6 +10,8 @@ import {
   UserCog,
   Eye,
   Users,
+  Sparkles,
+  Lock,
 } from "lucide-react";
 import { RowActionMenu } from "@/components/RowActionMenu";
 import { BulkActionBar } from "@/components/BulkActionBar";
@@ -24,6 +26,7 @@ import {
   useStaff,
   useStaffPaginated,
   useDeleteStaff,
+  useStaffLimits,
 } from "@/hooks/queries/useStaffQueries";
 
 const ITEMS_PER_PAGE = 10;
@@ -41,6 +44,8 @@ export const StaffList: React.FC = () => {
 
   const paginatedQuery = useStaffPaginated({ page, limit: ITEMS_PER_PAGE, sort: "name", order: "asc" });
   const allStaffQuery = useStaff();
+  const { data: limits } = useStaffLimits();
+  const isAtLimit = Boolean(limits && !limits.unlimited && limits.max !== null && limits.used >= limits.max);
 
   const loading = isSearching ? allStaffQuery.isLoading : paginatedQuery.isLoading;
   const allStaff = allStaffQuery.data ?? [];
@@ -109,7 +114,26 @@ export const StaffList: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text tracking-tight">{t("staff:list.title")}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-text tracking-tight">{t("staff:list.title")}</h1>
+            {limits && (
+              limits.unlimited ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                  <Sparkles className="h-3 w-3 text-primary" aria-hidden="true" />
+                  {t("staff:list.unlimited_seats", { defaultValue: "Colaboradores ilimitados" })}
+                </span>
+              ) : (
+                <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-medium border ${
+                  isAtLimit
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                    : "bg-surface-alt text-text-secondary border-border"
+                }`}>
+                  {isAtLimit && <Lock className="h-3 w-3 text-amber-500" aria-hidden="true" />}
+                  <span>{t("staff:list.seats_usage", { current: limits.used, max: limits.max, defaultValue: `Asientos: ${limits.used} de ${limits.max}` })}</span>
+                </span>
+              )
+            )}
+          </div>
           <p className="text-sm text-text-secondary mt-1">
             {t("staff:list.description")}
           </p>
@@ -122,15 +146,51 @@ export const StaffList: React.FC = () => {
             <Users className="h-4 w-4 mr-2" aria-hidden="true" />
             {t("staff:list.teams")}
           </Link>
-          <Link
-            to="/staff/new"
-            className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
-          >
-            <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
-            {t("staff:list.new_staff")}
-          </Link>
+          {isAtLimit ? (
+            <Link
+              to="/pricing"
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-amber-700 dark:text-amber-300 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 transition-all shadow-sm"
+              title={t("staff:list.limit_reached_desc", { max: limits?.max })}
+            >
+              <Sparkles className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              {t("staff:list.upgrade_prompt", { defaultValue: "Mejorar plan" })}
+            </Link>
+          ) : (
+            <Link
+              to="/staff/new"
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+            >
+              <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
+              {t("staff:list.new_staff")}
+            </Link>
+          )}
         </div>
       </div>
+
+      {isAtLimit && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+              <Lock className="h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-text">
+                {t("staff:list.limit_reached_title", { defaultValue: "Límite de colaboradores alcanzado" })}
+              </p>
+              <p className="text-xs text-text-secondary mt-0.5">
+                {t("staff:list.limit_reached_desc", { max: limits?.max, defaultValue: `Has alcanzado el cupo de ${limits?.max} colaboradores de tu plan.` })}
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/pricing"
+            className="inline-flex items-center justify-center px-4 py-2 text-xs font-bold rounded-xl text-white bg-primary hover:bg-primary-dark transition-colors shrink-0 shadow-sm"
+          >
+            <Sparkles className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+            {t("staff:list.upgrade_prompt", { defaultValue: "Mejorar plan" })}
+          </Link>
+        </div>
+      )}
 
       <div className="relative max-w-md">
         <label htmlFor="staff-search" className="sr-only">

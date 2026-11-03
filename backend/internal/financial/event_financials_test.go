@@ -11,16 +11,17 @@ func TestPassThroughExtrasExcludedFromMarginDenominator(t *testing.T) {
 	productID := uuid.New()
 	costs := map[string]float64{productID.String(): 300}
 
-	result := ComputeEventFinancials(
-		models.Event{DiscountType: "fixed"},
-		[]models.EventProduct{{ProductID: productID, Quantity: 1, UnitPrice: 1000}},
-		[]models.EventExtra{
-			{Price: 500, Cost: 100, ExcludeUtility: false},
-			{Price: 200, Cost: 0, ExcludeUtility: true},
-		},
-		nil,
-		costs,
-	)
+		result := ComputeEventFinancials(
+			models.Event{DiscountType: "fixed"},
+			[]models.EventProduct{{ProductID: productID, Quantity: 1, UnitPrice: 1000}},
+			[]models.EventExtra{
+				{Price: 500, Cost: 100, ExcludeUtility: false},
+				{Price: 200, Cost: 0, ExcludeUtility: true},
+			},
+			nil,
+			nil,
+			costs,
+		)
 
 	if result.DiscountableBase != 1500 {
 		t.Fatalf("discountableBase = %v, want 1500", result.DiscountableBase)
@@ -58,13 +59,14 @@ func TestIngredientAndSupplyCostsBothCounted(t *testing.T) {
 	}
 
 	productID := uuid.New()
-	result := ComputeEventFinancials(
-		models.Event{DiscountType: "fixed"},
-		[]models.EventProduct{{ProductID: productID, Quantity: 2, UnitPrice: 500}},
-		[]models.EventExtra{{Price: 200, Cost: 50}},
-		[]models.EventSupply{{Quantity: 3, UnitCost: 20}},
-		map[string]float64{productID.String(): 150},
-	)
+		result := ComputeEventFinancials(
+			models.Event{DiscountType: "fixed"},
+			[]models.EventProduct{{ProductID: productID, Quantity: 2, UnitPrice: 500}},
+			[]models.EventExtra{{Price: 200, Cost: 50}},
+			[]models.EventSupply{{Quantity: 3, UnitCost: 20}},
+			nil,
+			map[string]float64{productID.String(): 150},
+		)
 
 	if result.ProductCost != 300 {
 		t.Fatalf("productCost = %v, want 300", result.ProductCost)
@@ -80,37 +82,72 @@ func TestIngredientAndSupplyCostsBothCounted(t *testing.T) {
 	}
 }
 
-func TestExcludeCostSupplyIgnored(t *testing.T) {
-	result := ComputeEventFinancials(
-		models.Event{DiscountType: "fixed"},
-		nil,
-		nil,
-		[]models.EventSupply{
-			{Quantity: 5, UnitCost: 100, ExcludeCost: false},
-			{Quantity: 5, UnitCost: 100, ExcludeCost: true},
-		},
-		nil,
-	)
-	if result.SuppliesCost != 500 {
-		t.Fatalf("suppliesCost = %v, want 500", result.SuppliesCost)
+	func TestExcludeCostSupplyIgnored(t *testing.T) {
+		result := ComputeEventFinancials(
+			models.Event{DiscountType: "fixed"},
+			nil,
+			nil,
+			[]models.EventSupply{
+				{Quantity: 5, UnitCost: 100, ExcludeCost: false},
+				{Quantity: 5, UnitCost: 100, ExcludeCost: true},
+			},
+			nil,
+			nil,
+		)
+		if result.SuppliesCost != 500 {
+			t.Fatalf("suppliesCost = %v, want 500", result.SuppliesCost)
+		}
 	}
-}
 
-func TestPercentDiscountOver100ClampsTo100(t *testing.T) {
-	productID := uuid.New()
-	result := ComputeEventFinancials(
-		models.Event{DiscountType: "percent", Discount: 150},
-		[]models.EventProduct{{ProductID: productID, Quantity: 1, UnitPrice: 1000}},
-		nil,
-		nil,
-		map[string]float64{productID.String(): 0},
-	)
-	if result.DiscountAmount != 1000 {
-		t.Fatalf("discountAmount = %v, want 1000", result.DiscountAmount)
+	func TestPercentDiscountOver100ClampsTo100(t *testing.T) {
+		productID := uuid.New()
+		result := ComputeEventFinancials(
+			models.Event{DiscountType: "percent", Discount: 150},
+			[]models.EventProduct{{ProductID: productID, Quantity: 1, UnitPrice: 1000}},
+			nil,
+			nil,
+			nil,
+			map[string]float64{productID.String(): 0},
+		)
+		if result.DiscountAmount != 1000 {
+			t.Fatalf("discountAmount = %v, want 1000", result.DiscountAmount)
+		}
+		if result.Total != 0 {
+			t.Fatalf("total = %v, want 0", result.Total)
+		}
 	}
-	if result.Total != 0 {
-		t.Fatalf("total = %v, want 0", result.Total)
+
+	func TestStaffCostIncludedInFinancials(t *testing.T) {
+		fee1 := 350.0
+		fee2 := 450.0
+		cancelledFee := 200.0
+		declinedFee := 300.0
+		statusConfirmed := "confirmed"
+		statusCancelled := "cancelled"
+		statusDeclined := "declined"
+
+		staff := []models.EventStaff{
+			{FeeAmount: &fee1, Status: &statusConfirmed},
+			{FeeAmount: &fee2, Status: nil},
+			{FeeAmount: &cancelledFee, Status: &statusCancelled}, // should be ignored
+			{FeeAmount: &declinedFee, Status: &statusDeclined},   // should be ignored
+		}
+
+		result := ComputeEventFinancials(
+			models.Event{DiscountType: "fixed"},
+			nil,
+			nil,
+			nil,
+			staff,
+			nil,
+		)
+
+		if result.StaffCost != 800 {
+			t.Fatalf("staffCost = %v, want 800", result.StaffCost)
+		}
+		if result.TotalCost != 800 {
+			t.Fatalf("totalCost = %v, want 800", result.TotalCost)
+		}
 	}
-}
 
 func float64Ptr(v float64) *float64 { return &v }

@@ -353,6 +353,11 @@
         "title": "Catalog",
         "plural": "products and inventory items",
         "metric": "Catalog items"
+      },
+      "staff": {
+        "title": "Staff",
+        "plural": "collaborators",
+        "metric": "Collaborators in catalog"
       }
     }
   },

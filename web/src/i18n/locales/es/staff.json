@@ -30,6 +30,11 @@
     "error_delete": "Error al eliminar el colaborador",
     "error_respond_assignment": "No se pudo responder la asignación.",
     "error_mark_read": "No pudimos actualizar el estado de lectura.",
+    "seats_usage": "Asientos: {{current}} de {{max}}",
+    "unlimited_seats": "Colaboradores ilimitados",
+    "upgrade_prompt": "Mejorar plan",
+    "limit_reached_title": "Límite de colaboradores alcanzado",
+    "limit_reached_desc": "Has alcanzado el cupo de {{max}} colaboradores de tu plan actual. Para agregar más personal, actualiza tu suscripción.",
     "delete_confirm": {
       "title": "Eliminar colaborador",
       "description": "Se eliminará del catálogo y de los eventos donde esté asignado. Esta acción no se puede deshacer.",
@@ -51,7 +56,7 @@
       "email": "Email",
       "notes": "Notas",
       "notifications": "Notificaciones por email",
-      "notifications_desc": "Aceptado · se activará al liberar la feature (Pro+).",
+      "notifications_desc": "Activo · envía notificación por email con fecha y detalles del evento (planes Pro y Business).",
       "notifications_off": "No aceptado."
     },
     "upcoming": {
@@ -78,7 +83,7 @@
     "loading": "Cargando colaborador…",
     "title_new": "Nuevo colaborador",
     "title_edit": "Editar colaborador",
-    "help_text": "Phase 2 activará notificaciones por email al asignarlos a un evento. El toggle ya queda guardado.",
+    "help_text": "Las notificaciones automáticas por email se envían al asignar colaboradores en planes Pro y Business.",
     "fields": {
       "name": "Nombre",
       "name_placeholder": "María López",
@@ -91,7 +96,7 @@
       "notes": "Notas",
       "notes_placeholder": "Tarifa habitual, especialidad, disponibilidad…",
       "notifications": "Avisarle por email al asignarlo a un evento.",
-      "notifications_help": "Feature del plan Pro (próximamente) — el toggle se guarda desde ahora."
+      "notifications_help": "Disponible en planes Pro y Business — envía un aviso con fecha, lugar y rol."
     },
     "errors": {
       "name_required": "El nombre es obligatorio.",

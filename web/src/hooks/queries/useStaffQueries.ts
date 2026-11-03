@@ -23,6 +23,14 @@ export function useStaff() {
   });
 }
 
+export function useStaffLimits() {
+  return useQuery({
+    queryKey: queryKeys.staff.limits,
+    queryFn: () => staffService.getLimits(),
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useStaffPaginated(params: PaginationParams) {
   return useQuery({
     queryKey: queryKeys.staff.paginated(params.page, params.limit, params.sort, params.order),
@@ -183,6 +191,7 @@ export function useCreateStaff() {
     mutationFn: (data: StaffInsert) => staffService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.staff.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.staff.limits });
     },
     onError: (error) => {
       logError('Error creating staff', error);
@@ -221,6 +230,7 @@ export function useDeleteStaff() {
     mutationFn: (id: string) => staffService.delete(id) || staffService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.staff.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.staff.limits });
       addToast(t('list.success_delete'), 'success');
     },
     onError: (error) => {

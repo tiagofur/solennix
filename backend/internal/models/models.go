@@ -445,6 +445,39 @@ type EventStaff struct {
 	StaffEmail     *string `json:"staff_email,omitempty"`
 }
 
+// StaffAttendanceSummary aggregates the attendance and RSVP status of staff on an event.
+type StaffAttendanceSummary struct {
+	Total     int `json:"total"`
+	Confirmed int `json:"confirmed"`
+	Pending   int `json:"pending"`
+	Declined  int `json:"declined"`
+	Cancelled int `json:"cancelled"`
+}
+
+// ComputeAttendanceSummary tallies status counts across a slice of EventStaff assignments.
+func ComputeAttendanceSummary(staff []EventStaff) StaffAttendanceSummary {
+	summary := StaffAttendanceSummary{Total: len(staff)}
+	for _, s := range staff {
+		status := "pending"
+		if s.Status != nil && *s.Status != "" {
+			status = *s.Status
+		}
+		switch status {
+		case "confirmed":
+			summary.Confirmed++
+		case "declined":
+			summary.Declined++
+		case "cancelled":
+			summary.Cancelled++
+		case "pending":
+			summary.Pending++
+		default:
+			summary.Pending++
+		}
+	}
+	return summary
+}
+
 // StaffTeam is a named group of staff (e.g. "Meseros Plata", "Cuadrilla de
 // montaje") so the organizer can assign the whole crew to an event in one
 // click. Members are populated by GetByID; MemberCount by list queries for

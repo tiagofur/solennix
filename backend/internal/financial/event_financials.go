@@ -20,6 +20,7 @@ type EventFinancialResult struct {
 	ProductCost               float64 `json:"product_cost"`
 	ExtrasCost                float64 `json:"extras_cost"`
 	SuppliesCost              float64 `json:"supplies_cost"`
+	StaffCost                 float64 `json:"staff_cost"`
 	TotalCost                 float64 `json:"total_cost"`
 	Revenue                   float64 `json:"revenue"`
 	NetProfit                 float64 `json:"net_profit"`
@@ -53,6 +54,7 @@ func ComputeEventFinancials(
 	products []models.EventProduct,
 	extras []models.EventExtra,
 	supplies []models.EventSupply,
+	staff []models.EventStaff,
 	productUnitCosts map[string]float64,
 ) EventFinancialResult {
 	productsSubtotal := 0.0
@@ -99,44 +101,56 @@ func ComputeEventFinancials(
 	}
 	total := baseTotal + taxAmount
 
-	suppliesCost := 0.0
-	for _, supply := range supplies {
-		if supply.ExcludeCost {
-			continue
+		suppliesCost := 0.0
+		for _, supply := range supplies {
+			if supply.ExcludeCost {
+				continue
+			}
+			suppliesCost += supply.Quantity * supply.UnitCost
 		}
-		suppliesCost += supply.Quantity * supply.UnitCost
-	}
-	totalCost := productCost + extrasCost + suppliesCost
 
-	revenue := total
-	if event.RequiresInvoice {
-		revenue -= taxAmount
-	}
-	netProfit := revenue - totalCost
-	adjustedRevenue := revenue - passThroughExtrasSubtotal
-	profitMargin := 0.0
-	if adjustedRevenue > 0 {
-		profitMargin = (netProfit / adjustedRevenue) * 100
-	}
+		staffCost := 0.0
+		for _, s := range staff {
+			if s.Status != nil && (*s.Status == "cancelled" || *s.Status == "declined") {
+				continue
+			}
+			if s.FeeAmount != nil && *s.FeeAmount > 0 {
+				staffCost += *s.FeeAmount
+			}
+		}
 
-	return EventFinancialResult{
-		ProductsSubtotal:          round2(productsSubtotal),
-		NormalExtrasSubtotal:      round2(normalExtrasSubtotal),
-		PassThroughExtrasSubtotal: round2(passThroughExtrasSubtotal),
-		DiscountableBase:          round2(discountableBase),
-		DiscountAmount:            round2(discountAmount),
-		AfterDiscount:             round2(afterDiscount),
-		TaxAmount:                 round2(taxAmount),
-		Total:                     round2(total),
-		ProductCost:               round2(productCost),
-		ExtrasCost:                round2(extrasCost),
-		SuppliesCost:              round2(suppliesCost),
-		TotalCost:                 round2(totalCost),
-		Revenue:                   round2(revenue),
-		NetProfit:                 round2(netProfit),
-		AdjustedRevenue:           round2(adjustedRevenue),
-		ProfitMargin:              profitMargin,
-	}
+		totalCost := productCost + extrasCost + suppliesCost + staffCost
+
+		revenue := total
+		if event.RequiresInvoice {
+			revenue -= taxAmount
+		}
+		netProfit := revenue - totalCost
+		adjustedRevenue := revenue - passThroughExtrasSubtotal
+		profitMargin := 0.0
+		if adjustedRevenue > 0 {
+			profitMargin = (netProfit / adjustedRevenue) * 100
+		}
+
+		return EventFinancialResult{
+			ProductsSubtotal:          round2(productsSubtotal),
+			NormalExtrasSubtotal:      round2(normalExtrasSubtotal),
+			PassThroughExtrasSubtotal: round2(passThroughExtrasSubtotal),
+			DiscountableBase:          round2(discountableBase),
+			DiscountAmount:            round2(discountAmount),
+			AfterDiscount:             round2(afterDiscount),
+			TaxAmount:                 round2(taxAmount),
+			Total:                     round2(total),
+			ProductCost:               round2(productCost),
+			ExtrasCost:                round2(extrasCost),
+			SuppliesCost:              round2(suppliesCost),
+			StaffCost:                 round2(staffCost),
+			TotalCost:                 round2(totalCost),
+			Revenue:                   round2(revenue),
+			NetProfit:                 round2(netProfit),
+			AdjustedRevenue:           round2(adjustedRevenue),
+			ProfitMargin:              profitMargin,
+		}
 }
 
 func round2(v float64) float64 {
