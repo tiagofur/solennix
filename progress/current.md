@@ -2,6 +2,39 @@
 
 ## Estado actual
 
+### Adopción de la Metodología Agent-First Software Factory (2026-11-04)
+
+Rama activa: `feat/adopt-software-factory-methodology`
+
+1. **Guardrails y Tooling de Factoría**:
+   - `scripts/factory_preflight.py`: Chequeo read-only fail-closed de integridad de repositorio y governance (C1).
+   - `scripts/factory_handoff.py`: Generador determinista de paquetes de revisión stateless con digest SHA-256 y detección automática de triggers high-risk / judgment-day (C4).
+   - `scripts/check_pr_metadata.py`: Validador fail-closed del contrato de entrega de PRs, líneas de riesgo y pruebas mecánicas de review (C5).
+   - `scripts/setup-labels.sh`: Sincronizador idempotente de etiquetas GitHub.
+   - `tests/test_factory_scripts.py`: Suite de 21 tests unitarios para los guardrails de la factoría (100% pasando).
+   - `Makefile` en raíz con metas: `preflight`, `test`, `contracts-lint`, `contracts-diff`, `handoff`, `bootstrap`, `labels`.
+2. **Contratos Ejecutables y ADRs**:
+   - `contracts/`: Contrato OpenAPI centralizado (`contracts/openapi.yaml`), reglas Spectral (`.spectral.yaml`) y validación de breaking changes con `oasdiff` (`contracts/Makefile`).
+   - `docs/architecture/adr/`: Formalizados `ADR-0000` (Topología y 4 superficies Solennix), `ADR-0001` (Go Backend & DB Matrix), `ADR-0002` (Client Surfaces & Mobile Matrix), `ADR-0003` (Contract-First OpenAPI).
+   - `docs/agent-first-methodology.md`: Fundamentos científicos (Lost in the middle, ~500-line budget, screaming architecture, greppable symbols, clean-context review).
+   - `docs/factory/`: Guías operativas `clean-context-review.md` y `human-start.md`.
+   - `factory.manifest.json`: Manifiesto declarativo de superficies (`backend`, `web`, `ios-native`, `android-native`) y motor de base de datos (`postgres`).
+3. **Roles Cognitivos y Registro de Skills**:
+   - Roles puros en `.agents/skills/`: `leader`, `explorer`, `implementer`, `reviewer`, `ux-brief`.
+   - Skills de stack: `go-backend`, `react-vite-web`, `client-surfaces`.
+   - `.atl/skill-registry.md`: Catálogo estructurado separando roles cognitivos, contextos de stack y skills de dominio.
+4. **Normativa Central y GitHub Governance**:
+   - `AGENTS.md`: Mapa de divulgación progresiva (<150 líneas) con jerarquía de verdad, compuertas C1–C5, comandos rápidos y la regla sagrada de **Paridad Cross-Platform**.
+   - `CHECKPOINTS.md`: Compuertas fail-closed C1 a C5 y contrato de escalación.
+   - `.github/PULL_REQUEST_TEMPLATE.md`: Plantilla con checklist de paridad, SHAs verificados, evidencia y rollback.
+   - `.github/ISSUE_TEMPLATE/`: `feature.yml` y `bug.yml` con criterios de aceptación `S1..Sn` y superficies.
+5. **Verificación**:
+   - `make preflight`: OK.
+   - `make test`: 21 tests de guardrail + tests de Backend Go + 176 suites de Web Vitest 100% en verde.
+   - `make contracts-lint`: Spectral 0 errores.
+   - `make contracts-diff`: 0 breaking changes.
+   - `./init.sh`: 100% en verde.
+
 ### Implementación Fase 1: Personal Potenciado + P&L y Exportación Contable Business (2026-11-03)
 
 Siguiendo la secuencia normativa **Backend → Web → Verificación → Mobile**, con diseño UI/UX guiado por `$impeccable` (Modo Operate), revisión independiente dual adversarial (Judgment Day) y PR #1350:

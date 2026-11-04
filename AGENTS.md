@@ -1,110 +1,76 @@
-# AGENTS.md — Punto de entrada para agentes de IA (Solennix)
+# AGENTS.md — Agentic Software Factory Routing Map (Solennix)
 
-> **Este archivo es la única fuente normative para cualquier agente** (ZCode, Claude Code, Codex, Copilot, Cursor). No es una biblia de reglas: es un **mapa con divulgación progresiva**. Lee solo lo que tu tarea necesita.
-> Otros archivos de entrada (`CLAUDE.md`, `.github/copilot-instructions.md`) son stubs que apuntan aquí.
+This repository is built and maintained through an **Agentic Software Factory** powered by **Organic Driven Development (ODD)** across 4 client/service surfaces: **Go Backend**, **React Web**, **Native iOS (SwiftUI)**, and **Native Android (Jetpack Compose)**.
+This file is a progressive-disclosure routing map (<150 lines). Read only what your assigned role and task require.
 
 ---
 
-## 1. Antes de empezar (obligatorio)
+## 1. Hierarchy of Truth (Strict Order)
 
-1. Ejecutá `./init.sh` en la raíz y verificá que termine sin errores. Si falla, **pará** y resolvé el entorno antes de tocar código.
-2. Leé `progress/current.md` para saber en qué estado quedó la última sesión activa.
-3. Elegí **una** tarea: preferí `pending` en `feature_list.json`. Si no hay pending, usá `progress/current.md` + cambios activos en `openspec/changes/`. No trabajes en más de una a la vez.
+1. **Architecture Decision Records (`docs/architecture/adr/`)** — Active ADRs (ADR-0000 to ADR-0003) are binding. Never contradict an active ADR silently; propose a superseding ADR with human approval.
+2. **Executable Contracts (`contracts/openapi.yaml`)** — Single source of truth for API schemas, routes, and RFC 9457 error shapes.
+3. **Living Engineering & Product Docs (`docs/`, `PRODUCT.md`)** — Architecture, stack standards, and PRDs. If code and docs diverge, docs win or must be updated in the same work unit.
+4. **Existing Code** — Follow established patterns and module boundaries, never overriding tiers 1–3.
 
-## 2. Mapa de navegación (qué leer según tu tarea)
+---
 
-Leé **solo** lo relevante a tu tarea. Cargar todo de antemano desperdicia contexto y genera alucinaciones.
+## 2. Start & Authorization Protocol
 
-| Si tu tarea es… | Leé esto |
-| :--- | :--- |
-| Arrancar sesión / elegir tarea | `feature_list.json` (si hay pending) + `progress/current.md` + `openspec/changes/` |
-| Diseñar o estructurar cambios | `docs/agents/architecture.md` |
-| Escribir código (estilo, naming, DRY) | `docs/agents/conventions.md` |
-| Declarar tarea completada / escribir tests | `docs/agents/verification.md` |
-| Tocar UI, marca, diseño o accesibilidad | `PRODUCT.md` (intención) → Design System de la plataforma |
-| Auto-evaluarte antes del review | `CHECKPOINTS.md` |
-| Definir o implementar un cambio grande (spec-driven) | familia SDD: `.agents/skills/sdd-*` + `openspec/` |
-| Crear PR / issue | skills `branch-pr` / `issue-creation` |
-| Estado actual del producto | `docs/PRD/11_CURRENT_STATUS.md` (snapshot vivo) |
-| Roadmap | `docs/PRD/09_ROADMAP.md` (forward) · v2 inbound: `docs/PRD/15_MARKETPLACE_V2.md` |
-| Arquitectura por plataforma | `docs/{iOS,Android,Web,Backend}/Arquitectura General.md` |
-| Contrato API | `backend/docs/openapi.yaml` |
-| Contexto histórico | `progress/history.md` y `docs/_archive/` |
+1. **Establish Authority**: Work from an approved GitHub Issue (`status:ready` / `status:approved`). GitHub Issues is the **only** operational work queue (`feature_list.json` is capability context only).
+2. **Read Role Skill**: Load your assigned cognitive role from `.agents/skills/<role>/SKILL.md` (see `.atl/skill-registry.md`).
+3. **Run Preflight & Environment Check**:
+   ```bash
+   make preflight        # Read-only factory health & git state check (C1)
+   ./init.sh             # Validates tools, Go & Web test suites
+   ```
+4. **Scope Reads**: Read only affected files and stack standards inside `## Allowed edit surfaces`.
 
-**Stack por plataforma:** iOS, Android, Web y Backend. Ver `docs/agents/architecture.md` para el desglose de capas y `README.md` para los comandos de cada una.
+---
 
-## 3. Reglas duras (no negociables)
+## 3. Core Factory Invariants & Cross-Platform Parity
 
-- **Una sola feature a la vez.** No mezcles cambios de múltiples tareas.
-- **Paridad Cross-Platform obligatoria.** Todo cambio que altere dominio, DB o APIs DEBE propagarse a iOS, Android, Web y Backend de inmediato. Revisá proactivamente — no esperes que te lo pidan.
-- **DRY (Don't Repeat Yourself).** Antes de escribir una utilidad/componente, buscá si ya existe.
-- **No declares una tarea `done` sin pruebas en verde.** Corré `./init.sh` y asegurá que pase al 100%.
-- **Documentá lo que hacés** en `progress/current.md` a medida que avanzás.
-- **Dejá el repositorio limpio** al cerrar (sin logs de debug ni temporales huérfanos).
+- **Single Writer per Unit**: Every issue has at most one active Writer (`implementer`) respecting `## Allowed edit surfaces`.
+- **Mandatory Cross-Platform Parity**: Any change that alters domain models, DB schemas, or API routes **MUST** be propagated symmetrically across iOS, Android, Web, and Backend:
+  - **Models**: `backend/internal/models/` · `web/src/types/` · `ios/.../Models/` · `android/.../model/`
+  - **API/Network**: `backend/internal/handlers/` · `web/src/services/` · `ios/.../SolennixNetwork/` · `android/.../network/`
+  - **ViewModels/UI**: `web/src/stores/` + `pages/` · `ios/.../ViewModels/` + `Views/` · `android/.../viewmodel/` + `ui/`
+- **Stateless Clean-Context Review**: Reviewers never read implementer chat history. Review runs on deterministic bundles generated by `scripts/factory_handoff.py`.
+- **Automatic Blind Dual Review (`judgment-day`)**: High-risk diffs (C4.4) escalate to two independent judges.
+- **Assertiveness Contract**: Agents resolve implementation details via ADRs/stack defaults, logging them in PR body under `## Decisions Made Without Asking`.
 
-### Mapeo cross-platform (dónde tocar por área)
+---
 
-| Área | iOS | Android | Web | Backend |
-| :--- | :--- | :--- | :--- | :--- |
-| Modelos | `ios/Packages/SolennixCore/.../Models/` | `android/core/model/` | `web/src/types/` | `backend/internal/models/` |
-| API/Red | `ios/Packages/SolennixNetwork/.../` | `android/core/network/` | `web/src/services/` | `backend/internal/handlers/` |
-| ViewModels | `.../ViewModels/` | `android/feature/**/viewmodel/` | `web/src/stores/` (Zustand) | — |
-| UI | `.../Views/` | `android/feature/**/ui/` | `web/src/pages/`, `components/` | — |
-| Navegación | `ios/Solennix/Navigation/` | `.../navigation/` | `web/src/router/` | — |
-| Auth | `AuthManager.swift` | `AuthInterceptor.kt` | `AuthContext.tsx` / `authStore.ts` | `handlers/auth.go`, `middleware/auth.go` |
-| DB / Repo | — | — | — | `backend/internal/repository/` |
-| Servicios | — | — | — | `backend/internal/services/` |
-| Rutas API | — | — | — | `backend/internal/router/` |
+## 4. Cognitive Roles & On-Demand Skills Routing
 
-### Terminología del dominio
+| Role / Concern | Primary Skill | Reference Doc |
+| :--- | :--- | :--- |
+| **Leader / Orchestrator** | `.agents/skills/leader/SKILL.md` | `docs/factory/human-start.md` |
+| **Explorer & Issue Triage (DoR)** | `.agents/skills/explorer/SKILL.md` | `docs/factory/human-start.md` |
+| **UX Brief (`ux:shape` issues)** | `.agents/skills/ux-brief/SKILL.md` | `CHECKPOINTS.md` (C1, C5) |
+| **Implementer (Sole Writer)** | `.agents/skills/implementer/SKILL.md` | `CHECKPOINTS.md` |
+| **Independent Reviewer (Clean Context)** | `.agents/skills/reviewer/SKILL.md` | `docs/factory/clean-context-review.md` |
+| **Go Backend & DB Adapter** | `.agents/skills/go-backend/SKILL.md` | `docs/stack/go-backend.md`, `ADR-0001` |
+| **Web Frontend (React + Vite)** | `.agents/skills/react-vite-web/SKILL.md` | `docs/stack/web-react-vite.md`, `ADR-0002` |
+| **Native Mobile (iOS SwiftUI & Android Compose)** | `.agents/skills/client-surfaces/SKILL.md` | `docs/stack/mobile-native-vs-tauri.md`, `ADR-0002` |
+| **Agent-First Repo Organization (<500 lines)** | — | `docs/agent-first-methodology.md` |
 
-UI en español · código y DB en inglés · endpoints en `kebab-case`.
+---
 
-| UI (español) | Código | DB |
-| :--- | --- | --- |
-| Evento | `Event` | `events` |
-| Cliente | `Client` | `clients` |
-| Producto | `Product` | `products` |
-| Inventario | `InventoryItem` | `inventory_items` |
-| Cotización | `Quote` | `quotes` |
-| Contrato | `Contract` | `contracts` |
-| Pago | `Payment` | `payments` |
-| Extra | `EventExtra` | `event_extras` |
-| Equipo | `Equipment` | _(subcategoría inventario)_ |
-| Insumo | `Supply` | _(subcategoría inventario)_ |
-| Receta | `Recipe` | _(ingredientes de un producto)_ |
-| Plan | `Plan` | _(tier: Gratis/Pro/Business)_ |
-| Checklist | `Checklist` | _(tareas por evento)_ |
-| Dashboard | `Dashboard` | _(panel KPIs)_ |
+## 5. Domain Invariants & Terminology
 
-## 4. Commits
+- UI in Spanish · Code & DB in English · API routes in `kebab-case`.
+- Money amounts: integer cents / minor units. All dates/times RFC 3339 UTC.
+- Key Entities: `Event` (`events`), `Client` (`clients`), `Product` (`products`), `InventoryItem` (`inventory_items`), `Quote` (`quotes`), `Contract` (`contracts`), `Payment` (`payments`), `EventExtra` (`event_extras`), `Recipe` (ingredients), `Plan` (tiers).
 
-Después de cada cambio significativo, commiteá.
+---
 
-- **Formato:** Conventional Commits, en inglés: `type(scope): description`
-- **Types:** `feat` · `fix` · `refactor` · `docs` · `test` · `chore` · `style` · `perf`
-- **Scopes:** `ios` · `android` · `web` · `backend` · `prd` · `infra`
+## 6. Quick Commands
 
+```bash
+make preflight        # Read-only factory health & git state check (C1)
+make test             # Run factory guardrails and active surface test suites (C3)
+make contracts-lint   # Lint OpenAPI contract with Spectral (C2)
+make contracts-diff   # Check breaking OpenAPI changes against origin/main (C2)
+make handoff          # Generate stateless clean-context review packet (C4)
+./init.sh             # Full environment and surface validation
 ```
-feat(ios): add quick quote generation from client detail
-fix(backend): correct event date parsing for timezone offset
-docs(prd): update feature parity table after inventory release
-```
-
-**No commitear:** trabajo incompleto, secretos/`.env`, generados (`node_modules/`, `build/`, `.gradle/`), `console.log` de debug.
-
-## 5. Comunicación
-
-- Herramientas primero, texto después · Pará al encontrar lo buscado.
-- Respuestas directas: solo la ruta, el valor, el dato.
-- Oraciones cortas · Listas en vez de prosa · Código inline si es ≤3 líneas.
-- Sin preámbulos, disculpas, hedging ni resúmenes redundantes.
-- Números, no palabras: "3 archivos" no "varios".
-
-## 6. Lifecycle de cierre de sesión
-
-1. Ejecutá `./init.sh` y validá que termine en verde.
-2. Si completaste la feature, marcála `done` en `feature_list.json`.
-3. Pasá el resumen de `progress/current.md` al final de `progress/history.md`.
-4. Dejá `progress/current.md` limpio con su plantilla básica.
-5. Remové logs de debug, prints y temporales fuera del `.gitignore`.
