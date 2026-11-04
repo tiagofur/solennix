@@ -14,7 +14,7 @@ Header: aplicar 11 PRs de Dependabot sobre feat/adopt-software-factory-methodolo
 - T2 (S1,S2, route: inline): aplicar #1351 re2js 2.8.6->2.9.1 en /web — status: done, commit: (este commit; diff lock idéntico al PR 285f474e..b08307d3; sin uso directo en web/src; engines node>=20 OK con CI Node 22)
 - T3 (S1,S2, route: inline): aplicar #1331 go-jose 4.1.4->4.1.6 en /backend (security, RSA cap 4096 bits) — status: done, commit: (este commit; diff idéntico al PR; go build ./... OK; go test handlers -run TestGoogle|TestJWKS|TestAuth OK 31s; backend usa RSA-2048 de Google, bajo el cap)
 - T4 (S1,S2, route: inline): aplicar #1335 backend-go-non-major (aws-sdk x3 + google api) — status: done, commit: (este commit; go.mod +/- idéntico al PR, +99/-96; go build OK; storage+s3+config tests OK)
-- T5 (S1,S2, route: inline): aplicar #1337 android-gradle-non-major (firebase-bom 35.1.0, ktor 3.6.1, AGP 9.5.0) — status: pending, commit: -
+- T5 (S1,S2, route: inline): aplicar #1337 android-gradle-non-major (firebase-bom 35.1.0, ktor 3.6.1, AGP 9.5.0) — status: done, commit: (este commit; valores idénticos al PR; uso ktor = plugins estables core/okhttp/auth/logging/mock; sin Gradle local: sandbox bloquea sockets y services.gradle.org — verificar assemble+tests en CI)
 - T6 (S1,S2, route: inline): aplicar #1334 web-non-major 12 updates — status: pending, commit: -
 - T7 (S1,S2, route: inline): aplicar #1332 remotion-non-major 4.0.536->4.0.539 — status: pending, commit: -
 - T8 (S1,S2, route: inline): aplicar #1352 remotion zod 4.5.4->4.6.7 + @remotion/cli — status: pending, commit: -
