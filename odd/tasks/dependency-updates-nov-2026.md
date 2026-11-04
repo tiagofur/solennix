@@ -18,7 +18,7 @@ Header: aplicar 11 PRs de Dependabot sobre feat/adopt-software-factory-methodolo
 - T6 (S1,S2, route: inline): aplicar #1334 web-non-major 12 updates — status: done, commit: (este commit; package.json+lock del PR + hunk T2 re2js; tsc check OK; vitest 176 files/1666 tests OK; api.ts regenerado revertido por drift ajeno)
 - T7 (S1,S2, route: inline): aplicar #1332 remotion-non-major 4.0.536->4.0.539 — status: done, commit: (este commit; archivos del PR +443/-308; npm install estable; tsc --noEmit OK)
 - T8 (S1,S2, route: inline): aplicar #1352 remotion zod + @remotion/cli — status: done, commit: (este commit; PR 1352 proponía solo cli 540 sobre base 536 — ya teníamos todo en 539 por T7 y zod 4.6.7 en main; subí los 4 hermanos a 4.0.540 coherente, existe en registry; tsc OK; sin uso de APIs zod cambiadas)
-- T9 (S1,S2, route: inline + verifier): aplicar #1336+#1338 vitest 4.1.11->5.0.5 en /web (major, van juntos) — status: pending, commit: -
+- T9 (S1,S2, route: inline + verifier): aplicar #1336+#1338 vitest 4.1.11->5.0.5 en /web (major, van juntos) — status: done, commit: (este commit; resolví a 5.1.0 via ^5.0.5, igual que haría el merge hoy; suite 176/1666 OK; coverage 76.4% idéntico al baseline v4 76.6% — thresholds preexistentes sin gate en CI; falta verifier independiente)
 - T10 (S1,S2, route: inline + verifier): aplicar #1339 revenuecat 10.29.0->11.0.1 en /android (major: Billing 9, compileSdk 35, AGP 9, Kotlin 2.2.21) — status: pending, commit: -
 
 ## Log
