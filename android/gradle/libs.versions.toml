@@ -3,7 +3,7 @@ agp = "9.5.0"
 kotlin = "2.4.21"
 compose-bom = "2026.09.00"
 ktor = "3.6.1"
-# Hilt 2.59+ requires AGP 9. Keep on 2.58 while project stays on AGP 8.x.
+# Hilt 2.59+ requires AGP 9; project is on AGP 9.x.
 hilt = "2.60.1"
 room = "2.8.5"
 coil = "3.6.3"
