@@ -1,41 +1,102 @@
-# CHECKPOINTS — Evaluación del estado final (Solennix)
+# CHECKPOINTS.md — Fail-Closed Software Factory Gates (Solennix)
 
-> En sistemas autónomos y orquestados por IA no se evalúa el camino, se evalúa el destino. Estos son los checkpoints objetivos que un revisor (o tú mismo) debe usar para determinar si el trabajo está en perfecto estado.
+Every change in Solennix passes through five deterministic checkpoints (`C1`–`C5`), enforced by executable scripts, tests, and CI.
 
 ---
 
-## C1 — Integridad del Arnés
-- [ ] Existen los archivos base en la raíz: `AGENTS.md`, `init.sh`, `feature_list.json`, y `progress/current.md`.
-- [ ] Existen los manuales en `docs/agents/`: `architecture.md`, `conventions.md`, y `verification.md`.
-- [ ] `./init.sh` se ejecuta y finaliza con código de salida 0 (éxito).
+## C1 — Authority, DoR & Clean Workspace
 
-## C2 — Coherencia de Feature y Progreso
-- [ ] Hay como máximo **una** feature con estado `in_progress` en `feature_list.json`.
-- [ ] La feature que se marca como `done` tiene pruebas asociadas que validan sus criterios de aceptación.
-- [ ] `progress/current.md` está limpio o documenta únicamente la sesión de trabajo activa actual (sin residuos viejos).
+**Actor**: `leader`, `explorer`, `implementer`
+**Script**: `make preflight` (`python3 scripts/factory_preflight.py`)
 
-## C3 — Parity & i18n (Internacionalización)
-- [ ] Si se modificaron esquemas, tipos, APIs o modelos de dominio en backend, se reflejaron correctamente en:
-  - Go Backend (`backend/internal/model/`)
-  - React Web (`web/src/types/`)
-  - iOS Swift (`SolennixCore/.../Models/`)
-  - Android Kotlin (`core/model/`)
-- [ ] Las capas de red y de integración de API correspondientes se actualizaron al mismo tiempo en todas las plataformas involucradas.
-- [ ] **i18n Estricto:** Toda nueva cadena o texto visible para el usuario se encuentra mapeado al sistema de traducción correspondiente (i18next en web, templates localizados en Go, recursos de strings locales en Mobile) y no de forma dura en el código.
+1. **Issue Authority**: Work links to an open GitHub Issue in `status:ready` or `status:approved`.
+2. **Definition of Ready (DoR)**:
+   - Objective, scope, and explicit exclusions are defined.
+   - Verifiable acceptance criteria exist (`S1..Sn`).
+   - Labels assigned: exactly one `type:*`, one `priority:p0..p2`, one `size:xs..l`, and `ux:shape` if UI flows change.
+   - If `ux:shape` is present, a UX brief (`.agents/skills/ux-brief/SKILL.md`) is published as an issue comment **before** implementation starts.
+3. **Topology & Edit Surface**:
+   - Task is classified as **Inline Direct** or **Delegated Direct** (`odd/tasks/<issue>-<slug>.md`).
+   - Allowed edit surfaces (`## Allowed edit surfaces`) are explicitly enumerated before any writer runs.
 
-## C4 — Calidad de Código, DRY y Eficiencia de Agentes
-- [ ] **Sin duplicación:** Se reutilizaron funciones, utilidades y componentes ya existentes en lugar de copiar código idéntico (DRY).
-- [ ] **Limpio de debug:** No hay llamadas a `print()`, `fmt.Println()`, `console.log()`, o stack traces impresos al usuario de forma descuidada.
-- [ ] **Foco en Skills:** Cualquier modificación a prompts de agentes o archivos de habilidades (`SKILL.md`) es genérica, modular y evita la creación de archivos gigantescos que inflen innecesariamente el contexto y desperdicien tokens.
-- [ ] No existen TODOs o notas temporales sin contexto asignado o ID de ticket.
+---
 
-## C5 — Verificación y Tests Reales en Verde
-- [ ] Toda nueva funcionalidad tiene pruebas unitarias o de integración automatizadas.
-- [ ] Se ejecutan las pruebas del Backend Go (`go test ./...`) y terminan 100% en verde.
-- [ ] Se ejecutan las pruebas del Frontend React (`npm run test:run`) y terminan 100% en verde.
-- [ ] Los linters de frontend pasan correctamente sin errores de compilación de TypeScript o reglas bloqueantes.
+## C2 — Architecture, Cross-Platform Parity & Contract Gate
 
-## C6 — Cierre y Limpieza de Turno
-- [ ] No quedan archivos temporales ni carpetas de compilación huérfanas fuera del `.gitignore`.
-- [ ] Se movió el log del progreso de `progress/current.md` al archivo `progress/history.md`.
-- [ ] El estado de la feature correspondiente en `feature_list.json` se actualizó a su estado final correcto (`done` o `blocked`).
+**Actor**: `implementer`
+**Script**: `make contracts-lint contracts-diff`
+
+1. **ADR Compliance**: Changes respect `docs/architecture/adr/` (ADR-0000 to ADR-0003).
+2. **Contract-First OpenAPI**:
+   - Any API schema or route change updates `contracts/openapi.yaml` **first**.
+   - `Spectral` lint passes with zero errors (`make contracts-lint`).
+   - `oasdiff` detects zero unauthorized breaking changes against `origin/main` (`make contracts-diff`).
+3. **Mandatory Cross-Platform Parity**:
+   - Changes altering domain entities, DB schemas, or API endpoints MUST be reflected symmetrically across:
+     - Go Backend (`backend/internal/models/`, `backend/internal/handlers/`)
+     - React Web (`web/src/types/`, `web/src/services/`, `web/src/stores/`)
+     - iOS Swift (`SolennixCore/.../Models/`, `SolennixNetwork/`, `ViewModels/`)
+     - Android Kotlin (`android/core/model/`, `core/network/`, `viewmodel/`)
+4. **Agent-First Structural Hygiene**:
+   - Source files respect the soft ~500-line cognitive budget (`docs/agent-first-methodology.md`).
+   - Public symbols are descriptive and greppable; no generic `utils` or `helpers`.
+
+---
+
+## C3 — Proportional Test-First Verification (`V0` / `V1` / `V2`)
+
+**Actor**: `implementer`
+**Script**: `make test` and `./init.sh`
+
+| Level | Risk Profile | Required Evidence |
+| :--- | :--- | :--- |
+| **V0 — Structural & Static** | Passive docs, comments, or non-executable config | Structural readback, `make preflight`, markdown/schema lint |
+| **V1 — Focused RED/GREEN & Affected Suite** | Standard behavior change within a single module | Observe deterministic **RED** test per rule → implement **GREEN** → run module unit tests + linter (`go test -race`, `npm run test:run`) |
+| **V2 — Integration, Contract & Boundary Suite** | High-risk change: DB migrations, auth/security, concurrency, shared contracts, CI/scripts | V1 + container integration tests, OpenAPI `lint`/`diff`, full regression suite and `./init.sh` 100% green |
+
+- Work units close with atomic Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`) without AI attribution trailers.
+- Close every code delivery with an explicit `Risk:` line (`Risk: none` or `Risk: item N (<reason>)`), where `N` is an item of the canonical list below:
+  1. **Data / irreversible effects**: migrations, changing or deleting stored data.
+  2. **Security**: auth, permissions, credentials, secrets, token refresh.
+  3. **Contracts others consume**: public API changes, serialization, shared DTOs.
+  4. **Concurrency**: transactions, goroutines, mutexes, async races.
+  5. **Delivery / environment**: CI, deployment scripts, factory guardrails.
+  6. **No test would catch a regression** in what changes.
+
+---
+
+## C4 — Stateless Clean-Context Independent Review
+
+**Actor**: `reviewer` (fresh subagent or session with **zero** implementer chat context)
+**Script**: `make handoff` (`python3 scripts/factory_handoff.py`)
+
+1. **Zero Rationale Contamination**: The reviewer consumes only the deterministic handoff packet generated by `scripts/factory_handoff.py` (pinned `base_sha`/`head_sha`, SHA-256 digest, acceptance criteria, allowed edit surfaces, full diff, and V0/V1/V2 evidence).
+2. **Severity Rubric (`P0`–`P3`)**: canonical in [`.agents/skills/reviewer/SKILL.md`](.agents/skills/reviewer/SKILL.md). Any `P0`/`P1` blocks approval (`CHANGES_REQUESTED`).
+3. **Correction Bound**: At most **one** consolidated correction batch for reported P0/P1 blockers. If any remain, label `needs-human` and escalate.
+4. **Judgment-Day Triggers (canonical)**: Blind dual review (`jd-judge-a` + `jd-judge-b`) required when the diff touches:
+   - `contracts/**`, `scripts/**`, `.github/workflows/**`, `docs/architecture/adr/**`, `CHECKPOINTS.md`
+   - Path tokens: `auth`, `oauth`, `permission`, `security`, `secret`, `crypto`, `migration`
+   - More than **400** changed lines.
+
+---
+
+## C5 — Fail-Closed PR Metadata & Delivery Contract
+
+**Actor**: `leader`, GitHub CI
+**Script**: `python3 scripts/check_pr_metadata.py --body-file <pr_body.md>`
+
+1. **Line 1 & Line 2 Contract**:
+   - `Closes #N` / `Fixes #N` / `Resolves #N` with `Delivery: complete` OR `Refs #N` with `Delivery: partial`.
+2. **Mandatory Sections Present**:
+   - `## Summary`, `## Decisions Made Without Asking`, `## Verification Evidence`, `## Clean-Context Review Handoff`, `## Risk`, `## Rollback`, `## Commits (Work Units)`.
+3. **Mechanical Proof of C4 Review**: Full 40-hex base/head SHAs, 64-hex scope digest, and `APPROVED` verdict.
+
+---
+
+## Escalation Contract ("Process Default Beats Asking")
+
+Agents resolve implementation details using ADRs and stack defaults, logging them under `## Decisions Made Without Asking`. Pause with `status:blocked` + `needs-human` **only** for:
+1. Missing credentials, secrets, or unreachable production services.
+2. Direct contradiction between active ADRs and requested scope.
+3. Unavoidable breaking contract change without a pre-approved `contract-break` label.
+4. Irresolvable disagreement between dual judges in Judgment Day review.
