@@ -30,7 +30,7 @@ export function TeamInviteAccept() {
             .regex(/[A-Z]/, 'La contraseña debe incluir una mayúscula')
             .regex(/[a-z]/, 'La contraseña debe incluir una minúscula')
             .regex(/[0-9]/, 'La contraseña debe incluir un número')
-            .regex(/[^A-Za-z0-9]/, 'La contraseña debe incluir un símbolo'),
+            .regex(/[^A-Za-z0-9\s]/, 'La contraseña debe incluir un símbolo'),
           confirmPassword: z.string(),
         })
         .refine((data) => data.password === data.confirmPassword, {

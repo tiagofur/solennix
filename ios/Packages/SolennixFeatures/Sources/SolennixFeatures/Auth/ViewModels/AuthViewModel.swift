@@ -371,12 +371,13 @@ public final class AuthViewModel {
     // MARK: - Helpers
 
     /// Checks password meets complexity requirements: 8+ chars, uppercase, lowercase, digit, symbol.
+    /// Símbolo = no alfanumérico y no espacio (servidor: unicode Punct|Symbol; ver #1348).
     private func isPasswordComplex(_ value: String) -> Bool {
         value.count >= 8
         && value.range(of: "[A-Z]", options: .regularExpression) != nil
         && value.range(of: "[a-z]", options: .regularExpression) != nil
         && value.range(of: "[0-9]", options: .regularExpression) != nil
-        && value.range(of: "[^A-Za-z0-9]", options: .regularExpression) != nil
+        && value.range(of: "[^A-Za-z0-9\\s]", options: .regularExpression) != nil
     }
 
     public func clearError() {

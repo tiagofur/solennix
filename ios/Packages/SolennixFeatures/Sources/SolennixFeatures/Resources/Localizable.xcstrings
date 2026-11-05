@@ -23705,13 +23705,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Are you sure you want to delete %@? This action cannot be undone."
+            "value": "Are you sure you want to delete %@? They will be removed from the catalog and any assigned events. This action cannot be undone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Estás seguro de que querés eliminar a %@? Esta acción no se puede deshacer."
+            "value": "¿Estás seguro de que querés eliminar a %@? Se eliminará del catálogo y de los eventos donde esté asignado. Esta acción no se puede deshacer."
           }
         }
       }
