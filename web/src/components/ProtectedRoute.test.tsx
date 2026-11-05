@@ -54,6 +54,18 @@ describe('ProtectedRoute', () => {
     expect(screen.getByText('contenido')).toBeInTheDocument();
   });
 
+  it('redirects assistant to portal like team member (never organizer app)', () => {
+    mockAuthState = { user: { id: '1', role: 'assistant' }, loading: false };
+    render(
+      <MemoryRouter>
+        <ProtectedRoute allowTeamMember={false}>
+          <div>contenido</div>
+        </ProtectedRoute>
+      </MemoryRouter>
+    );
+    expect(screen.getByText('redirect:/team/work')).toBeInTheDocument();
+  });
+
   it('redirects team member to canonical /team/work (no extra hop)', () => {
     mockAuthState = { user: { id: '1', role: 'team_member' }, loading: false };
     render(

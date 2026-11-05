@@ -107,7 +107,7 @@ fun MainNavHost(deepLinkIntent: Intent? = null) {
         }
         AuthManager.AuthState.Authenticated -> {
             val currentUser by authViewModel.authManager.currentUser.collectAsStateWithLifecycle()
-            if (currentUser?.role == "team_member") {
+            if (currentUser?.role == "team_member" || currentUser?.role == "assistant") {
                 TeamMemberPortalScreen(
                     viewModel = hiltViewModel<TeamMemberPortalViewModel>(),
                     authManager = authViewModel.authManager
