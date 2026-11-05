@@ -27,8 +27,10 @@ public struct StaffDetailView: View {
     @State private var isSharingInvite: Bool = false
     @State private var inviteFeedback: String?
     @State private var inviteFeedbackIsError: Bool = false
+    @State private var inviteTargetRole: StaffInviteTargetRole = .teamMember
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(AuthManager.self) private var authManager
 
     private let apiClient: APIClient
 
@@ -303,6 +305,28 @@ public struct StaffDetailView: View {
 
     // MARK: - Primary Action
 
+    /// Secretario (`assistant`) invites require a Business plan (server-enforced).
+    private var isBusinessPlan: Bool {
+        authManager.currentUser?.plan == .business
+    }
+
+    @ViewBuilder
+    private var inviteRolePicker: some View {
+        if isBusinessPlan {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Picker(StaffStrings.inviteRoleLabel, selection: $inviteTargetRole) {
+                    Text(StaffStrings.inviteRoleMember).tag(StaffInviteTargetRole.teamMember)
+                    Text(StaffStrings.inviteRoleAssistant).tag(StaffInviteTargetRole.assistant)
+                }
+                .pickerStyle(.segmented)
+
+                Text(StaffStrings.inviteRoleHint)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
+        }
+    }
+
     @ViewBuilder
     private var primaryInviteAction: some View {
         if let item = staff,
@@ -310,6 +334,7 @@ public struct StaffDetailView: View {
            !email.isEmpty,
            item.invitedUserId == nil,
            !hasPendingInvite {
+            inviteRolePicker
             PremiumButton(
                 title: isInviting ? StaffStrings.inviting : StaffStrings.inviteAccess,
                 isLoading: isInviting,
@@ -377,6 +402,8 @@ public struct StaffDetailView: View {
             Text(StaffStrings.invitePendingNoLink)
                 .font(.footnote)
                 .foregroundStyle(SolennixColors.textSecondary)
+
+            inviteRolePicker
 
             PremiumButton(
                 title: isInviting ? StaffStrings.inviting : StaffStrings.resendInvite,
@@ -476,7 +503,7 @@ public struct StaffDetailView: View {
             inviteFeedback = nil
             inviteFeedbackIsError = false
             do {
-                let response = try await apiClient.inviteStaffUser(staffId: staffId)
+                let response = try await apiClient.inviteStaffUser(staffId: staffId, targetRole: inviteTargetRole)
                 inviteURL = response.acceptUrl
                 inviteFeedback = StaffStrings.inviteCreated
                 inviteFeedbackIsError = false

@@ -128,9 +128,9 @@ struct ContentView: View {
 
     @ViewBuilder
     private var authenticatedLayout: some View {
-        if authManager.currentUser?.role == "team_member"
-            || authManager.currentUser?.role == "assistant"
-        {
+        if authManager.currentUser?.role == "assistant" {
+            AssistantPortalView(apiClient: apiClient)
+        } else if authManager.currentUser?.role == "team_member" {
             TeamMemberPortalView(apiClient: apiClient)
         } else {
             mainLayout

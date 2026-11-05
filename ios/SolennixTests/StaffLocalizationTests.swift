@@ -143,6 +143,40 @@ final class StaffLocalizationTests: XCTestCase {
         XCTAssertEqual(StaffStrings.memberCount(4), expected(spanish: "4 miembros", english: "4 members"))
     }
 
+    func testStaffInviteRoleStringsResolve() {
+        // Invite Role (Miembro / Secretario, Business-gated)
+        XCTAssertEqual(StaffStrings.inviteRoleLabel, expected(spanish: "Rol de acceso", english: "Access role"))
+        XCTAssertEqual(StaffStrings.inviteRoleMember, expected(spanish: "Miembro", english: "Member"))
+        XCTAssertEqual(StaffStrings.inviteRoleAssistant, expected(spanish: "Secretario", english: "Secretary"))
+        XCTAssertEqual(StaffStrings.inviteRoleHint, expected(spanish: "Miembro ve solo su jornada. Secretario ve agenda, dotación y personal.", english: "Member sees only their own schedule. Secretary sees agenda, staffing, and staff."))
+    }
+
+    func testAssistantPortalStringsResolve() {
+        // Assistant Portal (Secretario, read-only)
+        XCTAssertEqual(StaffStrings.assistantTitle, expected(spanish: "Panel del secretario", english: "Secretary panel"))
+        XCTAssertEqual(StaffStrings.assistantAgenda, expected(spanish: "Agenda", english: "Agenda"))
+        XCTAssertEqual(StaffStrings.assistantDirectory, expected(spanish: "Personal", english: "Staff"))
+        XCTAssertEqual(StaffStrings.assistantSearchStaff, expected(spanish: "Buscar personal", english: "Search staff"))
+        XCTAssertEqual(StaffStrings.assistantLoading, expected(spanish: "Cargando panel...", english: "Loading panel..."))
+        XCTAssertEqual(StaffStrings.assistantLoadError, expected(spanish: "No pudimos cargar el panel", english: "Could not load the panel"))
+        XCTAssertEqual(StaffStrings.assistantLoadErrorMessage, expected(spanish: "No pudimos cargar el panel del secretario.", english: "We couldn't load the secretary panel."))
+        XCTAssertEqual(StaffStrings.assistantEmptyEvents, expected(spanish: "No hay eventos próximos", english: "No upcoming events"))
+        XCTAssertEqual(StaffStrings.assistantEmptyEventsMessage, expected(spanish: "Cuando haya eventos próximos, aparecerán acá con su dotación.", english: "Upcoming events will appear here with their staffing."))
+        XCTAssertEqual(StaffStrings.assistantEmptyDirectory, expected(spanish: "Sin personal registrado", english: "No staff registered"))
+        XCTAssertEqual(StaffStrings.assistantStaffingTitle, expected(spanish: "Dotación", english: "Staffing"))
+        XCTAssertEqual(StaffStrings.assistantNoStaff, expected(spanish: "Sin personal asignado", english: "No staff assigned"))
+        XCTAssertEqual(StaffStrings.assistantReloadAccessibility, expected(spanish: "Recargar panel", english: "Reload panel"))
+        XCTAssertEqual(StaffStrings.assistantSignOutAccessibility, expected(spanish: "Cerrar sesión", english: "Sign out"))
+        XCTAssertEqual(StaffStrings.assistantStatusConfirmed, expected(spanish: "Confirmado", english: "Confirmed"))
+        XCTAssertEqual(StaffStrings.assistantStatusPending, expected(spanish: "Pendiente", english: "Pending"))
+        XCTAssertEqual(StaffStrings.assistantStatusDeclined, expected(spanish: "Rechazó", english: "Declined"))
+        XCTAssertEqual(StaffStrings.assistantStatusCancelled, expected(spanish: "Cancelado", english: "Cancelled"))
+        XCTAssertEqual(StaffStrings.assistantSummaryConfirmed(2), expected(spanish: "2 confirmados", english: "2 confirmed"))
+        XCTAssertEqual(StaffStrings.assistantSummaryPending(1), expected(spanish: "1 pendientes", english: "1 pending"))
+        XCTAssertEqual(StaffStrings.assistantSummaryDeclined(0), expected(spanish: "0 rechazados", english: "0 declined"))
+        XCTAssertEqual(StaffStrings.assistantSummaryCancelled(3), expected(spanish: "3 cancelados", english: "3 cancelled"))
+    }
+
     func testTeamsFormStringsResolve() {
         // Teams Form
         XCTAssertEqual(StaffStrings.teamEditTitle, expected(spanish: "Editar Equipo", english: "Edit Team"))
