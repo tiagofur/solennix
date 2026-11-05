@@ -209,6 +209,10 @@ class AuthViewModel @Inject constructor(
     var teamInviteConfirmPassword by mutableStateOf("")
     var teamInviteSuccess by mutableStateOf(false)
 
+    val isTeamInviteValid: Boolean
+        get() = passwordComplexityRegex.matches(teamInvitePassword) &&
+            teamInvitePassword == teamInviteConfirmPassword
+
     fun resetPassword() {
         if (!passwordComplexityRegex.matches(newPassword) || newPassword != confirmNewPassword) return
         viewModelScope.launch {

@@ -73,7 +73,7 @@
     <string name="staff_detail_inviting">Inviting...</string>
     <string name="staff_detail_invite_access">Invite access</string>
     <string name="staff_detail_delete_title">Delete collaborator</string>
-    <string name="staff_detail_delete_message">Delete this collaborator? Previous event assignments are not deleted, but you will no longer be able to assign this collaborator to new events.</string>
+    <string name="staff_detail_delete_message">Delete this collaborator? They will be removed from the catalog and any assigned events. This action cannot be undone.</string>
     <string name="staff_detail_revoke_invite_title">Revoke invitation</string>
     <string name="staff_detail_revoke_invite_message">The invitation will be disabled and the link will stop working.</string>
     <string name="staff_detail_revoke">Revoke</string>

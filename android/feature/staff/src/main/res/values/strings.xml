@@ -73,7 +73,7 @@
     <string name="staff_detail_inviting">Invitando...</string>
     <string name="staff_detail_invite_access">Invitar acceso</string>
     <string name="staff_detail_delete_title">Eliminar colaborador</string>
-    <string name="staff_detail_delete_message">¿Eliminar este colaborador? Las asignaciones previas a eventos no se borran, pero ya no vas a poder asignarlo a eventos nuevos.</string>
+    <string name="staff_detail_delete_message">¿Eliminar este colaborador? Se eliminará del catálogo y de los eventos donde esté asignado. Esta acción no se puede deshacer.</string>
     <string name="staff_detail_revoke_invite_title">Revocar invitación</string>
     <string name="staff_detail_revoke_invite_message">La invitación quedará desactivada y el enlace dejará de funcionar.</string>
     <string name="staff_detail_revoke">Revocar</string>
