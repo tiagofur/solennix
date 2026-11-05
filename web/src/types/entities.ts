@@ -198,6 +198,7 @@ export interface StaffInviteResponse {
     staff_id: string
     email: string
     status: 'pending' | 'accepted' | 'revoked' | 'expired'
+    target_role: 'team_member' | 'assistant'
     accept_url: string
     expires_at: string
     created_at: string
