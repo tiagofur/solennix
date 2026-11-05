@@ -81,6 +81,20 @@ enum StaffStrings {
     static var revokeConfirmMessage: String { FeatureL10n.text("staff.detail.revoke_confirm_message", "La invitación quedará desactivada y el enlace dejará de funcionar.") }
     static var inviteRevoked: String { FeatureL10n.text("staff.detail.invite_revoked", "Invitación revocada") }
     static var inviteRevokeError: String { FeatureL10n.text("staff.detail.invite_revoke_error", "No se pudo revocar la invitación") }
+    static var shareInviteLink: String { FeatureL10n.text("staff.detail.share_invite_link", "Compartir") }
+    static var resendInvite: String { FeatureL10n.text("staff.detail.resend_invite", "Reenviar invitación") }
+    static var invitePendingNoLink: String { FeatureL10n.text("staff.detail.invite_pending_no_link", "Ese link ya no está en este dispositivo. Reenviá la invitación para generar uno nuevo.") }
+    static var inviteStepsTitle: String { FeatureL10n.text("staff.detail.invite_steps_title", "Qué sigue") }
+    static var inviteStepOpenLink: String { FeatureL10n.text("staff.detail.invite_step_open_link", "1. El colaborador abre el link") }
+    static var inviteStepCreatePassword: String { FeatureL10n.text("staff.detail.invite_step_create_password", "2. Crea su contraseña") }
+    static var inviteStepSeeSchedule: String { FeatureL10n.text("staff.detail.invite_step_see_schedule", "3. Ve su jornada en Mi jornada") }
+
+    static func shareInviteMessage(_ name: String, role: String?, _ url: String) -> String {
+        if let role, !role.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return FeatureL10n.format("staff.detail.share_invite_message_role", "Hola %@, te invito a unirte como %@. Abrí este link para crear tu contraseña: %@", name, role, url)
+        }
+        return FeatureL10n.format("staff.detail.share_invite_message", "Hola %@, te invito a unirte al equipo. Abrí este link para crear tu contraseña: %@", name, url)
+    }
 
     static func deleteConfirmMessage(_ name: String) -> String {
         FeatureL10n.format("staff.delete.delete_confirm_message", "¿Estás seguro de que querés eliminar a %@? Esta acción no se puede deshacer.", name)
