@@ -208,7 +208,10 @@ public final class DashboardViewModel {
         // Generic list loader returning a (values, failed) tuple so it is safe
         // to call from concurrent `async let` branches (no shared mutable
         // capture). Callers aggregate the `failed` flags after awaiting.
-        @Sendable func loadOrEmpty<T: Decodable>(
+        // `& Sendable` keeps #IsolatedConformances quiet: every model type is
+        // a plain Sendable struct, so the conformance is safe to use inside
+        // the APIClient actor.
+        @Sendable func loadOrEmpty<T: Decodable & Sendable>(
             _ endpoint: String,
             params: [String: String]? = nil,
             label: String

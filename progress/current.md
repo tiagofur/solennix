@@ -115,3 +115,17 @@ Reporte de usuario: en la lista de eventos la fecha sale un día antes. Diagnós
 - Mergear PR del tren 1.5.1, archivar desde Xcode con 1.5.1 (10) y adjuntar a la versión 1.5.1 en ASC.
 - Decidir si se commitea `xcodecloud/manifest.json` (setup Xcode Cloud).
 - Renovación RC 22/11: verificar primer webhook real.
+### Limpieza de warnings Xcode — 0 warnings en build limpio (branch `chore/ios-zero-build-warnings`)
+
+Los 3 warnings de Xcode mapeados y eliminados (build limpio completo: 0 warnings en 10 targets):
+
+| Warning | Causa | Fix |
+| --- | --- | --- |
+| `IsolatedConformances` DashboardViewModel.swift:223 | `@Sendable loadOrEmpty<T: Decodable>` cruza `T` hacia el actor `APIClient.getAll` | constraint `T: Decodable & Sendable` |
+| `IsolatedConformances` AuthManager.swift:579 (de #1305) | `updateProfile(data: some Encodable)` → `APIClient.put` (actor) | `some Encodable & Sendable` en `put` y `updateProfile` |
+| `appintentsmetadataprocessor` "extraction skipped" | La fase corre para todos los targets; los instalables sin AppIntents linkeado advierten | `AppIntents.framework` como dependencia del notification extension (system framework, costo cero) |
+
+- Nota: `GENERATE_APP_INTENTS_METADATA` NO gatea esa fase (verificado empíricamente — corrió igual con NO); no agregar config muerta.
+- Validación: build limpio 0 warnings; DashboardViewModelTests 6/6; suite 18 tests del área 0 fallos; KeychainHelperTests fallan IGUAL en main limpio (ambiental del simulador, preexistente); RevenueCat del package local pineaba 5.67.2 (incompatible toolchain) → actualizado local a 5.99.0 (Package.resolved no trackeado).
+
+### Release train iOS 1.5.1 (build 10) — MERGEADO (#1328)

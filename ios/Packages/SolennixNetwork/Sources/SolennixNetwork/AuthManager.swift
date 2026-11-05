@@ -568,7 +568,10 @@ public final class AuthManager {
     // MARK: - Profile Update
 
     /// Update the current user's profile.
-    public func updateProfile(data: some Encodable) async throws {
+    /// `& Sendable` keeps #IsolatedConformances quiet: the DTO crosses from
+    /// this @MainActor context into the APIClient actor and every profile
+    /// payload is a plain Sendable struct.
+    public func updateProfile(data: some Encodable & Sendable) async throws {
         isLoading = true
         defer { isLoading = false }
 
