@@ -12,6 +12,7 @@ public struct StaffFormView: View {
     @State private var viewModel: StaffFormViewModel
     @State private var scoped: ViewScopedTask?
     @State private var showDiscardDialog: Bool = false
+    @State private var customRolePicked: Bool = false
     @Environment(\.dismiss) private var dismiss
 
     public init(staffId: String? = nil, apiClient: APIClient) {
@@ -93,6 +94,39 @@ public struct StaffFormView: View {
         .viewScopedTask(scoped: $scoped)
     }
 
+    // MARK: - Role Picker
+
+    private static let customRoleTag = "__other"
+
+    private var isCustomRoleSelected: Bool {
+        if StaffStrings.suggestedRoleLabels.contains(viewModel.roleLabel) {
+            return false
+        }
+        return customRolePicked || !viewModel.roleLabel.isEmpty
+    }
+
+    private var rolePickerSelection: Binding<String> {
+        Binding(
+            get: {
+                if StaffStrings.suggestedRoleLabels.contains(viewModel.roleLabel) {
+                    return viewModel.roleLabel
+                }
+                return customRolePicked || !viewModel.roleLabel.isEmpty
+                    ? Self.customRoleTag
+                    : ""
+            },
+            set: { newValue in
+                if newValue == Self.customRoleTag {
+                    customRolePicked = true
+                    viewModel.roleLabel = ""
+                } else {
+                    customRolePicked = false
+                    viewModel.roleLabel = newValue
+                }
+            }
+        )
+    }
+
     // MARK: - Info Section
 
     private var infoSection: some View {
@@ -110,9 +144,26 @@ public struct StaffFormView: View {
                     .solennixRow()
             }
 
-            TextField(StaffStrings.fieldRole, text: $viewModel.roleLabel,
-                      prompt: Text(StaffStrings.fieldRolePlaceholder))
-                .textInputAutocapitalization(.words)
+            Picker(StaffStrings.fieldRole, selection: rolePickerSelection) {
+                Text(StaffStrings.fieldRolePlaceholder).tag("")
+                ForEach(StaffStrings.suggestedRoleLabels, id: \.self) { role in
+                    Text(role).tag(role)
+                }
+                Text(StaffStrings.fieldRoleOther).tag(Self.customRoleTag)
+            }
+            .pickerStyle(.menu)
+            .solennixRow()
+
+            if isCustomRoleSelected {
+                TextField(StaffStrings.fieldRole, text: $viewModel.roleLabel,
+                          prompt: Text(StaffStrings.fieldRoleCustomPlaceholder))
+                    .textInputAutocapitalization(.words)
+                    .solennixRow()
+            }
+
+            Text(StaffStrings.fieldRoleHint)
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textSecondary)
                 .solennixRow()
         } header: {
             Text(StaffStrings.sectionInfo)

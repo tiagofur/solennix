@@ -109,7 +109,11 @@ enum StaffStrings {
     static var fieldNamePlaceholder: String { FeatureL10n.text("staff.form.field_name_placeholder", "Nombre completo") }
     static var nameMinError: String { FeatureL10n.text("staff.form.name_min_error", "Mínimo 2 caracteres") }
     static var fieldRole: String { FeatureL10n.text("staff.form.field_role", "Rol") }
-    static var fieldRolePlaceholder: String { FeatureL10n.text("staff.form.field_role_placeholder", "Ej: Mesero, DJ, Fotógrafo") }
+    static var fieldRolePlaceholder: String { FeatureL10n.text("staff.form.field_role_placeholder", "Elegí un rol…") }
+    static var fieldRoleOther: String { FeatureL10n.text("staff.form.field_role_other", "Otro (texto libre)") }
+    static var fieldRoleCustomPlaceholder: String { FeatureL10n.text("staff.form.field_role_custom_placeholder", "Escribí el rol libre") }
+    static var fieldRoleHint: String { FeatureL10n.text("staff.form.field_role_hint", "Rol de trabajo: lo que verá el colaborador en sus asignaciones. El acceso con login se invita aparte.") }
+    static let suggestedRoleLabels = ["Mesero", "Capitán", "Coordinador", "DJ", "Fotógrafo", "Cocina"]
     static var sectionContact: String { FeatureL10n.text("staff.form.section_contact", "Contacto") }
     static var fieldPhone: String { FeatureL10n.text("staff.form.field_phone", "Teléfono") }
     static var fieldPhonePlaceholder: String { FeatureL10n.text("staff.form.field_phone_placeholder", "10 dígitos") }

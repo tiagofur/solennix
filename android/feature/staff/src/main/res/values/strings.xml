@@ -3,7 +3,9 @@
     <string name="staff_form_title_edit">Editar colaborador</string>
     <string name="staff_form_title_create">Nuevo colaborador</string>
     <string name="staff_form_name_label">Nombre *</string>
-    <string name="staff_form_role_label">Rol (ej. Fotógrafa · DJ · Coordinador)</string>
+    <string name="staff_form_role_label">Rol</string>
+    <string name="staff_form_role_placeholder">Elegí un rol…</string>
+    <string name="staff_form_role_hint">Rol de trabajo: lo que verá el colaborador en sus asignaciones. El acceso con login se invita aparte.</string>
     <string name="staff_form_phone_label">Teléfono</string>
     <string name="staff_form_email_label">Email</string>
     <string name="staff_form_notes_label">Notas (tarifa habitual, especialidad, disponibilidad...)</string>

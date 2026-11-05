@@ -28,7 +28,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -127,12 +131,56 @@ fun StaffFormScreen(
                             )
                         },
                         right = {
-                            SolennixTextField(
-                                value = viewModel.roleLabel,
-                                onValueChange = { viewModel.roleLabel = it },
-                                label = stringResource(R.string.staff_form_role_label),
-                                leadingIcon = Icons.Default.Badge
-                            )
+                            var roleExpanded by remember { mutableStateOf(false) }
+                            val roleSuggestions = remember {
+                                listOf("Mesero", "Capitán", "Coordinador", "DJ", "Fotógrafo", "Cocina")
+                            }
+                            val filteredRoles = remember(viewModel.roleLabel) {
+                                if (viewModel.roleLabel.isBlank()) roleSuggestions
+                                else roleSuggestions.filter {
+                                    it.contains(viewModel.roleLabel, ignoreCase = true)
+                                }
+                            }
+                            Column {
+                                ExposedDropdownMenuBox(
+                                    expanded = roleExpanded && filteredRoles.isNotEmpty(),
+                                    onExpandedChange = { roleExpanded = it }
+                                ) {
+                                    SolennixTextField(
+                                        value = viewModel.roleLabel,
+                                        onValueChange = {
+                                            viewModel.roleLabel = it
+                                            roleExpanded = true
+                                        },
+                                        label = stringResource(R.string.staff_form_role_label),
+                                        placeholder = stringResource(R.string.staff_form_role_placeholder),
+                                        leadingIcon = Icons.Default.Badge,
+                                        modifier = Modifier.menuAnchor(
+                                            ExposedDropdownMenuAnchorType.PrimaryEditable,
+                                            enabled = true
+                                        )
+                                    )
+                                    DropdownMenu(
+                                        expanded = roleExpanded && filteredRoles.isNotEmpty(),
+                                        onDismissRequest = { roleExpanded = false }
+                                    ) {
+                                        filteredRoles.forEach { role ->
+                                            DropdownMenuItem(
+                                                text = { Text(role) },
+                                                onClick = {
+                                                    viewModel.roleLabel = role
+                                                    roleExpanded = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                                Text(
+                                    text = stringResource(R.string.staff_form_role_hint),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.height(16.dp))

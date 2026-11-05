@@ -123,6 +123,64 @@ describe("StaffForm", () => {
     });
   });
 
+  it("submits a suggested role from the picker", async () => {
+    const createMut = {
+      mutateAsync: vi.fn().mockResolvedValue({}),
+      isPending: false,
+    };
+    mockedCreate.mockReturnValue(createMut as any);
+    const { container } = renderAt("/staff/new");
+
+    fireEvent.change(screen.getByLabelText(/nombre/i), {
+      target: { value: "Ana" },
+    });
+    fireEvent.change(screen.getByLabelText(/^rol$/i), {
+      target: { value: "Mesero" },
+    });
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => {
+      expect(createMut.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ role_label: "Mesero" }),
+      );
+    });
+  });
+
+  it("supports a custom role through the Other option", async () => {
+    const createMut = {
+      mutateAsync: vi.fn().mockResolvedValue({}),
+      isPending: false,
+    };
+    mockedCreate.mockReturnValue(createMut as any);
+    const { container } = renderAt("/staff/new");
+
+    fireEvent.change(screen.getByLabelText(/nombre/i), {
+      target: { value: "Beto" },
+    });
+    fireEvent.change(screen.getByLabelText(/^rol$/i), {
+      target: { value: "__other" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Escribí el rol libre"), {
+      target: { value: "Sonido" },
+    });
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => {
+      expect(createMut.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ role_label: "Sonido" }),
+      );
+    });
+  });
+
+  it("loads an existing custom role into the free-text input", async () => {
+    mockedMember.mockReturnValue({ data: existing, isLoading: false } as any);
+    renderAt("/staff/abc/edit");
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Escribí el rol libre")).toHaveValue("Sonido");
+    });
+  });
+
   it("prefills and updates in edit mode", async () => {
     mockedMember.mockReturnValue({ data: existing, isLoading: false } as any);
     const updateMut = {

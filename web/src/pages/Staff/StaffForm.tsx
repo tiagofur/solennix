@@ -21,6 +21,9 @@ const emptyForm: StaffInsert = {
   notification_email_opt_in: false,
 };
 
+export const SUGGESTED_STAFF_ROLES = ["Mesero", "Capitán", "Coordinador", "DJ", "Fotógrafo", "Cocina"] as const;
+const ROLE_OTHER = "__other";
+
 export const StaffForm: React.FC = () => {
   const { t } = useTranslation(["staff"]);
   const { id } = useParams<{ id?: string }>();
@@ -37,6 +40,14 @@ export const StaffForm: React.FC = () => {
 
   const [form, setForm] = useState<StaffInsert>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [customRoleOpen, setCustomRoleOpen] = useState(false);
+
+  const roleSelectValue = !form.role_label
+    ? ""
+    : (SUGGESTED_STAFF_ROLES as readonly string[]).includes(form.role_label)
+      ? form.role_label
+      : ROLE_OTHER;
+  const showCustomRoleInput = customRoleOpen || roleSelectValue === ROLE_OTHER;
 
   useEffect(() => {
     if (existing) {
@@ -145,14 +156,41 @@ export const StaffForm: React.FC = () => {
           <label htmlFor="staff-role" className="block text-sm font-medium text-text">
             {t("staff:form.fields.role")}
           </label>
-          <input
+          <select
             id="staff-role"
-            type="text"
-            value={form.role_label ?? ""}
-            onChange={(e) => setForm({ ...form, role_label: e.target.value })}
+            value={roleSelectValue}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === ROLE_OTHER) {
+                setCustomRoleOpen(true);
+                setForm({ ...form, role_label: "" });
+              } else {
+                setCustomRoleOpen(false);
+                setForm({ ...form, role_label: v });
+              }
+            }}
             className="mt-1 block w-full rounded-xl border border-border bg-surface-alt px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-            placeholder={t("staff:form.fields.role_placeholder")}
-          />
+          >
+            <option value="">{t("staff:form.fields.role_placeholder")}</option>
+            {SUGGESTED_STAFF_ROLES.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+            <option value={ROLE_OTHER}>{t("staff:form.fields.role_other")}</option>
+          </select>
+          {showCustomRoleInput && (
+            <input
+              id="staff-role-custom"
+              type="text"
+              value={form.role_label ?? ""}
+              onChange={(e) => setForm({ ...form, role_label: e.target.value })}
+              className="mt-2 block w-full rounded-xl border border-border bg-surface-alt px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+              placeholder={t("staff:form.fields.role_custom_placeholder")}
+              aria-label={t("staff:form.fields.role_custom_placeholder")}
+            />
+          )}
+          <p className="mt-1 text-sm text-text-secondary">{t("staff:form.fields.role_hint")}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
