@@ -24409,13 +24409,61 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ex: Waiter, DJ, Photographer"
+            "value": "Choose a role…"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ej: Mesero, DJ, Fotógrafo"
+            "value": "Elegí un rol…"
+          }
+        }
+      }
+    },
+    "staff.form.field_role_other": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other (free text)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otro (texto libre)"
+          }
+        }
+      }
+    },
+    "staff.form.field_role_custom_placeholder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type the custom role"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribí el rol libre"
+          }
+        }
+      }
+    },
+    "staff.form.field_role_hint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Work role: what the collaborator will see on their assignments. Login access is invited separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rol de trabajo: lo que verá el colaborador en sus asignaciones. El acceso con login se invita aparte."
           }
         }
       }

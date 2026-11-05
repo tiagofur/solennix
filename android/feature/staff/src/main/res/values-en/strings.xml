@@ -3,7 +3,9 @@
     <string name="staff_form_title_edit">Edit collaborator</string>
     <string name="staff_form_title_create">New collaborator</string>
     <string name="staff_form_name_label">Name *</string>
-    <string name="staff_form_role_label">Role (e.g. Photographer · DJ · Coordinator)</string>
+    <string name="staff_form_role_label">Role</string>
+    <string name="staff_form_role_placeholder">Choose a role…</string>
+    <string name="staff_form_role_hint">Work role: what the collaborator will see on their assignments. Login access is invited separately.</string>
     <string name="staff_form_phone_label">Phone</string>
     <string name="staff_form_email_label">Email</string>
     <string name="staff_form_notes_label">Notes (usual rate, specialty, availability...)</string>
