@@ -24,6 +24,7 @@ public struct StaffDetailView: View {
     @State private var showRevokeConfirm: Bool = false
     @State private var isInviting: Bool = false
     @State private var inviteURL: String?
+    @State private var isSharingInvite: Bool = false
     @State private var inviteFeedback: String?
     @State private var inviteFeedbackIsError: Bool = false
     @Environment(\.dismiss) private var dismiss
@@ -332,19 +333,34 @@ public struct StaffDetailView: View {
                 .foregroundStyle(SolennixColors.text)
                 .textSelection(.enabled)
 
-            Button {
-                UIPasteboard.general.string = url
-                inviteFeedback = StaffStrings.inviteLinkCopied
-                inviteFeedbackIsError = false
-            } label: {
-                Label(StaffStrings.copyInviteLink, systemImage: "doc.on.doc")
-                    .font(.footnote)
-                    .foregroundStyle(SolennixColors.primary)
+            HStack(spacing: Spacing.md) {
+                Button {
+                    UIPasteboard.general.string = url
+                    inviteFeedback = StaffStrings.inviteLinkCopied
+                    inviteFeedbackIsError = false
+                } label: {
+                    Label(StaffStrings.copyInviteLink, systemImage: "doc.on.doc")
+                        .font(.footnote)
+                        .foregroundStyle(SolennixColors.primary)
+                }
+
+                Button {
+                    isSharingInvite = true
+                } label: {
+                    Label(StaffStrings.shareInviteLink, systemImage: "square.and.arrow.up")
+                        .font(.footnote)
+                        .foregroundStyle(SolennixColors.primary)
+                }
             }
+
+            inviteStepsHint
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .solennixCard(radius: CornerRadius.lg, border: false)
+        .sheet(isPresented: $isSharingInvite) {
+            ShareSheet(items: [shareInviteText(url: url)])
+        }
     }
 
     private var pendingInviteCard: some View {
@@ -357,10 +373,56 @@ public struct StaffDetailView: View {
             Text(StaffStrings.invitePendingActive)
                 .font(.footnote)
                 .foregroundStyle(SolennixColors.text)
+
+            Text(StaffStrings.invitePendingNoLink)
+                .font(.footnote)
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            PremiumButton(
+                title: isInviting ? StaffStrings.inviting : StaffStrings.resendInvite,
+                isLoading: isInviting,
+                isDisabled: isInviting,
+                style: .secondary,
+                icon: "paperplane.fill"
+            ) {
+                inviteAccess(force: true)
+            }
+
+            inviteStepsHint
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .solennixCard(radius: CornerRadius.lg, border: false)
+    }
+
+    private var inviteStepsHint: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(StaffStrings.inviteStepsTitle)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            Text(StaffStrings.inviteStepOpenLink)
+                .font(.footnote)
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            Text(StaffStrings.inviteStepCreatePassword)
+                .font(.footnote)
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            Text(StaffStrings.inviteStepSeeSchedule)
+                .font(.footnote)
+                .foregroundStyle(SolennixColors.textSecondary)
+        }
+        .padding(.top, Spacing.xs)
+    }
+
+    private func shareInviteText(url: String) -> String {
+        StaffStrings.shareInviteMessage(
+            staff?.name ?? StaffStrings.navTitleFallback,
+            role: staff?.roleLabel,
+            url
+        )
     }
 
     private var hasPendingInvite: Bool {
@@ -378,6 +440,9 @@ public struct StaffDetailView: View {
         do {
             let item: Staff = try await apiClient.get(Endpoint.staff(staffId))
             staff = item
+            if item.invitedUserId != nil || !isPendingInviteStatus(item.inviteStatus) {
+                inviteURL = nil
+            }
         } catch {
             if let apiError = error as? APIError {
                 errorMessage = apiError.errorDescription
@@ -390,7 +455,7 @@ public struct StaffDetailView: View {
     }
 
     @MainActor
-    private func inviteAccess() {
+    private func inviteAccess(force: Bool = false) {
         guard let item = staff else { return }
         guard let email = item.email, !email.isEmpty else {
             inviteFeedback = StaffStrings.inviteEmailRequired
@@ -402,7 +467,7 @@ public struct StaffDetailView: View {
             inviteFeedbackIsError = false
             return
         }
-        guard !hasPendingInvite else {
+        guard force || !hasPendingInvite else {
             return
         }
 
@@ -453,6 +518,29 @@ public struct StaffDetailView: View {
 
 private extension Optional where Wrapped == String {
     var orEmpty: String { self ?? "" }
+}
+
+// MARK: - Share Sheet
+
+private struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        // iPad presents activity controllers in a popover and crashes without an anchor.
+        if let popover = controller.popoverPresentationController,
+           let rootView = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap({ $0.windows })
+            .first(where: { $0.isKeyWindow })?.rootViewController?.view {
+            popover.sourceView = rootView
+            popover.sourceRect = CGRect(x: rootView.bounds.midX, y: rootView.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Preview

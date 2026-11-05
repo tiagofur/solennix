@@ -32,7 +32,10 @@ data class StaffDetailUiState(
     val inviteUrl: String? = null,
     val inviteFeedback: String? = null,
     val inviteFeedbackIsError: Boolean = false,
-)
+) {
+    val hasPendingInvite: Boolean
+        get() = !inviteUrl.isNullOrBlank() || isPendingInviteStatus(staff?.inviteStatus)
+}
 
 @HiltViewModel
 class StaffDetailViewModel @Inject constructor(
@@ -107,6 +110,7 @@ class StaffDetailViewModel @Inject constructor(
                     it.copy(
                         isInviting = false,
                         inviteUrl = invite.acceptUrl,
+                        staff = it.staff?.copy(inviteStatus = invite.status),
                         inviteFeedback = "Invitación creada correctamente.",
                         inviteFeedbackIsError = false
                     )
@@ -120,6 +124,30 @@ class StaffDetailViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun refreshInviteStatus() {
+        viewModelScope.launch {
+            try {
+                val staff = staffRepository.getStaffMember(staffId)
+                _uiState.update {
+                    // Drop a stale in-memory link when the server no longer reports a pending invite.
+                    val inviteUrl = if (isPendingInviteStatus(staff?.inviteStatus)) it.inviteUrl else null
+                    it.copy(staff = staff, inviteUrl = inviteUrl)
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = e.message) }
+            }
+        }
+    }
+
+    fun onShareFallbackCopied() {
+        _uiState.update {
+            it.copy(
+                inviteFeedback = "Link copiado al portapapeles.",
+                inviteFeedbackIsError = false
+            )
         }
     }
 
