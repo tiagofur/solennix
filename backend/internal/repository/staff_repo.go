@@ -42,6 +42,18 @@ func (r *StaffRepo) CountByUserID(ctx context.Context, userID uuid.UUID) (int, e
 const staffColumns = `id, user_id, name, role_label, phone, email, notes,
 	notification_email_opt_in, invited_user_id, created_at, updated_at`
 
+// staffPendingInviteJoin exposes at most one 'pending' invite_status per
+// staff row. Shared by GetAll, GetAllPaginated, Search and GetByID so list
+// and detail stay in parity (issue #1343, S2). Requires the staff table to
+// be aliased as `s`.
+const staffPendingInviteJoin = `LEFT JOIN LATERAL (
+		SELECT status
+		FROM staff_invites
+		WHERE staff_id = s.id AND owner_user_id = s.user_id AND status = 'pending'
+		ORDER BY created_at DESC
+		LIMIT 1
+	) i ON TRUE`
+
 func scanStaff(rows interface {
 	Scan(...any) error
 }, s *models.Staff) error {
@@ -66,8 +78,8 @@ func scanStaffWithInvite(row interface {
 }
 
 func (r *StaffRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Staff, error) {
-	query := fmt.Sprintf(`SELECT %s FROM staff WHERE user_id = $1 ORDER BY name LIMIT %d`,
-		staffColumns, GetAllSafetyLimit)
+	query := fmt.Sprintf(`SELECT %s, i.status FROM staff s %s WHERE user_id = $1 ORDER BY name LIMIT %d`,
+		staffColumns, staffPendingInviteJoin, GetAllSafetyLimit)
 	rows, err := r.pool.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
@@ -77,7 +89,7 @@ func (r *StaffRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Staf
 	result := make([]models.Staff, 0)
 	for rows.Next() {
 		var s models.Staff
-		if err := scanStaff(rows, &s); err != nil {
+		if err := scanStaffWithInvite(rows, &s); err != nil {
 			return nil, err
 		}
 		result = append(result, s)
@@ -99,8 +111,8 @@ func (r *StaffRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offse
 		return nil, 0, fmt.Errorf("count staff: %w", err)
 	}
 
-	query := fmt.Sprintf(`SELECT %s FROM staff WHERE user_id = $1
-		ORDER BY %s %s LIMIT $2 OFFSET $3`, staffColumns, sortCol, order)
+	query := fmt.Sprintf(`SELECT %s, i.status FROM staff s %s WHERE user_id = $1
+		ORDER BY %s %s LIMIT $2 OFFSET $3`, staffColumns, staffPendingInviteJoin, sortCol, order)
 	rows, err := r.pool.Query(ctx, query, userID, limit, offset)
 	if err != nil {
 		return nil, 0, err
@@ -110,7 +122,7 @@ func (r *StaffRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offse
 	result := make([]models.Staff, 0)
 	for rows.Next() {
 		var s models.Staff
-		if err := scanStaff(rows, &s); err != nil {
+		if err := scanStaffWithInvite(rows, &s); err != nil {
 			return nil, 0, err
 		}
 		result = append(result, s)
@@ -125,14 +137,8 @@ func (r *StaffRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.
 	s := &models.Staff{}
 	query := fmt.Sprintf(`SELECT %s, i.status
 		FROM staff s
-		LEFT JOIN LATERAL (
-			SELECT status
-			FROM staff_invites
-			WHERE staff_id = s.id AND owner_user_id = s.user_id AND status = 'pending'
-			ORDER BY created_at DESC
-			LIMIT 1
-		) i ON TRUE
-		WHERE s.id = $1 AND s.user_id = $2`, staffColumns)
+		%s
+		WHERE s.id = $1 AND s.user_id = $2`, staffColumns, staffPendingInviteJoin)
 	row := r.pool.QueryRow(ctx, query, id, userID)
 	if err := scanStaffWithInvite(row, s); err != nil {
 		return nil, fmt.Errorf("staff not found: %w", err)
@@ -172,7 +178,7 @@ func (r *StaffRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 
 // Search performs a fuzzy search on staff using ILIKE + pg_trgm similarity.
 func (r *StaffRepo) Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Staff, error) {
-	sqlQuery := fmt.Sprintf(`SELECT %s FROM staff
+	sqlQuery := fmt.Sprintf(`SELECT %s, i.status FROM staff s %s
 		WHERE user_id = $1
 		AND (
 			name ILIKE '%%' || $2 || '%%' OR
@@ -182,7 +188,7 @@ func (r *StaffRepo) Search(ctx context.Context, userID uuid.UUID, query string) 
 			similarity(name, $2) > 0.3
 		)
 		ORDER BY similarity(name, $2) DESC, created_at DESC
-		LIMIT 10`, staffColumns)
+		LIMIT 10`, staffColumns, staffPendingInviteJoin)
 
 	rows, err := r.pool.Query(ctx, sqlQuery, userID, query)
 	if err != nil {
@@ -193,7 +199,7 @@ func (r *StaffRepo) Search(ctx context.Context, userID uuid.UUID, query string) 
 	result := make([]models.Staff, 0)
 	for rows.Next() {
 		var s models.Staff
-		if err := scanStaff(rows, &s); err != nil {
+		if err := scanStaffWithInvite(rows, &s); err != nil {
 			return nil, err
 		}
 		result = append(result, s)
