@@ -187,6 +187,7 @@ export const StaffForm: React.FC = () => {
               onChange={(e) => setForm({ ...form, role_label: e.target.value })}
               className="mt-2 block w-full rounded-xl border border-border bg-surface-alt px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
               placeholder={t("staff:form.fields.role_custom_placeholder")}
+              aria-label={t("staff:form.fields.role_custom_placeholder")}
             />
           )}
           <p className="mt-1 text-sm text-text-secondary">{t("staff:form.fields.role_hint")}</p>

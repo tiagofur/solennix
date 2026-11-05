@@ -99,9 +99,10 @@ public struct StaffFormView: View {
     private static let customRoleTag = "__other"
 
     private var isCustomRoleSelected: Bool {
-        customRolePicked
-            || (!viewModel.roleLabel.isEmpty
-                && !StaffStrings.suggestedRoleLabels.contains(viewModel.roleLabel))
+        if StaffStrings.suggestedRoleLabels.contains(viewModel.roleLabel) {
+            return false
+        }
+        return customRolePicked || !viewModel.roleLabel.isEmpty
     }
 
     private var rolePickerSelection: Binding<String> {
