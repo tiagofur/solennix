@@ -49,7 +49,31 @@
     "return_list": "Volver al listado",
     "actions": {
       "edit": "Editar",
-      "delete": "Eliminar"
+      "delete": "Eliminar",
+      "invite": "Invitar acceso",
+      "inviting": "Invitando...",
+      "invite_sent": "Invitación creada correctamente.",
+      "invite_error": "No se pudo crear la invitación.",
+      "invite_revoked": "Invitación revocada.",
+      "invite_revoke_error": "No se pudo revocar la invitación.",
+      "invite_copied": "Link copiado al portapapeles.",
+      "invite_link": "Link de invitación",
+      "copy_link": "Copiar",
+      "share_link": "Compartir",
+      "revoke_invite": "Revocar invitación",
+      "invite_pending": "Hay una invitación activa pendiente.",
+      "invite_pending_hint": "El colaborador abre el link, crea su contraseña y entra a 'Mi jornada'.",
+      "invite_share_text": "Te invito a {{business}} como {{role}}. Activa tu acceso aquí: {{url}}",
+      "invite_share_text_generic": "Te invito como {{role}}. Activa tu acceso aquí: {{url}}",
+      "invite_share_title": "Invitación de {{business}}",
+      "invite_share_title_generic": "Invitación",
+      "invite_share_role_default": "colaborador"
+    },
+    "revoke_confirm": {
+      "title": "Revocar invitación",
+      "description": "La invitación quedará desactivada y el enlace dejará de funcionar.",
+      "confirm": "Revocar",
+      "cancel": "Cancelar"
     },
     "fields": {
       "phone": "Teléfono",

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, CalendarClock, Edit, Mail, Phone, Send, Trash2, UserCog } from "lucide-react";
+import { ArrowLeft, CalendarClock, Edit, Mail, Phone, Send, Share2, Trash2, UserCog } from "lucide-react";
 import {
   useStaffMember,
   useDeleteStaff,
@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import type { AssignmentStatus } from "@/types/entities";
 import { staffService } from "@/services/staffService";
 import { useToast } from "@/hooks/useToast";
+import { useAuth } from "@/hooks/useAuth";
 import { getErrorMessage, logError } from "@/lib/errorHandler";
 
 const formatShiftRange = (
@@ -61,11 +62,41 @@ const isPendingInviteStatus = (status?: string | null): boolean => {
   return normalized === "pending" || normalized === "active" || normalized === "invited" || normalized === "sent";
 };
 
+export interface InviteShareArgs {
+  business?: string | null;
+  role?: string | null;
+  url: string;
+}
+
+type InviteShareT = (key: string, options?: Record<string, unknown>) => string;
+
+// Pre-built share copy: "Te invito a [negocio] como [rol]…" + accept URL.
+// Exported for unit tests; falls back to a business-less template when the
+// organizer profile has no business name yet.
+export const getInviteShareText = (
+  t: InviteShareT,
+  args: InviteShareArgs,
+): { title: string; text: string } => {
+  const role = args.role?.trim() || t("staff:details.actions.invite_share_role_default");
+  const business = args.business?.trim();
+  if (business) {
+    return {
+      title: t("staff:details.actions.invite_share_title", { business }),
+      text: t("staff:details.actions.invite_share_text", { business, role, url: args.url }),
+    };
+  }
+  return {
+    title: t("staff:details.actions.invite_share_title_generic"),
+    text: t("staff:details.actions.invite_share_text_generic", { role, url: args.url }),
+  };
+};
+
 export const StaffDetails: React.FC = () => {
   const { t, i18n } = useTranslation(["staff"]);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { user } = useAuth();
   const { data: staff, isLoading, refetch } = useStaffMember(id);
   const deleteMut = useDeleteStaff();
   const [confirmOpen, setConfirmOpen] = React.useState(false);
@@ -125,18 +156,16 @@ export const StaffDetails: React.FC = () => {
     try {
       const result = await staffService.inviteUser(staff.id);
       setInviteURL(result.accept_url);
-      await refetch();
-      addToast(
-        t("staff:details.actions.invite_sent", { defaultValue: "Invitación creada correctamente." }),
-        "success",
-      );
+      addToast(t("staff:details.actions.invite_sent"), "success");
+      try {
+        await refetch();
+      } catch (refetchError) {
+        logError("Error refreshing staff after invite", refetchError);
+      }
     } catch (error) {
       logError("Error creating staff invite", error);
       addToast(
-        getErrorMessage(
-          error,
-          t("staff:details.actions.invite_error", { defaultValue: "No se pudo crear la invitación." }),
-        ),
+        getErrorMessage(error, t("staff:details.actions.invite_error")),
         "error",
       );
     } finally {
@@ -151,33 +180,43 @@ export const StaffDetails: React.FC = () => {
       await staffService.revokeInvite(staff.id);
       setInviteURL(null);
       await refetch();
-      addToast(
-        t("staff:details.actions.invite_revoked", { defaultValue: "Invitación revocada." }),
-        "info",
-      );
+      addToast(t("staff:details.actions.invite_revoked"), "info");
     } catch (error) {
       logError("Error revoking staff invite", error);
       addToast(
-        getErrorMessage(
-          error,
-          t("staff:details.actions.invite_revoke_error", { defaultValue: "No se pudo revocar la invitación." }),
-        ),
+        getErrorMessage(error, t("staff:details.actions.invite_revoke_error")),
         "error",
       );
     }
   };
 
-  const onCopyInviteURL = async () => {
-    if (!inviteURL) return;
+  const onCopyInviteURL = async (value?: string) => {
+    const textToCopy = value ?? inviteURL;
+    if (!textToCopy) return;
     try {
-      await navigator.clipboard.writeText(inviteURL);
-      addToast(
-        t("staff:details.actions.invite_copied", { defaultValue: "Link copiado al portapapeles." }),
-        "success",
-      );
+      await navigator.clipboard.writeText(textToCopy);
+      addToast(t("staff:details.actions.invite_copied"), "success");
     } catch {
-      addToast(inviteURL, "info");
+      addToast(textToCopy, "info");
     }
+  };
+
+  const onShareInviteURL = async () => {
+    if (!inviteURL) return;
+    const { title, text } = getInviteShareText(t, {
+      business: user?.business_name,
+      role: staff?.role_label,
+      url: inviteURL,
+    });
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title, text, url: inviteURL });
+        return;
+      } catch {
+        // Share failed or was dismissed — fall through to clipboard copy.
+      }
+    }
+    await onCopyInviteURL(text);
   };
 
   return (
@@ -194,12 +233,10 @@ export const StaffDetails: React.FC = () => {
 
       <ConfirmDialog
         open={revokeOpen}
-        title={t("staff:details.revoke_confirm.title", { defaultValue: "Revocar invitación" })}
-        description={t("staff:details.revoke_confirm.description", {
-          defaultValue: "La invitación quedará desactivada y el enlace dejará de funcionar.",
-        })}
-        confirmText={t("staff:details.revoke_confirm.confirm", { defaultValue: "Revocar" })}
-        cancelText={t("staff:details.revoke_confirm.cancel", { defaultValue: "Cancelar" })}
+        title={t("staff:details.revoke_confirm.title")}
+        description={t("staff:details.revoke_confirm.description")}
+        confirmText={t("staff:details.revoke_confirm.confirm")}
+        cancelText={t("staff:details.revoke_confirm.cancel")}
         onConfirm={onRevokeInvite}
         onCancel={() => setRevokeOpen(false)}
       />
@@ -234,8 +271,8 @@ export const StaffDetails: React.FC = () => {
               >
                 <Send className="h-4 w-4 mr-2" aria-hidden="true" />
                 {inviting
-                  ? t("staff:details.actions.inviting", { defaultValue: "Invitando..." })
-                  : t("staff:details.actions.invite", { defaultValue: "Invitar acceso" })}
+                  ? t("staff:details.actions.inviting")
+                  : t("staff:details.actions.invite")}
               </button>
             )}
             <Link
@@ -257,33 +294,44 @@ export const StaffDetails: React.FC = () => {
         {hasPendingInvite && (
           <div className="mt-4 rounded-xl border border-border bg-surface-alt p-3">
             <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-1">
-              {t("staff:details.actions.invite_link", { defaultValue: "Link de invitación" })}
+              {t("staff:details.actions.invite_link")}
             </p>
             <div className="flex flex-col gap-3">
               {inviteURL ? (
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <code className="flex-1 text-xs text-text break-all">{inviteURL}</code>
-                  <button
-                    type="button"
-                    onClick={onCopyInviteURL}
-                    className="inline-flex items-center justify-center px-3 py-2 text-xs font-medium rounded-lg text-text bg-card border border-border hover:bg-surface-alt transition-colors"
-                  >
-                    {t("staff:details.actions.copy_link", { defaultValue: "Copiar" })}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={onShareInviteURL}
+                      className="inline-flex items-center justify-center px-3 py-2 text-xs font-medium rounded-lg text-white premium-gradient transition-opacity hover:opacity-90"
+                    >
+                      <Share2 className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+                      {t("staff:details.actions.share_link")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onCopyInviteURL()}
+                      className="inline-flex items-center justify-center px-3 py-2 text-xs font-medium rounded-lg text-text bg-card border border-border hover:bg-surface-alt transition-colors"
+                    >
+                      {t("staff:details.actions.copy_link")}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-text-secondary">
-                  {t("staff:details.actions.invite_pending", {
-                    defaultValue: "Hay una invitación activa pendiente.",
-                  })}
+                  {t("staff:details.actions.invite_pending")}
                 </p>
               )}
+              <p className="text-xs text-text-secondary">
+                {t("staff:details.actions.invite_pending_hint")}
+              </p>
               <button
                 type="button"
                 onClick={() => setRevokeOpen(true)}
                 className="inline-flex items-center justify-center px-3 py-2 text-xs font-medium rounded-lg text-danger bg-danger/10 border border-danger/20 hover:bg-danger/20 transition-colors self-start"
               >
-                {t("staff:details.actions.revoke_invite", { defaultValue: "Revocar invitación" })}
+                {t("staff:details.actions.revoke_invite")}
               </button>
             </div>
           </div>
