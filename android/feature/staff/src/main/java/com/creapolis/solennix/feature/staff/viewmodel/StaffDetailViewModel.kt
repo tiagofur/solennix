@@ -32,7 +32,10 @@ data class StaffDetailUiState(
     val inviteUrl: String? = null,
     val inviteFeedback: String? = null,
     val inviteFeedbackIsError: Boolean = false,
-)
+) {
+    val hasPendingInvite: Boolean
+        get() = !inviteUrl.isNullOrBlank() || isPendingInviteStatus(staff?.inviteStatus)
+}
 
 @HiltViewModel
 class StaffDetailViewModel @Inject constructor(
@@ -107,6 +110,7 @@ class StaffDetailViewModel @Inject constructor(
                     it.copy(
                         isInviting = false,
                         inviteUrl = invite.acceptUrl,
+                        staff = it.staff?.copy(inviteStatus = invite.status),
                         inviteFeedback = "Invitación creada correctamente.",
                         inviteFeedbackIsError = false
                     )
@@ -119,6 +123,17 @@ class StaffDetailViewModel @Inject constructor(
                         inviteFeedbackIsError = true
                     )
                 }
+            }
+        }
+    }
+
+    fun refreshInviteStatus() {
+        viewModelScope.launch {
+            try {
+                val staff = staffRepository.getStaffMember(staffId)
+                _uiState.update { it.copy(staff = staff) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = e.message) }
             }
         }
     }

@@ -1,8 +1,10 @@
 package com.creapolis.solennix.feature.staff.ui
 
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,13 +62,6 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.staff.R
 import com.creapolis.solennix.feature.staff.viewmodel.StaffDetailViewModel
 
-private fun isPendingInviteStatus(status: String?): Boolean {
-    return when (status?.trim()?.lowercase()) {
-        "pending", "active", "invited", "sent" -> true
-        else -> false
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StaffDetailScreen(
@@ -80,7 +75,7 @@ fun StaffDetailScreen(
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showRevokeDialog by remember { mutableStateOf(false) }
-    val hasPendingInvite = uiState.inviteUrl != null || isPendingInviteStatus(uiState.staff?.inviteStatus)
+    val hasPendingInvite = uiState.hasPendingInvite
 
     LaunchedEffect(viewModel.deleteSuccess) {
         if (viewModel.deleteSuccess) {
@@ -316,17 +311,63 @@ fun StaffDetailScreen(
                                     color = SolennixTheme.colors.secondaryText
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
-                                TextButton(
-                                    onClick = {
-                                        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                        clipboardManager.setPrimaryClip(
-                                            ClipData.newPlainText("invite_url", uiState.inviteUrl.orEmpty())
-                                        )
+                                Text(
+                                    text = stringResource(R.string.staff_detail_invite_steps),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row {
+                                    TextButton(
+                                        onClick = {
+                                            val url = uiState.inviteUrl.orEmpty()
+                                            val role = staff.roleLabel?.trim().orEmpty()
+                                            val message = if (role.isEmpty()) {
+                                                context.getString(
+                                                    R.string.staff_detail_share_message,
+                                                    staff.name,
+                                                    url
+                                                )
+                                            } else {
+                                                context.getString(
+                                                    R.string.staff_detail_share_message_role,
+                                                    staff.name,
+                                                    role,
+                                                    url
+                                                )
+                                            }
+                                            try {
+                                                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                                    type = "text/plain"
+                                                    putExtra(Intent.EXTRA_TEXT, message)
+                                                }
+                                                context.startActivity(
+                                                    Intent.createChooser(sendIntent, null)
+                                                )
+                                            } catch (e: ActivityNotFoundException) {
+                                                val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                                clipboardManager.setPrimaryClip(
+                                                    ClipData.newPlainText("invite_url", message)
+                                                )
+                                            }
+                                        }
+                                    ) {
+                                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(stringResource(R.string.staff_detail_share_link))
                                     }
-                                ) {
-                                    Icon(Icons.Default.ContentCopy, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(stringResource(R.string.staff_detail_copy_link))
+                                    TextButton(
+                                        onClick = {
+                                            val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                            clipboardManager.setPrimaryClip(
+                                                ClipData.newPlainText("invite_url", uiState.inviteUrl.orEmpty())
+                                            )
+                                        }
+                                    ) {
+                                        Icon(Icons.Default.ContentCopy, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(stringResource(R.string.staff_detail_copy_link))
+                                    }
                                 }
                             }
                         }
@@ -341,7 +382,7 @@ fun StaffDetailScreen(
                         ) {
                             Text(if (uiState.isRevoking) stringResource(R.string.staff_detail_revoking) else stringResource(R.string.staff_detail_revoke_invite))
                         }
-                    } else if (isPendingInviteStatus(uiState.staff?.inviteStatus)) {
+                    } else if (uiState.hasPendingInvite) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
@@ -356,6 +397,12 @@ fun StaffDetailScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = stringResource(R.string.staff_detail_pending_invite_description),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(R.string.staff_detail_invite_steps),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = SolennixTheme.colors.secondaryText
                                 )

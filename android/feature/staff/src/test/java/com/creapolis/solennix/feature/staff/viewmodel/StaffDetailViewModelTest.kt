@@ -59,6 +59,127 @@ class StaffDetailViewModelTest {
     }
 
     @Test
+    fun `invite stores server status so pending survives without in-memory url`() = runTest {
+        val repository = mockk<StaffRepository>()
+        coEvery { repository.getStaffMember("s1") } returns Staff(
+            id = "s1",
+            name = "Ana",
+            email = "ana@example.com"
+        )
+        coEvery { repository.inviteStaffUser("s1") } returns StaffInviteResponse(
+            inviteId = "i1",
+            staffId = "s1",
+            email = "ana@example.com",
+            status = "pending",
+            acceptUrl = "https://example.com/invite-1",
+            expiresAt = "2026-05-13T00:00:00Z",
+            createdAt = "2026-05-13T00:00:00Z"
+        )
+
+        val viewModel = StaffDetailViewModel(repository, SavedStateHandle(mapOf("staffId" to "s1")))
+        val collector = backgroundScope.launch { viewModel.uiState.collect { } }
+        advanceUntilIdle()
+
+        viewModel.inviteAccess()
+        advanceUntilIdle()
+
+        assertEquals("pending", viewModel.uiState.value.staff?.inviteStatus)
+        assertTrue(viewModel.uiState.value.hasPendingInvite)
+        collector.cancel()
+    }
+
+    @Test
+    fun `pending invite from server shows without in-memory url`() = runTest {
+        val repository = mockk<StaffRepository>()
+        coEvery { repository.getStaffMember("s1") } returns Staff(
+            id = "s1",
+            name = "Ana",
+            email = "ana@example.com",
+            inviteStatus = "pending"
+        )
+
+        val viewModel = StaffDetailViewModel(repository, SavedStateHandle(mapOf("staffId" to "s1")))
+        val collector = backgroundScope.launch { viewModel.uiState.collect { } }
+        advanceUntilIdle()
+
+        assertEquals(null, viewModel.uiState.value.inviteUrl)
+        assertTrue(viewModel.uiState.value.hasPendingInvite)
+        collector.cancel()
+    }
+
+    @Test
+    fun `re-invite rotates url when pending without in-memory url`() = runTest {
+        val repository = mockk<StaffRepository>()
+        coEvery { repository.getStaffMember("s1") } returns Staff(
+            id = "s1",
+            name = "Ana",
+            email = "ana@example.com",
+            inviteStatus = "pending"
+        )
+        coEvery { repository.inviteStaffUser("s1") } returnsMany listOf(
+            StaffInviteResponse(
+                inviteId = "i1",
+                staffId = "s1",
+                email = "ana@example.com",
+                status = "pending",
+                acceptUrl = "https://example.com/invite-1",
+                expiresAt = "2026-05-13T00:00:00Z",
+                createdAt = "2026-05-13T00:00:00Z"
+            ),
+            StaffInviteResponse(
+                inviteId = "i2",
+                staffId = "s1",
+                email = "ana@example.com",
+                status = "pending",
+                acceptUrl = "https://example.com/invite-2",
+                expiresAt = "2026-05-13T00:00:00Z",
+                createdAt = "2026-05-13T00:00:00Z"
+            )
+        )
+
+        val viewModel = StaffDetailViewModel(repository, SavedStateHandle(mapOf("staffId" to "s1")))
+        val collector = backgroundScope.launch { viewModel.uiState.collect { } }
+        advanceUntilIdle()
+
+        viewModel.inviteAccess()
+        advanceUntilIdle()
+        viewModel.inviteAccess()
+        advanceUntilIdle()
+
+        assertEquals("https://example.com/invite-2", viewModel.uiState.value.inviteUrl)
+        coVerify(exactly = 2) { repository.inviteStaffUser("s1") }
+        collector.cancel()
+    }
+
+    @Test
+    fun `refresh reloads invite status from server`() = runTest {
+        val repository = mockk<StaffRepository>()
+        coEvery { repository.getStaffMember("s1") } returns Staff(
+            id = "s1",
+            name = "Ana",
+            email = "ana@example.com"
+        )
+
+        val viewModel = StaffDetailViewModel(repository, SavedStateHandle(mapOf("staffId" to "s1")))
+        val collector = backgroundScope.launch { viewModel.uiState.collect { } }
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.hasPendingInvite)
+
+        coEvery { repository.getStaffMember("s1") } returns Staff(
+            id = "s1",
+            name = "Ana",
+            email = "ana@example.com",
+            inviteStatus = "pending"
+        )
+        viewModel.refreshInviteStatus()
+        advanceUntilIdle()
+
+        assertEquals("pending", viewModel.uiState.value.staff?.inviteStatus)
+        assertTrue(viewModel.uiState.value.hasPendingInvite)
+        collector.cancel()
+    }
+
+    @Test
     fun `delete staff marks success and invite creates url`() = runTest {
         val repository = mockk<StaffRepository>()
         coEvery { repository.getStaffMember("s1") } returns Staff(

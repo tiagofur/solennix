@@ -58,6 +58,10 @@
     <string name="staff_detail_email_notifications_disabled">Disabled</string>
     <string name="staff_detail_invite_link_title">Invite link</string>
     <string name="staff_detail_copy_link">Copy link</string>
+    <string name="staff_detail_share_link">Share</string>
+    <string name="staff_detail_share_message">Hi %1$s, you are invited to join the team. Open this link to create your password: %2$s</string>
+    <string name="staff_detail_share_message_role">Hi %1$s, you are invited to join as %2$s. Open this link to create your password: %3$s</string>
+    <string name="staff_detail_invite_steps">What happens next: your team member opens the link, creates a password and sees their day.</string>
     <string name="staff_detail_revoking">Revoking...</string>
     <string name="staff_detail_revoke_invite">Revoke invitation</string>
     <string name="staff_detail_pending_invite_title">Active pending invitation</string>
