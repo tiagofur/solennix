@@ -7,7 +7,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.StaffRepository
+import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.model.Staff
+import com.creapolis.solennix.core.network.AuthManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +34,10 @@ data class StaffDetailUiState(
     val inviteUrl: String? = null,
     val inviteFeedback: String? = null,
     val inviteFeedbackIsError: Boolean = false,
+    /** Rol de acceso de la invitación: `team_member` o `assistant` (#1347). */
+    val inviteTargetRole: String = StaffDetailViewModel.INVITE_ROLE_TEAM_MEMBER,
+    /** La opción Secretario exige plan Business (#1347 S1). */
+    val canInviteAsAssistant: Boolean = false,
 ) {
     val hasPendingInvite: Boolean
         get() = !inviteUrl.isNullOrBlank() || isPendingInviteStatus(staff?.inviteStatus)
@@ -40,8 +46,14 @@ data class StaffDetailUiState(
 @HiltViewModel
 class StaffDetailViewModel @Inject constructor(
     private val staffRepository: StaffRepository,
+    private val authManager: AuthManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    companion object {
+        const val INVITE_ROLE_TEAM_MEMBER = "team_member"
+        const val INVITE_ROLE_ASSISTANT = "assistant"
+    }
 
     private val staffId: String = checkNotNull(savedStateHandle["staffId"])
 
@@ -59,11 +71,41 @@ class StaffDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val staff = staffRepository.getStaffMember(staffId)
-                _uiState.update { it.copy(staff = staff, isLoading = false) }
+                _uiState.update {
+                    it.copy(
+                        staff = staff,
+                        isLoading = false,
+                        canInviteAsAssistant = isBusinessPlan()
+                    )
+                }
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = e.message, isLoading = false) }
+                _uiState.update {
+                    it.copy(
+                        errorMessage = e.message,
+                        isLoading = false,
+                        canInviteAsAssistant = isBusinessPlan()
+                    )
+                }
             }
         }
+    }
+
+    private fun isBusinessPlan(): Boolean =
+        authManager.currentUser.value?.plan == Plan.BUSINESS
+
+    /**
+     * Elige el rol de acceso de la invitación (#1347 S1/S3).
+     * `assistant` (Secretario) solo se acepta con plan Business; cualquier otro
+     * valor o un plan inferior conserva `team_member`.
+     */
+    fun setInviteTargetRole(role: String) {
+        val normalized = role.trim().lowercase()
+        val next = when (normalized) {
+            INVITE_ROLE_ASSISTANT -> if (isBusinessPlan()) INVITE_ROLE_ASSISTANT else return
+            INVITE_ROLE_TEAM_MEMBER -> INVITE_ROLE_TEAM_MEMBER
+            else -> return
+        }
+        _uiState.update { it.copy(inviteTargetRole = next) }
     }
 
     fun deleteStaff() {
@@ -105,7 +147,7 @@ class StaffDetailViewModel @Inject constructor(
                 it.copy(isInviting = true, inviteFeedback = null, inviteFeedbackIsError = false)
             }
             try {
-                val invite = staffRepository.inviteStaffUser(staffId)
+                val invite = staffRepository.inviteStaffUser(staffId, _uiState.value.inviteTargetRole)
                 _uiState.update {
                     it.copy(
                         isInviting = false,
