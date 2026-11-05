@@ -440,7 +440,7 @@ public struct StaffDetailView: View {
         do {
             let item: Staff = try await apiClient.get(Endpoint.staff(staffId))
             staff = item
-            if item.invitedUserId != nil {
+            if item.invitedUserId != nil || !isPendingInviteStatus(item.inviteStatus) {
                 inviteURL = nil
             }
         } catch {
@@ -526,7 +526,18 @@ private struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        // iPad presents activity controllers in a popover and crashes without an anchor.
+        if let popover = controller.popoverPresentationController,
+           let rootView = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap({ $0.windows })
+            .first(where: { $0.isKeyWindow })?.rootViewController?.view {
+            popover.sourceView = rootView
+            popover.sourceRect = CGRect(x: rootView.bounds.midX, y: rootView.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+        return controller
     }
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}

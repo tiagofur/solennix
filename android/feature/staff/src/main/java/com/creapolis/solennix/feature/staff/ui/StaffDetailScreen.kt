@@ -349,6 +349,7 @@ fun StaffDetailScreen(
                                                 clipboardManager.setPrimaryClip(
                                                     ClipData.newPlainText("invite_url", message)
                                                 )
+                                                viewModel.onShareFallbackCopied()
                                             }
                                         }
                                     ) {

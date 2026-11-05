@@ -131,10 +131,23 @@ class StaffDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val staff = staffRepository.getStaffMember(staffId)
-                _uiState.update { it.copy(staff = staff) }
+                _uiState.update {
+                    // Drop a stale in-memory link when the server no longer reports a pending invite.
+                    val inviteUrl = if (isPendingInviteStatus(staff?.inviteStatus)) it.inviteUrl else null
+                    it.copy(staff = staff, inviteUrl = inviteUrl)
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = e.message) }
             }
+        }
+    }
+
+    fun onShareFallbackCopied() {
+        _uiState.update {
+            it.copy(
+                inviteFeedback = "Link copiado al portapapeles.",
+                inviteFeedbackIsError = false
+            )
         }
     }
 
