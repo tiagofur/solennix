@@ -23940,6 +23940,150 @@
         }
       }
     },
+    "staff.detail.share_invite_link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir"
+          }
+        }
+      }
+    },
+    "staff.detail.resend_invite": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resend invite"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reenviar invitación"
+          }
+        }
+      }
+    },
+    "staff.detail.invite_pending_no_link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That link is no longer on this device. Resend the invite to generate a new one."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese link ya no está en este dispositivo. Reenviá la invitación para generar uno nuevo."
+          }
+        }
+      }
+    },
+    "staff.detail.invite_steps_title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's next"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qué sigue"
+          }
+        }
+      }
+    },
+    "staff.detail.invite_step_open_link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Your team member opens the link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. El colaborador abre el link"
+          }
+        }
+      }
+    },
+    "staff.detail.invite_step_create_password": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. They create their password"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Crea su contraseña"
+          }
+        }
+      }
+    },
+    "staff.detail.invite_step_see_schedule": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. They see their shifts in My day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Ve su jornada en Mi jornada"
+          }
+        }
+      }
+    },
+    "staff.detail.share_invite_message_role": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hi %@, you're invited to join as %@. Open this link to create your password: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hola %@, te invito a unirte como %@. Abrí este link para crear tu contraseña: %@"
+          }
+        }
+      }
+    },
+    "staff.detail.share_invite_message": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hi %@, you're invited to join the team. Open this link to create your password: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hola %@, te invito a unirte al equipo. Abrí este link para crear tu contraseña: %@"
+          }
+        }
+      }
+    },
     "staff.detail.invite_pending_active": {
       "localizations": {
         "en": {
@@ -27210,150 +27354,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hasta 15 productos y 30 de inventario"
-          }
-        }
-      }
-    },
-    "staff.detail.share_invite_link": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Share"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compartir"
-          }
-        }
-      }
-    },
-    "staff.detail.resend_invite": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Resend invite"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reenviar invitación"
-          }
-        }
-      }
-    },
-    "staff.detail.invite_pending_no_link": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "That link is no longer on this device. Resend the invite to generate a new one."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ese link ya no está en este dispositivo. Reenviá la invitación para generar uno nuevo."
-          }
-        }
-      }
-    },
-    "staff.detail.invite_steps_title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What's next"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Qué sigue"
-          }
-        }
-      }
-    },
-    "staff.detail.invite_step_open_link": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1. Your team member opens the link"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1. El colaborador abre el link"
-          }
-        }
-      }
-    },
-    "staff.detail.invite_step_create_password": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "2. They create their password"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "2. Crea su contraseña"
-          }
-        }
-      }
-    },
-    "staff.detail.invite_step_see_schedule": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "3. They see their shifts in My day"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "3. Ve su jornada en Mi jornada"
-          }
-        }
-      }
-    },
-    "staff.detail.share_invite_message_role": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hi %@, you're invited to join as %@. Open this link to create your password: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hola %@, te invito a unirte como %@. Abrí este link para crear tu contraseña: %@"
-          }
-        }
-      }
-    },
-    "staff.detail.share_invite_message": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hi %@, you're invited to join the team. Open this link to create your password: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hola %@, te invito a unirte al equipo. Abrí este link para crear tu contraseña: %@"
           }
         }
       }
