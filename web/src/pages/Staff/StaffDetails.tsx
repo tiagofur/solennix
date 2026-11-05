@@ -5,11 +5,12 @@ import {
   useStaffMember,
   useDeleteStaff,
   useStaffAvailabilityRange,
+  useStaffLimits,
 } from "@/hooks/queries/useStaffQueries";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useTranslation } from "react-i18next";
 import type { AssignmentStatus } from "@/types/entities";
-import { staffService } from "@/services/staffService";
+import { staffService, type StaffInviteTargetRole } from "@/services/staffService";
 import { useToast } from "@/hooks/useToast";
 import { useAuth } from "@/hooks/useAuth";
 import { getErrorMessage, logError } from "@/lib/errorHandler";
@@ -103,7 +104,11 @@ export const StaffDetails: React.FC = () => {
   const [revokeOpen, setRevokeOpen] = React.useState(false);
   const [inviteURL, setInviteURL] = React.useState<string | null>(null);
   const [inviting, setInviting] = React.useState(false);
+  const [targetRole, setTargetRole] = React.useState<StaffInviteTargetRole>("team_member");
   const hasPendingInvite = Boolean(inviteURL || isPendingInviteStatus(staff?.invite_status));
+  // S1: el rol Secretario solo existe en plan Business (el backend responde 403 en otro caso).
+  const { data: staffLimits } = useStaffLimits();
+  const canInviteAssistant = staffLimits?.plan === "business";
 
   // Próximas asignaciones — ventana rolling de 90 días desde hoy. Usamos la
   // fecha en zona local (no UTC) para que la ventana coincida con lo que el
@@ -154,7 +159,7 @@ export const StaffDetails: React.FC = () => {
     if (!staff?.email || inviting || hasPendingInvite) return;
     setInviting(true);
     try {
-      const result = await staffService.inviteUser(staff.id);
+      const result = await staffService.inviteUser(staff.id, targetRole);
       setInviteURL(result.accept_url);
       addToast(t("staff:details.actions.invite_sent"), "success");
       try {
@@ -262,6 +267,20 @@ export const StaffDetails: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {staff.email && !staff.invited_user_id && !hasPendingInvite && canInviteAssistant && (
+              <label className="inline-flex items-center gap-2 text-sm text-text-secondary">
+                <span>{t("staff:details.actions.invite_role_label")}</span>
+                <select
+                  value={targetRole}
+                  onChange={(e) => setTargetRole(e.target.value as StaffInviteTargetRole)}
+                  disabled={inviting}
+                  className="rounded-xl border border-border bg-surface-alt px-2 py-2 text-sm font-medium text-text disabled:opacity-60"
+                >
+                  <option value="team_member">{t("staff:details.actions.invite_role_member")}</option>
+                  <option value="assistant">{t("staff:details.actions.invite_role_assistant")}</option>
+                </select>
+              </label>
+            )}
             {staff.email && !staff.invited_user_id && !hasPendingInvite && (
               <button
                 type="button"
