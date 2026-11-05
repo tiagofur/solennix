@@ -11,6 +11,7 @@ import com.creapolis.solennix.core.database.entity.asExternalModel
 import com.creapolis.solennix.core.model.EventStaff
 import com.creapolis.solennix.core.model.PaginatedResponse
 import com.creapolis.solennix.core.model.Staff
+import com.creapolis.solennix.core.model.StaffAttendanceSummary
 import com.creapolis.solennix.core.model.StaffAvailability
 import com.creapolis.solennix.core.model.StaffInviteResponse
 import com.creapolis.solennix.core.model.TeamMemberAssignment
@@ -40,7 +41,7 @@ interface StaffRepository {
     suspend fun createStaff(staff: Staff): Staff
     suspend fun updateStaff(staff: Staff): Staff
     suspend fun deleteStaff(id: String)
-    suspend fun inviteStaffUser(id: String): StaffInviteResponse
+    suspend fun inviteStaffUser(id: String, targetRole: String = "team_member"): StaffInviteResponse
     suspend fun revokeStaffInvite(id: String)
     suspend fun getMyAssignments(): List<TeamMemberAssignment>
     suspend fun respondAssignment(id: String, response: AssignmentPortalResponse): AssignmentResponseOutcome
@@ -82,6 +83,9 @@ interface StaffRepository {
      * No-op silencioso si el GET falla (la UI cae al cache).
      */
     suspend fun syncEventStaff(eventId: String): List<EventStaff>
+
+    /** `GET /api/events/{id}/staff/summary` — conteos RSVP de la dotación. Solo lectura. */
+    suspend fun getEventStaffSummary(eventId: String): StaffAttendanceSummary
 
     /**
      * `GET /api/staff/availability` — sólo devuelve colaboradores CON asignaciones
@@ -157,8 +161,11 @@ class OfflineFirstStaffRepository @Inject constructor(
         }
     }
 
-    override suspend fun inviteStaffUser(id: String): StaffInviteResponse {
-        return apiService.post(Endpoints.staffInvite(id), emptyMap<String, String>())
+    override suspend fun inviteStaffUser(id: String, targetRole: String): StaffInviteResponse {
+        return apiService.post(
+            Endpoints.staffInvite(id),
+            mapOf("target_role" to targetRole.ifBlank { "team_member" })
+        )
     }
 
     override suspend fun revokeStaffInvite(id: String) {
@@ -277,6 +284,10 @@ class OfflineFirstStaffRepository @Inject constructor(
         val remote: List<EventStaff> = apiService.get(Endpoints.eventStaff(eventId))
         staffDao.replaceEventStaff(eventId, remote.map { it.asEntity() })
         return remote
+    }
+
+    override suspend fun getEventStaffSummary(eventId: String): StaffAttendanceSummary {
+        return apiService.get(Endpoints.eventStaffSummary(eventId))
     }
 
     override suspend fun getStaffAvailability(

@@ -8,6 +8,7 @@ data class StaffInviteResponse(
     @SerialName("invite_id") val inviteId: String,
     @SerialName("staff_id") val staffId: String,
     val email: String,
+    @SerialName("target_role") val targetRole: String = "team_member",
     val status: String,
     @SerialName("accept_url") val acceptUrl: String,
     @SerialName("expires_at") val expiresAt: String,

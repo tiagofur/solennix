@@ -460,5 +460,35 @@
     "decrease_quantity": "Decrease quantity",
     "increase_quantity": "Increase quantity",
     "select_named": "Select {{name}}"
+  },
+  "assistant": {
+    "portal_nav": "Assistant navigation",
+    "nav": {
+      "agenda": "Agenda",
+      "staff": "Staff"
+    },
+    "agenda_title": "Event agenda",
+    "agenda_subtitle": "Upcoming events and staffing. Read-only.",
+    "upcoming_title": "Upcoming events",
+    "agenda_empty": "No upcoming events.",
+    "staffing_title": "Event staffing",
+    "staffing_empty": "No staff assigned to this event yet.",
+    "summary": {
+      "total": "Total",
+      "confirmed": "Confirmed",
+      "pending": "Pending",
+      "declined": "Declined",
+      "cancelled": "Cancelled"
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "declined": "Declined",
+      "cancelled": "Cancelled"
+    },
+    "directory_title": "Staff directory",
+    "directory_subtitle": "Team contact details. Read-only.",
+    "directory_empty": "No staff registered yet.",
+    "load_error": "We could not load the information."
   }
 }

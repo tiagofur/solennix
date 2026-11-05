@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Layout } from "@/components/Layout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AssistantRoute, TeamPortalGuard } from "@/pages/Assistant/AssistantRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { logError } from "@/lib/errorHandler";
@@ -92,6 +93,8 @@ const PaymentInboxPage = React.lazy(() => import("@/pages/Payments/PaymentInboxP
 const ReviewsPage = React.lazy(() => import("@/pages/Reviews/ReviewsPage").then((m) => ({ default: m.ReviewsPage })));
 const TeamMemberEventsPage = React.lazy(() => import("@/pages/TeamMember/TeamEventsPage").then((m) => ({ default: m.TeamEventsPage })));
 const TeamMemberCalendarPage = React.lazy(() => import("@/pages/TeamMember/TeamCalendarPage").then((m) => ({ default: m.TeamCalendarPage })));
+const AssistantAgendaPage = React.lazy(() => import("@/pages/Assistant/AssistantAgendaPage").then((m) => ({ default: m.AssistantAgendaPage })));
+const AssistantStaffPage = React.lazy(() => import("@/pages/Assistant/AssistantStaffPage").then((m) => ({ default: m.AssistantStaffPage })));
 
 const AdminDashboard = React.lazy(() => import("@/pages/Admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 const AdminUsers = React.lazy(() => import("@/pages/Admin/AdminUsers").then((m) => ({ default: m.AdminUsers })));
@@ -221,7 +224,9 @@ function App() {
                 path="/team/work"
                 element={
                   <ProtectedRoute>
-                    <TeamMemberEventsPage />
+                    <TeamPortalGuard>
+                      <TeamMemberEventsPage />
+                    </TeamPortalGuard>
                   </ProtectedRoute>
                 }
               />
@@ -237,11 +242,38 @@ function App() {
                 path="/team/calendar"
                 element={
                   <ProtectedRoute>
-                    <TeamMemberCalendarPage />
+                    <TeamPortalGuard>
+                      <TeamMemberCalendarPage />
+                    </TeamPortalGuard>
                   </ProtectedRoute>
                 }
               />
               <Route path="/team" element={<Navigate to="/team/work" replace />} />
+
+              <Route
+                path="/assistant"
+                element={
+                  <AssistantRoute>
+                    <AssistantAgendaPage />
+                  </AssistantRoute>
+                }
+              />
+              <Route
+                path="/assistant/events/:eventId"
+                element={
+                  <AssistantRoute>
+                    <AssistantAgendaPage />
+                  </AssistantRoute>
+                }
+              />
+              <Route
+                path="/assistant/staff"
+                element={
+                  <AssistantRoute>
+                    <AssistantStaffPage />
+                  </AssistantRoute>
+                }
+              />
 
               <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />

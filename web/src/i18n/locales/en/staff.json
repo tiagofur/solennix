@@ -67,7 +67,13 @@
       "invite_share_text_generic": "You are invited as {{role}}. Activate your access here: {{url}}",
       "invite_share_title": "Invitation from {{business}}",
       "invite_share_title_generic": "Invitation",
-      "invite_share_role_default": "team member"
+      "invite_share_role_default": "team member",
+      "invite_role_label": "Access role",
+      "invite_role_member": "Member",
+      "invite_role_assistant": "Assistant",
+      "invite_role_member_hint": "Sees their own schedule and calendar.",
+      "invite_role_assistant_hint": "Sees agenda, staffing and directory. Business plan only.",
+      "invite_role_business_only": "The Assistant role requires the Business plan."
     },
     "revoke_confirm": {
       "title": "Revoke invitation",

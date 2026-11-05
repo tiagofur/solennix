@@ -67,7 +67,13 @@
       "invite_share_text_generic": "Te invito como {{role}}. Activa tu acceso aquí: {{url}}",
       "invite_share_title": "Invitación de {{business}}",
       "invite_share_title_generic": "Invitación",
-      "invite_share_role_default": "colaborador"
+      "invite_share_role_default": "colaborador",
+      "invite_role_label": "Rol de acceso",
+      "invite_role_member": "Miembro",
+      "invite_role_assistant": "Secretario",
+      "invite_role_member_hint": "Ve su jornada y calendario.",
+      "invite_role_assistant_hint": "Ve agenda, dotación y directorio. Solo plan Business.",
+      "invite_role_business_only": "El rol Secretario requiere plan Business."
     },
     "revoke_confirm": {
       "title": "Revocar invitación",

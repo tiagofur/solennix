@@ -34,6 +34,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -459,6 +460,39 @@ fun StaffDetailScreen(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     if (!staff.email.isNullOrBlank() && staff.invitedUserId.isNullOrBlank() && !hasPendingInvite) {
+                        Text(
+                            text = stringResource(R.string.staff_detail_invite_role_label),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = SolennixTheme.colors.secondaryText
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FilterChip(
+                                selected = uiState.inviteTargetRole == StaffDetailViewModel.INVITE_ROLE_TEAM_MEMBER,
+                                onClick = { viewModel.setInviteTargetRole(StaffDetailViewModel.INVITE_ROLE_TEAM_MEMBER) },
+                                label = { Text(stringResource(R.string.staff_detail_invite_role_member)) },
+                                enabled = !uiState.isInviting
+                            )
+                            FilterChip(
+                                selected = uiState.inviteTargetRole == StaffDetailViewModel.INVITE_ROLE_ASSISTANT,
+                                onClick = { viewModel.setInviteTargetRole(StaffDetailViewModel.INVITE_ROLE_ASSISTANT) },
+                                label = { Text(stringResource(R.string.staff_detail_invite_role_assistant)) },
+                                enabled = !uiState.isInviting && uiState.canInviteAsAssistant
+                            )
+                        }
+                        if (!uiState.canInviteAsAssistant) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.staff_detail_invite_assistant_business_only),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolennixTheme.colors.secondaryText
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
                         TextButton(
                             onClick = { viewModel.inviteAccess() },
                             enabled = !uiState.isInviting,

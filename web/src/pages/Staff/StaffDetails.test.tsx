@@ -10,6 +10,7 @@ import { logError } from '@/lib/errorHandler';
 const mockUseStaffMember = vi.fn();
 const mockUseDeleteStaff = vi.fn();
 const mockUseStaffAvailabilityRange = vi.fn();
+const mockUseStaffLimits = vi.fn();
 const mockUseAuth = vi.fn();
 const mockAddToast = vi.fn();
 const mockMutateAsync = vi.fn();
@@ -19,6 +20,7 @@ vi.mock('@/hooks/queries/useStaffQueries', () => ({
   useStaffMember: (...args: unknown[]) => mockUseStaffMember(...args),
   useDeleteStaff: (...args: unknown[]) => mockUseDeleteStaff(...args),
   useStaffAvailabilityRange: (...args: unknown[]) => mockUseStaffAvailabilityRange(...args),
+  useStaffLimits: (...args: unknown[]) => mockUseStaffLimits(...args),
 }));
 
 vi.mock('@/services/staffService', () => ({
@@ -95,6 +97,7 @@ describe('StaffDetails invite access', () => {
     vi.clearAllMocks();
     mockUseDeleteStaff.mockReturnValue({ mutateAsync: mockMutateAsync });
     mockUseStaffAvailabilityRange.mockReturnValue({ data: [] });
+    mockUseStaffLimits.mockReturnValue({ data: undefined });
     mockUseAuth.mockReturnValue({ user: null });
     mockRefetch.mockResolvedValue({ data: null });
     vi.stubGlobal('navigator', {
@@ -130,7 +133,7 @@ describe('StaffDetails invite access', () => {
     fireEvent.click(screen.getByRole('button', { name: 'staff:details.actions.invite' }));
 
     await waitFor(() => {
-      expect(staffService.inviteUser).toHaveBeenCalledWith('staff-1');
+      expect(staffService.inviteUser).toHaveBeenCalledWith('staff-1', 'team_member');
     });
 
     expect(screen.getByText('https://app.solennix.com/team-invite?token=abc123')).toBeInTheDocument();
@@ -283,6 +286,33 @@ describe('StaffDetails invite access', () => {
       expect(screen.queryByRole('button', { name: 'staff:details.actions.invite' })).not.toBeInTheDocument();
     },
   );
+
+  it('hides the role picker when plan is not business', () => {
+    mockStaff();
+    mockUseStaffLimits.mockReturnValue({ data: { used: 1, max: 10, unlimited: false, plan: 'pro' } });
+
+    renderPage();
+
+    expect(screen.getByRole('button', { name: 'staff:details.actions.invite' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  });
+
+  it('shows the role picker on business plan and sends target_role assistant', async () => {
+    mockStaff();
+    mockUseStaffLimits.mockReturnValue({ data: { used: 1, max: 10, unlimited: false, plan: 'business' } });
+    mockInviteSuccess();
+
+    renderPage();
+
+    const picker = screen.getByRole('combobox');
+    expect(picker).toBeInTheDocument();
+    fireEvent.change(picker, { target: { value: 'assistant' } });
+    fireEvent.click(screen.getByRole('button', { name: 'staff:details.actions.invite' }));
+
+    await waitFor(() => {
+      expect(staffService.inviteUser).toHaveBeenCalledWith('staff-1', 'assistant');
+    });
+  });
 
   it('revokes a server-side pending invite without in-memory URL', async () => {
     mockStaff({ invite_status: 'pending', invited_user_id: null });

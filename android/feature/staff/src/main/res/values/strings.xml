@@ -157,6 +157,22 @@
     <string name="staff_ok">Aceptar</string>
     <string name="common_cancel">Cancelar</string>
 
+    <!-- Portal del secretario (#1347 S2) -->
+    <string name="secretary_portal_title">Portal del secretario</string>
+    <string name="secretary_portal_agenda">Agenda</string>
+    <string name="secretary_portal_staffing">Dotación del evento</string>
+    <string name="secretary_portal_directory">Directorio del personal</string>
+    <string name="secretary_portal_empty_agenda">No hay eventos próximos.</string>
+    <string name="secretary_portal_select_event_hint">Elegí un evento para ver su dotación.</string>
+    <string name="secretary_portal_empty_staff">Este evento aún no tiene personal asignado.</string>
+    <string name="secretary_portal_empty_directory">Aún no hay personal registrado.</string>
+
+    <!-- Rol de invitación (#1347 S1/S3) -->
+    <string name="staff_detail_invite_role_label">Rol de acceso</string>
+    <string name="staff_detail_invite_role_member">Miembro</string>
+    <string name="staff_detail_invite_role_assistant">Secretario</string>
+    <string name="staff_detail_invite_assistant_business_only">La opción Secretario requiere plan Business.</string>
+
     <!-- Dirty state dialogs -->
     <string name="staff_form_discard_title">¿Descartar cambios?</string>
     <string name="staff_form_discard_message">Tenés cambios sin guardar. Si salís, se perderán.</string>

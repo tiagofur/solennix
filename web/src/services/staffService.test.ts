@@ -147,6 +147,58 @@ describe('staffService', () => {
       expect(called).toBe(true);
     });
 
+    it('inviteUser defaults to team_member target_role', async () => {
+      let receivedBody: unknown = null;
+      server.use(
+        http.post(`${API_BASE}/staff/s1/invite`, async ({ request }) => {
+          receivedBody = await request.json();
+          return HttpResponse.json({
+            invite_id: 'inv-1',
+            staff_id: 's1',
+            email: 'staff@example.com',
+            target_role: 'team_member',
+            status: 'pending',
+            accept_url: 'https://app.solennix.com/team-invite?token=abc',
+            expires_at: '2026-05-20T00:00:00Z',
+            created_at: '2026-05-10T00:00:00Z',
+          });
+        }),
+      );
+      await staffService.inviteUser('s1');
+      expect(receivedBody).toEqual({ target_role: 'team_member' });
+    });
+
+    it('inviteUser sends assistant target_role for Secretario invites', async () => {
+      let receivedBody: unknown = null;
+      server.use(
+        http.post(`${API_BASE}/staff/s1/invite`, async ({ request }) => {
+          receivedBody = await request.json();
+          return HttpResponse.json({
+            invite_id: 'inv-1',
+            staff_id: 's1',
+            email: 'staff@example.com',
+            target_role: 'assistant',
+            status: 'pending',
+            accept_url: 'https://app.solennix.com/team-invite?token=abc',
+            expires_at: '2026-05-20T00:00:00Z',
+            created_at: '2026-05-10T00:00:00Z',
+          });
+        }),
+      );
+      await staffService.inviteUser('s1', 'assistant');
+      expect(receivedBody).toEqual({ target_role: 'assistant' });
+    });
+
+    it('getEventStaffSummary returns attendance counts', async () => {
+      server.use(
+        http.get(`${API_BASE}/events/e1/staff/summary`, () =>
+          HttpResponse.json({ total: 2, confirmed: 1, pending: 1, declined: 0, cancelled: 0 }),
+        ),
+      );
+      const summary = await staffService.getEventStaffSummary('e1');
+      expect(summary).toEqual({ total: 2, confirmed: 1, pending: 1, declined: 0, cancelled: 0 });
+    });
+
     it('getByEvent returns assignments with joined fields', async () => {
       server.use(
         http.get(`${API_BASE}/events/e1/staff`, () =>

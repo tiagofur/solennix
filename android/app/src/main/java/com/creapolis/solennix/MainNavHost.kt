@@ -22,8 +22,12 @@ import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.feature.auth.ui.BiometricGateScreen
 import com.creapolis.solennix.feature.auth.viewmodel.AuthViewModel
+import com.creapolis.solennix.feature.staff.ui.SecretaryPortalScreen
 import com.creapolis.solennix.feature.staff.ui.TeamMemberPortalScreen
+import com.creapolis.solennix.feature.staff.viewmodel.PortalDestination
+import com.creapolis.solennix.feature.staff.viewmodel.SecretaryPortalViewModel
 import com.creapolis.solennix.feature.staff.viewmodel.TeamMemberPortalViewModel
+import com.creapolis.solennix.feature.staff.viewmodel.portalDestinationForRole
 import com.creapolis.solennix.ui.navigation.AdaptiveNavigationRailLayout
 import com.creapolis.solennix.ui.navigation.AuthNavHost
 import com.creapolis.solennix.ui.navigation.CompactBottomNavLayout
@@ -107,18 +111,23 @@ fun MainNavHost(deepLinkIntent: Intent? = null) {
         }
         AuthManager.AuthState.Authenticated -> {
             val currentUser by authViewModel.authManager.currentUser.collectAsStateWithLifecycle()
-            if (currentUser?.role == "team_member" || currentUser?.role == "assistant") {
-                TeamMemberPortalScreen(
+            when (portalDestinationForRole(currentUser?.role)) {
+                PortalDestination.SECRETARY -> SecretaryPortalScreen(
+                    viewModel = hiltViewModel<SecretaryPortalViewModel>(),
+                    authManager = authViewModel.authManager
+                )
+                PortalDestination.TEAM_MEMBER -> TeamMemberPortalScreen(
                     viewModel = hiltViewModel<TeamMemberPortalViewModel>(),
                     authManager = authViewModel.authManager
                 )
-            } else if (windowSizeClass != null && windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact) {
-                AdaptiveNavigationRailLayout(
-                    initialDeepLinkRoute = replayRoute,
-                    currentUser = currentUser
-                )
-            } else {
-                CompactBottomNavLayout(initialDeepLinkRoute = replayRoute)
+                PortalDestination.ORGANIZER -> if (windowSizeClass != null && windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact) {
+                    AdaptiveNavigationRailLayout(
+                        initialDeepLinkRoute = replayRoute,
+                        currentUser = currentUser
+                    )
+                } else {
+                    CompactBottomNavLayout(initialDeepLinkRoute = replayRoute)
+                }
             }
         }
     }

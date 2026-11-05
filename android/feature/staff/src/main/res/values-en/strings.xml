@@ -152,4 +152,20 @@
     <string name="staff_list_action_email">Send email</string>
     <string name="staff_ok">OK</string>
 
+    <!-- Secretary portal (#1347 S2) -->
+    <string name="secretary_portal_title">Secretary portal</string>
+    <string name="secretary_portal_agenda">Agenda</string>
+    <string name="secretary_portal_staffing">Event staffing</string>
+    <string name="secretary_portal_directory">Staff directory</string>
+    <string name="secretary_portal_empty_agenda">No upcoming events.</string>
+    <string name="secretary_portal_select_event_hint">Select an event to see its staffing.</string>
+    <string name="secretary_portal_empty_staff">No staff assigned to this event yet.</string>
+    <string name="secretary_portal_empty_directory">No staff registered yet.</string>
+
+    <!-- Invite role (#1347 S1/S3) -->
+    <string name="staff_detail_invite_role_label">Access role</string>
+    <string name="staff_detail_invite_role_member">Member</string>
+    <string name="staff_detail_invite_role_assistant">Secretary</string>
+    <string name="staff_detail_invite_assistant_business_only">The Secretary option requires the Business plan.</string>
+
 </resources>

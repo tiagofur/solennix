@@ -462,5 +462,35 @@
     "decrease_quantity": "Disminuir cantidad",
     "increase_quantity": "Aumentar cantidad",
     "select_named": "Seleccionar {{name}}"
+  },
+  "assistant": {
+    "portal_nav": "Navegación de secretaría",
+    "nav": {
+      "agenda": "Agenda",
+      "staff": "Personal"
+    },
+    "agenda_title": "Agenda de eventos",
+    "agenda_subtitle": "Próximos eventos y dotación de personal. Solo lectura.",
+    "upcoming_title": "Próximos eventos",
+    "agenda_empty": "No hay próximos eventos.",
+    "staffing_title": "Dotación del evento",
+    "staffing_empty": "Este evento aún no tiene personal asignado.",
+    "summary": {
+      "total": "Total",
+      "confirmed": "Confirmados",
+      "pending": "Pendientes",
+      "declined": "Rechazados",
+      "cancelled": "Cancelados"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "confirmed": "Confirmado",
+      "declined": "Rechazado",
+      "cancelled": "Cancelado"
+    },
+    "directory_title": "Directorio de personal",
+    "directory_subtitle": "Datos de contacto del equipo. Solo lectura.",
+    "directory_empty": "Todavía no hay personal registrado.",
+    "load_error": "No pudimos cargar la información."
   }
 }

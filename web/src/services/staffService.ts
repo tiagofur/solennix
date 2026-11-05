@@ -7,6 +7,7 @@ import type {
   PaginatedResponse,
   PaginationParams,
   Staff,
+  StaffAttendanceSummary,
   StaffAvailability,
   StaffInsert,
   StaffInviteResponse,
@@ -19,6 +20,9 @@ import type {
   StaffTeamUpdate,
   StaffUpdate,
 } from '../types/entities';
+
+/** Rol que recibirá el colaborador al aceptar la invitación. `assistant` requiere plan Business (el backend responde 403 en otro caso). */
+export type StaffInviteTargetRole = 'team_member' | 'assistant';
 
 export const staffService = {
   async getAll(): Promise<Staff[]> {
@@ -58,8 +62,8 @@ export const staffService = {
     return api.delete(`/staff/${id}`);
   },
 
-  async inviteUser(id: string): Promise<StaffInviteResponse> {
-    return api.post<StaffInviteResponse>(`/staff/${id}/invite`, {});
+  async inviteUser(id: string, targetRole: StaffInviteTargetRole = 'team_member'): Promise<StaffInviteResponse> {
+    return api.post<StaffInviteResponse>(`/staff/${id}/invite`, { target_role: targetRole });
   },
 
   async revokeInvite(id: string): Promise<void> {
@@ -68,6 +72,10 @@ export const staffService = {
 
   async getByEvent(eventId: string): Promise<EventStaff[]> {
     return api.get<EventStaff[]>(`/events/${eventId}/staff`);
+  },
+
+  async getEventStaffSummary(eventId: string): Promise<StaffAttendanceSummary> {
+    return api.get<StaffAttendanceSummary>(`/events/${eventId}/staff/summary`);
   },
 
   async getAvailability(params: { date?: string; start?: string; end?: string }): Promise<StaffAvailability[]> {

@@ -27,6 +27,12 @@ class StaffDetailViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
 
+    private fun authManager(): com.creapolis.solennix.core.network.AuthManager {
+        val authManager = io.mockk.mockk<com.creapolis.solennix.core.network.AuthManager>()
+        io.mockk.every { authManager.currentUser } returns kotlinx.coroutines.flow.MutableStateFlow(null)
+        return authManager
+    }
+
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(dispatcher)
@@ -42,7 +48,7 @@ class StaffDetailViewModelTest {
         val repository = mockk<StaffRepository>()
         coEvery { repository.getStaffMember("s1") } returns Staff(id = "s1", name = "Ana")
 
-        val viewModel = StaffDetailViewModel(repository, SavedStateHandle(mapOf("staffId" to "s1")))
+        val viewModel = StaffDetailViewModel(repository, authManager(), SavedStateHandle(mapOf("staffId" to "s1")))
         val collector = backgroundScope.launch { viewModel.uiState.collect { } }
         advanceUntilIdle()
 
@@ -76,7 +82,7 @@ class StaffDetailViewModelTest {
             createdAt = "2026-05-13T00:00:00Z"
         )
 
-        val viewModel = StaffDetailViewModel(repository, SavedStateHandle(mapOf("staffId" to "s1")))
+        val viewModel = StaffDetailViewModel(repository, authManager(), SavedStateHandle(mapOf("staffId" to "s1")))
         val collector = backgroundScope.launch { viewModel.uiState.collect { } }
         advanceUntilIdle()
 
@@ -98,7 +104,7 @@ class StaffDetailViewModelTest {
             inviteStatus = "pending"
         )
 
-        val viewModel = StaffDetailViewModel(repository, SavedStateHandle(mapOf("staffId" to "s1")))
+        val viewModel = StaffDetailViewModel(repository, authManager(), SavedStateHandle(mapOf("staffId" to "s1")))
         val collector = backgroundScope.launch { viewModel.uiState.collect { } }
         advanceUntilIdle()
 
@@ -137,7 +143,7 @@ class StaffDetailViewModelTest {
             )
         )
 
-        val viewModel = StaffDetailViewModel(repository, SavedStateHandle(mapOf("staffId" to "s1")))
+        val viewModel = StaffDetailViewModel(repository, authManager(), SavedStateHandle(mapOf("staffId" to "s1")))
         val collector = backgroundScope.launch { viewModel.uiState.collect { } }
         advanceUntilIdle()
 
@@ -160,7 +166,7 @@ class StaffDetailViewModelTest {
             email = "ana@example.com"
         )
 
-        val viewModel = StaffDetailViewModel(repository, SavedStateHandle(mapOf("staffId" to "s1")))
+        val viewModel = StaffDetailViewModel(repository, authManager(), SavedStateHandle(mapOf("staffId" to "s1")))
         val collector = backgroundScope.launch { viewModel.uiState.collect { } }
         advanceUntilIdle()
         assertFalse(viewModel.uiState.value.hasPendingInvite)
@@ -198,7 +204,7 @@ class StaffDetailViewModelTest {
         )
         coEvery { repository.deleteStaff("s1") } returns Unit
 
-        val viewModel = StaffDetailViewModel(repository, SavedStateHandle(mapOf("staffId" to "s1")))
+        val viewModel = StaffDetailViewModel(repository, authManager(), SavedStateHandle(mapOf("staffId" to "s1")))
         val collector = backgroundScope.launch { viewModel.uiState.collect { } }
         advanceUntilIdle()
 

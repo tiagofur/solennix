@@ -28,6 +28,7 @@ object Endpoints {
     fun staff(id: String) = "staff/$id"
     fun staffInvite(id: String) = "staff/$id/invite"
     fun staffRespondAssignment(id: String) = "staff/assignments/$id/respond"
+    fun eventStaffSummary(eventId: String) = "events/$eventId/staff/summary"
     fun staffExecutionState(id: String) = "staff/assignments/$id/execution-state"
     fun eventStaff(eventId: String) = "events/$eventId/staff"
 

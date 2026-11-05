@@ -83,6 +83,10 @@ enum StaffStrings {
     static var inviteRevokeError: String { FeatureL10n.text("staff.detail.invite_revoke_error", "No se pudo revocar la invitación") }
     static var shareInviteLink: String { FeatureL10n.text("staff.detail.share_invite_link", "Compartir") }
     static var resendInvite: String { FeatureL10n.text("staff.detail.resend_invite", "Reenviar invitación") }
+    static var inviteRoleLabel: String { FeatureL10n.text("staff.detail.invite_role_label", "Rol de acceso") }
+    static var inviteRoleMember: String { FeatureL10n.text("staff.detail.invite_role_member", "Miembro") }
+    static var inviteRoleAssistant: String { FeatureL10n.text("staff.detail.invite_role_assistant", "Secretario") }
+    static var inviteRoleHint: String { FeatureL10n.text("staff.detail.invite_role_hint", "Miembro ve solo su jornada. Secretario ve agenda, dotación y personal.") }
     static var invitePendingNoLink: String { FeatureL10n.text("staff.detail.invite_pending_no_link", "Ese link ya no está en este dispositivo. Reenviá la invitación para generar uno nuevo.") }
     static var inviteStepsTitle: String { FeatureL10n.text("staff.detail.invite_steps_title", "Qué sigue") }
     static var inviteStepOpenLink: String { FeatureL10n.text("staff.detail.invite_step_open_link", "1. El colaborador abre el link") }
@@ -186,4 +190,41 @@ enum StaffStrings {
     static var membersFooter: String { FeatureL10n.text("staff.teams_form.members_footer", "Ordenalos como deberían aparecer al asignar el equipo a un evento. El líder se marca con la corona.") }
     static var pickerEmptyMessage: String { FeatureL10n.text("staff.teams_form.picker_empty_message", "Agrega colaboradores en la sección Personal antes de armar equipos") }
     static var pickerTitle: String { FeatureL10n.text("staff.teams_form.picker_title", "Agregar miembro") }
+
+    // MARK: - Assistant Portal (Secretario, solo lectura)
+
+    static var assistantTitle: String { FeatureL10n.text("staff.assistant.title", "Panel del secretario") }
+    static var assistantAgenda: String { FeatureL10n.text("staff.assistant.agenda", "Agenda") }
+    static var assistantDirectory: String { FeatureL10n.text("staff.assistant.directory", "Personal") }
+    static var assistantSearchStaff: String { FeatureL10n.text("staff.assistant.search_staff", "Buscar personal") }
+    static var assistantLoading: String { FeatureL10n.text("staff.assistant.loading", "Cargando panel...") }
+    static var assistantLoadError: String { FeatureL10n.text("staff.assistant.load_error", "No pudimos cargar el panel") }
+    static var assistantLoadErrorMessage: String { FeatureL10n.text("staff.assistant.load_error_message", "No pudimos cargar el panel del secretario.") }
+    static var assistantEmptyEvents: String { FeatureL10n.text("staff.assistant.empty_events", "No hay eventos próximos") }
+    static var assistantEmptyEventsMessage: String { FeatureL10n.text("staff.assistant.empty_events_message", "Cuando haya eventos próximos, aparecerán acá con su dotación.") }
+    static var assistantEmptyDirectory: String { FeatureL10n.text("staff.assistant.empty_directory", "Sin personal registrado") }
+    static var assistantStaffingTitle: String { FeatureL10n.text("staff.assistant.staffing_title", "Dotación") }
+    static var assistantNoStaff: String { FeatureL10n.text("staff.assistant.no_staff", "Sin personal asignado") }
+    static var assistantReloadAccessibility: String { FeatureL10n.text("staff.assistant.reload_a11y", "Recargar panel") }
+    static var assistantSignOutAccessibility: String { FeatureL10n.text("staff.assistant.sign_out_a11y", "Cerrar sesión") }
+    static var assistantStatusConfirmed: String { FeatureL10n.text("staff.assistant.status_confirmed", "Confirmado") }
+    static var assistantStatusPending: String { FeatureL10n.text("staff.assistant.status_pending", "Pendiente") }
+    static var assistantStatusDeclined: String { FeatureL10n.text("staff.assistant.status_declined", "Rechazó") }
+    static var assistantStatusCancelled: String { FeatureL10n.text("staff.assistant.status_cancelled", "Cancelado") }
+
+    static func assistantSummaryConfirmed(_ count: Int) -> String {
+        FeatureL10n.format("staff.assistant.summary_confirmed", "%d confirmados", count)
+    }
+
+    static func assistantSummaryPending(_ count: Int) -> String {
+        FeatureL10n.format("staff.assistant.summary_pending", "%d pendientes", count)
+    }
+
+    static func assistantSummaryDeclined(_ count: Int) -> String {
+        FeatureL10n.format("staff.assistant.summary_declined", "%d rechazados", count)
+    }
+
+    static func assistantSummaryCancelled(_ count: Int) -> String {
+        FeatureL10n.format("staff.assistant.summary_cancelled", "%d cancelados", count)
+    }
 }
