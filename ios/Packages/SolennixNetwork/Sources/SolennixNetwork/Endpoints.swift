@@ -102,6 +102,9 @@ public enum Endpoint {
     public static let staffMyTimeline = "/staff/my-timeline"
     public static let staffMyTimelineRead = "/staff/my-timeline/read"
 
+    /// Seat quota of the current organizer (GET /api/staff/limits, #1366).
+    public static let staffLimits = "/staff/limits"
+
     public static func staffRespondAssignment(_ id: String) -> String {
         "/staff/assignments/\(id)/respond"
     }

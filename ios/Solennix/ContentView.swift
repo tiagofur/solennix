@@ -128,11 +128,12 @@ struct ContentView: View {
 
     @ViewBuilder
     private var authenticatedLayout: some View {
-        if authManager.currentUser?.role == "assistant" {
+        switch portalDestination(forRole: authManager.currentUser?.role) {
+        case .secretary:
             AssistantPortalView(apiClient: apiClient)
-        } else if authManager.currentUser?.role == "team_member" {
+        case .teamMember:
             TeamMemberPortalView(apiClient: apiClient)
-        } else {
+        case .organizer:
             mainLayout
         }
     }

@@ -52,6 +52,18 @@ public final class StaffListViewModel {
     public var showDeleteConfirm: Bool = false
     public var errorMessage: String?
 
+    // MARK: - Seat Quota (#1366)
+
+    /// Seat usage from `GET /api/staff/limits`; `nil` until loaded or on fetch failure.
+    public var limits: StaffLimits?
+
+    /// Proactive creation block (parity with web): true when the plan has a
+    /// finite capacity and it is already fully used.
+    public var isAtLimit: Bool {
+        guard let limits, !limits.unlimited, let max = limits.max else { return false }
+        return limits.used >= max
+    }
+
     // MARK: - Pagination
 
     public var currentPage: Int = 1
@@ -101,6 +113,10 @@ public final class StaffListViewModel {
         currentPage = 1
 
         do {
+            // Seat quota refreshes on every load; a failure must not block the
+            // list (non-fatal), #1366.
+            limits = try? await apiClient.fetchStaffLimits()
+
             if isFiltering {
                 // Server search via `q` param.
                 let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -198,6 +214,7 @@ public final class StaffListViewModel {
             try await apiClient.delete(Endpoint.staff(item.id))
             staff.removeAll { $0.id == item.id }
             applyFilters()
+            limits = try? await apiClient.fetchStaffLimits()
         } catch {
             errorMessage = mapError(error)
         }
@@ -227,6 +244,7 @@ public final class StaffListViewModel {
         errorMessage = nil
         do {
             try await apiClient.delete(Endpoint.staff(item.id))
+            limits = try? await apiClient.fetchStaffLimits()
         } catch {
             // Restore on failure
             staff.append(item)

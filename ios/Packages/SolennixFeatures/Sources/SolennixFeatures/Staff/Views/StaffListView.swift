@@ -14,6 +14,14 @@ public struct StaffListView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.apiClient) private var apiClient
     @Environment(ToastManager.self) private var toastManager
+    @State private var showSeatsAlert = false
+
+    /// "Asientos: 3 de 5" badge; nil for unlimited plans or before the
+    /// quota loads (#1366).
+    private var seatsBadgeText: String? {
+        guard let limits = viewModel.limits, !limits.unlimited, let max = limits.max else { return nil }
+        return StaffStrings.seatsUsage(used: limits.used, max: max)
+    }
 
     public init(apiClient: APIClient) {
         _viewModel = State(initialValue: StaffListViewModel(apiClient: apiClient))
@@ -33,16 +41,38 @@ public struct StaffListView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: Spacing.sm) {
-                        NavigationLink(value: Route.staffForm()) {
-                            Image(systemName: "plus")
-                                .font(.body)
-                                .foregroundStyle(SolennixColors.primary)
-                                .accessibilityLabel(StaffStrings.addAccessibility)
+                        if let badge = seatsBadgeText {
+                            Text(badge)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(viewModel.isAtLimit ? SolennixColors.warning : SolennixColors.textSecondary)
+                                .accessibilityLabel(badge)
+                        }
+                        if viewModel.isAtLimit {
+                            Button {
+                                showSeatsAlert = true
+                            } label: {
+                                Image(systemName: "plus")
+                                    .font(.body)
+                                    .foregroundStyle(SolennixColors.textTertiary)
+                            }
+                            .accessibilityLabel(StaffStrings.addAccessibility)
+                        } else {
+                            NavigationLink(value: Route.staffForm()) {
+                                Image(systemName: "plus")
+                                    .font(.body)
+                                    .foregroundStyle(SolennixColors.primary)
+                                    .accessibilityLabel(StaffStrings.addAccessibility)
+                            }
                         }
 
                         sortMenu
                     }
                 }
+            }
+            .alert(StaffStrings.seatsAtLimitTitle, isPresented: $showSeatsAlert) {
+                Button(StaffStrings.cancel, role: .cancel) {}
+            } message: {
+                Text(StaffStrings.seatsAtLimitMessage)
             }
             .confirmationDialog(
                 StaffStrings.deleteTitle,

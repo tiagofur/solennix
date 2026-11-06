@@ -227,4 +227,19 @@ enum StaffStrings {
     static func assistantSummaryCancelled(_ count: Int) -> String {
         FeatureL10n.format("staff.assistant.summary_cancelled", "%d cancelados", count)
     }
+
+    // MARK: - Seats (#1366)
+
+    /// Usage badge: "Asientos: 3 de 5" style with positional args (used, max).
+    static func seatsUsage(used: Int, max: Int) -> String {
+        FeatureL10n.format("staff.list.seats_usage_format", "Asientos: %1$d de %2$d", used, max)
+    }
+
+    static var seatsAtLimitTitle: String {
+        FeatureL10n.text("staff.list.seats_at_limit_title", "Límite de asientos alcanzado")
+    }
+
+    static var seatsAtLimitMessage: String {
+        FeatureL10n.text("staff.list.seats_at_limit_message", "Tu plan no tiene más asientos de personal disponibles. Liberá uno o actualizá tu plan desde la app.")
+    }
 }

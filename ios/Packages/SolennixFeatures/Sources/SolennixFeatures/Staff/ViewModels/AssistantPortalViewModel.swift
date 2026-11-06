@@ -84,3 +84,25 @@ public final class AssistantPortalViewModel {
         )
     }
 }
+
+// MARK: - Role Routing (#1366)
+
+/// Destination for an authenticated user, by role. Extracted from
+/// `ContentView.authenticatedLayout` so the gating has regression tests.
+public enum PortalDestination: Equatable {
+    case secretary
+    case teamMember
+    case organizer
+}
+
+/// Mirrors the production switch in `ContentView`: a `nil`/unknown role falls
+/// to `.organizer`, matching today's behavior — the app-level state machine
+/// guarantees a loaded user before `.authenticated`, so a null role cannot be
+/// authenticated on iOS (unlike the Android fail-closed fix in #1365).
+public func portalDestination(forRole role: String?) -> PortalDestination {
+    switch role?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+    case "assistant": return .secretary
+    case "team_member": return .teamMember
+    default: return .organizer
+    }
+}
