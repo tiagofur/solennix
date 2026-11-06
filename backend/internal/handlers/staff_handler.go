@@ -190,10 +190,15 @@ func (h *StaffHandler) GetStaffLimits(w http.ResponseWriter, r *http.Request) {
 		max := 5
 		resp.Max = &max
 		resp.Unlimited = false
-	default:
-		// business and any paid/enterprise plan: unlimited
+	case "business":
 		resp.Max = nil
 		resp.Unlimited = true
+	default:
+		// Unrecognized plans fail closed at the most restrictive tier
+		// until the plan is known (#1365).
+		max := 1
+		resp.Max = &max
+		resp.Unlimited = false
 	}
 
 	writeJSON(w, http.StatusOK, resp)
@@ -255,9 +260,12 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 		seatLimit = 1
 	case "pro":
 		seatLimit = 5
-	default:
-		// business and any unknown paid plans: unlimited — skip atomic path.
+	case "business":
 		seatLimit = 0
+	default:
+		// Unrecognized plans fail closed at the most restrictive tier
+		// until the plan is known (#1365).
+		seatLimit = 1
 	}
 
 	if seatLimit > 0 {
@@ -419,6 +427,12 @@ func (h *StaffHandler) InviteStaffUser(w http.ResponseWriter, r *http.Request) {
 	plan := normalizePlan(user.Plan)
 	if plan != "pro" && plan != "business" {
 		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.team_member_plan_required")
+		return
+	}
+	if !IsPlanActive(user) {
+		// Paid plans with a lapsed expiry must not invite collaborators,
+		// matching the other paid-feature gates (#1365).
+		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.plan_expired")
 		return
 	}
 

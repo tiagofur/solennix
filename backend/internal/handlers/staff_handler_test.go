@@ -504,6 +504,67 @@ func TestInviteStaffUser_BasicPlan_Returns403(t *testing.T) {
 	staffRepo.AssertNotCalled(t, "CreateInvite", mock.Anything, mock.Anything)
 }
 
+// Fail-closed hardening (#1365): an expired paid plan must not invite
+// collaborators, and unrecognized plans must get the most restrictive tier.
+func TestInviteStaffUser_ExpiredPlan_Returns403(t *testing.T) {
+	userID := uuid.New()
+	staffID := uuid.New()
+	expired := time.Now().Add(-24 * time.Hour)
+
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "business", PlanExpiresAt: &expired, Name: "Owner"}, nil)
+
+	authSvc := services.NewAuthService("test-secret", 24)
+	h := NewStaffHandler(staffRepo, userRepo)
+	h.SetInviteSupport(authSvc, nil, "https://app.solennix.com")
+
+	req := makeReqWithIDParam(http.MethodPost, "/api/staff/"+staffID.String()+"/invite", "{}", staffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.InviteStaffUser(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	staffRepo.AssertNotCalled(t, "CreateInvite", mock.Anything, mock.Anything)
+}
+
+func TestCreateStaff_UnknownPlan_IsRestrictive(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "mystery_tier"}, nil)
+	staffRepo.On("CountByUserID", mock.Anything, userID).Return(1, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithUserID(http.MethodPost, "/api/staff", `{"name":"Maria"}`, userID)
+	rr := httptest.NewRecorder()
+	h.CreateStaff(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	assert.Contains(t, rr.Body.String(), "plan_limit_exceeded")
+	staffRepo.AssertNotCalled(t, "Create", mock.Anything, mock.Anything)
+}
+
+func TestGetStaffLimits_UnknownPlan_IsRestrictive(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "mystery_tier"}, nil)
+	staffRepo.On("CountByUserID", mock.Anything, userID).Return(0, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/limits", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffLimits(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	var resp StaffLimitsResponse
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.NotNil(t, resp.Max)
+	assert.Equal(t, 1, *resp.Max)
+	assert.False(t, resp.Unlimited)
+}
+
 func TestRevokeStaffInvite_Success_Returns204(t *testing.T) {
 	userID := uuid.New()
 	staffID := uuid.New()

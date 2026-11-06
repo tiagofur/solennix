@@ -134,7 +134,10 @@ class SecretaryPortalViewModelTest {
         assertEquals(PortalDestination.SECRETARY, portalDestinationForRole(" Assistant "))
         assertEquals(PortalDestination.TEAM_MEMBER, portalDestinationForRole("team_member"))
         assertEquals(PortalDestination.ORGANIZER, portalDestinationForRole("organizer"))
-        assertEquals(PortalDestination.ORGANIZER, portalDestinationForRole(null))
-        assertEquals(PortalDestination.ORGANIZER, portalDestinationForRole(""))
+        // Fail-closed (#1365): an unknown/absent role never lands in the
+        // organizer app; it falls back to the least-privileged portal.
+        assertEquals(PortalDestination.TEAM_MEMBER, portalDestinationForRole(null))
+        assertEquals(PortalDestination.TEAM_MEMBER, portalDestinationForRole(""))
+        assertEquals(PortalDestination.TEAM_MEMBER, portalDestinationForRole("   "))
     }
 }
