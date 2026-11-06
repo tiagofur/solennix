@@ -123,10 +123,10 @@ export const AccountingExportModal: React.FC<AccountingExportModalProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {(
                   [
-                    { id: "year", label: `Año ${currentYear}` },
-                    { id: "quarter", label: "Trimestre" },
-                    { id: "all", label: "Historial" },
-                    { id: "custom", label: "Personalizado" },
+                    { id: "year", label: t("events:export_accounting.preset_year", { year: currentYear }) },
+                    { id: "quarter", label: t("events:export_accounting.preset_quarter") },
+                    { id: "all", label: t("events:export_accounting.preset_all") },
+                    { id: "custom", label: t("events:export_accounting.preset_custom") },
                   ] as const
                 ).map((opt) => (
                   <button

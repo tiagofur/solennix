@@ -217,8 +217,11 @@ export const StaffDetails: React.FC = () => {
       try {
         await navigator.share({ title, text, url: inviteURL });
         return;
-      } catch {
-        // Share failed or was dismissed — fall through to clipboard copy.
+      } catch (err) {
+        // User dismissed the share sheet — do not overwrite the clipboard
+        // or show a success toast for an aborted share (#1366).
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        // Share failed — fall through to clipboard copy.
       }
     }
     await onCopyInviteURL(text);
