@@ -147,11 +147,7 @@ private fun TeamInviteAcceptFormContent(
             text = stringResource(R.string.auth_team_invite_submit),
             onClick = { viewModel.acceptTeamInvite(token) },
             isLoading = viewModel.isLoading,
-            enabled = viewModel.teamInvitePassword.length >= 8
-                && viewModel.teamInvitePassword.any { it.isUpperCase() }
-                && viewModel.teamInvitePassword.any { it.isLowerCase() }
-                && viewModel.teamInvitePassword.any { it.isDigit() }
-                && viewModel.teamInvitePassword == viewModel.teamInviteConfirmPassword,
+            enabled = viewModel.isTeamInviteValid,
         )
 
         if (viewModel.errorMessage != null) {

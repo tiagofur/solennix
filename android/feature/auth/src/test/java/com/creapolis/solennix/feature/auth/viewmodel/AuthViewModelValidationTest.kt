@@ -107,6 +107,31 @@ class AuthViewModelValidationTest {
     }
 
     @Test
+    fun `isTeamInviteValid requires full complexity including symbol`() {
+        val vm = createViewModel()
+
+        vm.teamInvitePassword = "StrongPass1!"
+        vm.teamInviteConfirmPassword = "StrongPass1!"
+        assertTrue(vm.isTeamInviteValid)
+
+        vm.teamInvitePassword = "StrongPass12"
+        vm.teamInviteConfirmPassword = "StrongPass12"
+        assertFalse(vm.isTeamInviteValid)
+
+        vm.teamInvitePassword = "StrongPass1 "
+        vm.teamInviteConfirmPassword = "StrongPass1 "
+        assertFalse(vm.isTeamInviteValid)
+
+        vm.teamInvitePassword = "Strong Pass1!"
+        vm.teamInviteConfirmPassword = "Strong Pass1!"
+        assertTrue(vm.isTeamInviteValid)
+
+        vm.teamInvitePassword = "StrongPass1!"
+        vm.teamInviteConfirmPassword = "Different1!"
+        assertFalse(vm.isTeamInviteValid)
+    }
+
+    @Test
     fun `login returns early when credentials are invalid`() {
         val vm = createViewModel()
 

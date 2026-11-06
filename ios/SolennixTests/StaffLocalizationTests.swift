@@ -61,7 +61,7 @@ final class StaffLocalizationTests: XCTestCase {
         XCTAssertEqual(StaffStrings.deleteTitle, expected(spanish: "Eliminar personal", english: "Delete staff member"))
         XCTAssertEqual(StaffStrings.deletedToast("Juan"), expected(spanish: "Juan eliminado", english: "Juan deleted"))
         XCTAssertEqual(StaffStrings.deleteMessage("Juan"), expected(spanish: "Se eliminará a Juan. Podrás deshacer durante unos segundos.", english: "Remove Juan? You can undo this for a few seconds."))
-        XCTAssertEqual(StaffStrings.deleteConfirmMessage("Juan"), expected(spanish: "¿Estás seguro de que querés eliminar a Juan? Esta acción no se puede deshacer.", english: "Are you sure you want to delete Juan? This action cannot be undone."))
+        XCTAssertEqual(StaffStrings.deleteConfirmMessage("Juan"), expected(spanish: "¿Estás seguro de que querés eliminar a Juan? Se eliminará del catálogo y de los eventos donde esté asignado. Esta acción no se puede deshacer.", english: "Are you sure you want to delete Juan? They will be removed from the catalog and any assigned events. This action cannot be undone."))
     }
 
     func testStaffDetailStringsResolve() {

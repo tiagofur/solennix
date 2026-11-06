@@ -115,7 +115,8 @@ class AuthViewModel @Inject constructor(
     var registerEmail by mutableStateOf("")
     var registerPassword by mutableStateOf("")
     var registerConfirmPassword by mutableStateOf("")
-    private val passwordComplexityRegex = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")
+    // Símbolo = no alfanumérico y no espacio (servidor: unicode Punct|Symbol; ver #1348).
+    private val passwordComplexityRegex = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9\\s]).{8,}$")
 
     val isRegisterValid: Boolean get() = registerName.length >= 2 &&
             registerEmail.isValidEmail() &&
@@ -208,6 +209,10 @@ class AuthViewModel @Inject constructor(
     var teamInvitePassword by mutableStateOf("")
     var teamInviteConfirmPassword by mutableStateOf("")
     var teamInviteSuccess by mutableStateOf(false)
+
+    val isTeamInviteValid: Boolean
+        get() = passwordComplexityRegex.matches(teamInvitePassword) &&
+            teamInvitePassword == teamInviteConfirmPassword
 
     fun resetPassword() {
         if (!passwordComplexityRegex.matches(newPassword) || newPassword != confirmNewPassword) return

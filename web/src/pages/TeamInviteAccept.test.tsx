@@ -56,16 +56,16 @@ describe('TeamInviteAccept', () => {
     renderPage('/team-invite?token=token-123');
 
     fireEvent.change(screen.getByLabelText('Contraseña'), {
-      target: { value: 'StrongPass1' },
+      target: { value: 'StrongPass1!' },
     });
     fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-      target: { value: 'StrongPass1' },
+      target: { value: 'StrongPass1!' },
     });
 
     fireEvent.click(screen.getByRole('button', { name: /aceptar invitación/i }));
 
     await waitFor(() => {
-      expect(authService.acceptTeamInvite).toHaveBeenCalledWith('token-123', 'StrongPass1');
+      expect(authService.acceptTeamInvite).toHaveBeenCalledWith('token-123', 'StrongPass1!');
     });
     await waitFor(() => {
       expect(checkAuth).toHaveBeenCalled();
@@ -75,16 +75,72 @@ describe('TeamInviteAccept', () => {
     });
   });
 
+  it('rejects passwords without a symbol and does not call the API', async () => {
+    renderPage('/team-invite?token=token-123');
+
+    fireEvent.change(screen.getByLabelText('Contraseña'), {
+      target: { value: 'StrongPass12' },
+    });
+    fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
+      target: { value: 'StrongPass12' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /aceptar invitación/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/símbolo/i)).toBeInTheDocument();
+    });
+    expect(authService.acceptTeamInvite).not.toHaveBeenCalled();
+  });
+
+  it('rejects a trailing space as the only symbol', async () => {
+    renderPage('/team-invite?token=token-123');
+
+    fireEvent.change(screen.getByLabelText('Contraseña'), {
+      target: { value: 'StrongPass1 ' },
+    });
+    fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
+      target: { value: 'StrongPass1 ' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /aceptar invitación/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/símbolo/i)).toBeInTheDocument();
+    });
+    expect(authService.acceptTeamInvite).not.toHaveBeenCalled();
+  });
+
+  it('accepts spaces when a real symbol is present', async () => {
+    (authService.acceptTeamInvite as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      user: { role: 'team_member' },
+    });
+    renderPage('/team-invite?token=token-123');
+
+    fireEvent.change(screen.getByLabelText('Contraseña'), {
+      target: { value: 'Strong Pass1!' },
+    });
+    fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
+      target: { value: 'Strong Pass1!' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /aceptar invitación/i }));
+
+    await waitFor(() => {
+      expect(authService.acceptTeamInvite).toHaveBeenCalledWith('token-123', 'Strong Pass1!');
+    });
+  });
+
   it('shows API error if invite acceptance fails', async () => {
     (authService.acceptTeamInvite as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Token expirado'));
 
     renderPage('/team-invite?token=bad-token');
 
     fireEvent.change(screen.getByLabelText('Contraseña'), {
-      target: { value: 'StrongPass1' },
+      target: { value: 'StrongPass1!' },
     });
     fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-      target: { value: 'StrongPass1' },
+      target: { value: 'StrongPass1!' },
     });
 
     fireEvent.click(screen.getByRole('button', { name: /aceptar invitación/i }));
@@ -104,16 +160,16 @@ describe('TeamInviteAccept', () => {
     renderPage('/team-invite/accept?token=legacy-token');
 
     fireEvent.change(screen.getByLabelText('Contraseña'), {
-      target: { value: 'StrongPass1' },
+      target: { value: 'StrongPass1!' },
     });
     fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-      target: { value: 'StrongPass1' },
+      target: { value: 'StrongPass1!' },
     });
 
     fireEvent.click(screen.getByRole('button', { name: /aceptar invitación/i }));
 
     await waitFor(() => {
-      expect(authService.acceptTeamInvite).toHaveBeenCalledWith('legacy-token', 'StrongPass1');
+      expect(authService.acceptTeamInvite).toHaveBeenCalledWith('legacy-token', 'StrongPass1!');
     });
   });
 });

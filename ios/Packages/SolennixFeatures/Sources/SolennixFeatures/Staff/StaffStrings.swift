@@ -101,7 +101,7 @@ enum StaffStrings {
     }
 
     static func deleteConfirmMessage(_ name: String) -> String {
-        FeatureL10n.format("staff.delete.delete_confirm_message", "¿Estás seguro de que querés eliminar a %@? Esta acción no se puede deshacer.", name)
+        FeatureL10n.format("staff.delete.delete_confirm_message", "¿Estás seguro de que querés eliminar a %@? Se eliminará del catálogo y de los eventos donde esté asignado. Esta acción no se puede deshacer.", name)
     }
 
     // MARK: - Staff Form
