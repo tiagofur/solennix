@@ -44,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -82,6 +83,14 @@ fun StaffDetailScreen(
         if (viewModel.deleteSuccess) {
             onNavigateBack()
         }
+    }
+
+    // Re-entry hook (#1366): when the user comes back from the email/link
+    // client, re-read the invite status so a consumed pending invite drops
+    // its stale in-memory link.
+    LifecycleResumeEffect(Unit) {
+        viewModel.refreshInviteStatus()
+        onPauseOrDispose { }
     }
 
     Scaffold(

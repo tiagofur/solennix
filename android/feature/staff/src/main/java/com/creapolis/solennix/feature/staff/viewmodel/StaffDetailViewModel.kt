@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.staff.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,7 +11,9 @@ import com.creapolis.solennix.core.data.repository.StaffRepository
 import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.model.Staff
 import com.creapolis.solennix.core.network.AuthManager
+import com.creapolis.solennix.feature.staff.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,7 +50,8 @@ data class StaffDetailUiState(
 class StaffDetailViewModel @Inject constructor(
     private val staffRepository: StaffRepository,
     private val authManager: AuthManager,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     companion object {
@@ -135,7 +139,7 @@ class StaffDetailViewModel @Inject constructor(
         if (!current.invitedUserId.isNullOrBlank()) {
             _uiState.update {
                 it.copy(
-                    inviteFeedback = "Este colaborador ya tiene acceso activado.",
+                    inviteFeedback = context.getString(R.string.staff_invite_already_active),
                     inviteFeedbackIsError = false
                 )
             }
@@ -153,7 +157,7 @@ class StaffDetailViewModel @Inject constructor(
                         isInviting = false,
                         inviteUrl = invite.acceptUrl,
                         staff = it.staff?.copy(inviteStatus = invite.status),
-                        inviteFeedback = "Invitación creada correctamente.",
+                        inviteFeedback = context.getString(R.string.staff_invite_created),
                         inviteFeedbackIsError = false
                     )
                 }
@@ -161,7 +165,10 @@ class StaffDetailViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isInviting = false,
-                        inviteFeedback = "No se pudo crear la invitación: ${e.message ?: "error"}",
+                        inviteFeedback = context.getString(
+                            R.string.staff_invite_create_failed,
+                            e.message ?: "error"
+                        ),
                         inviteFeedbackIsError = true
                     )
                 }
@@ -187,7 +194,7 @@ class StaffDetailViewModel @Inject constructor(
     fun onShareFallbackCopied() {
         _uiState.update {
             it.copy(
-                inviteFeedback = "Link copiado al portapapeles.",
+                inviteFeedback = context.getString(R.string.staff_invite_link_copied),
                 inviteFeedbackIsError = false
             )
         }
