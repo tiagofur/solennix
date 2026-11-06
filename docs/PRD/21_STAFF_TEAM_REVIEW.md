@@ -19,9 +19,9 @@ Fuente: `backend/internal/handlers/staff_handler.go` (`basic→1`, `pro→5`, Bu
 
 | Capacidad | Gratis (basic) | Pro | Business |
 | --- | --- | --- | --- |
-| Filas en catálogo (`staff` seats) | **1** | **2** | **∞** |
+| Filas en catálogo (`staff` seats) | **1** | **5** | **∞** |
 | Invitar con acceso (login + portal) | ❌ 403 | ✅ | ✅ |
-| Rol "Secretario" (`assistant`) | ❌ | ❌ | ✅ (no expuesto en ninguna UI) |
+| Rol "Secretario" (`assistant`) | ❌ 403 | ❌ 403 | ✅ (picker Business-only en las 3 apps, #1347) |
 | Email al colaborador al asignar | ❌ | ✅ **ya funciona** | ✅ |
 | Equipos (`staff_teams`) | ✅ sin límite | ✅ | ✅ |
 
@@ -59,15 +59,15 @@ Lo que **no** puede: ver clientes, cotizaciones, finanzas ni nada del organizado
 
 | # | Hallazgo | Evidencia |
 | --- | --- | --- |
-| H1 | **Contradicción pricing ↔ código**: web pricing y PRD dicen "portal de colaboradores (login)" solo Business, pero el backend lo permite desde Pro (`plan != pro && != business` → 403). Pro obtiene el portal "de regalo" sin que el marketing lo prometa. | `web/src/locales/es/pricing.json`; `04_MONETIZATION.md:142`; `staff_handler.go:351-354` |
-| H2 | **Límite de asientos invisible**: ninguna app muestra uso ("1/2") ni tiene CTA de upgrade en Personal. El free/pro llena el formulario y recibe 403 genérico después. | `PlanLimitsManager.swift` (sin staff); `web/src/hooks/usePlanLimits.ts` (sin staff); `PlanLimitsManager.kt` (sin staff) |
+| H1 | ~~**Contradicción pricing ↔ código**~~ **RESUELTO (§3, opción A)**: el portal es Pro+. Marketing y PRD 04 alineados. | #1340 |
+| H2 | **Límite de asientos invisible**: ninguna app muestra uso ("1/5") ni tiene CTA de upgrade en Personal. El free/pro llena el formulario y recibe 403 genérico después. | `PlanLimitsManager.swift` (sin staff); `web/src/hooks/usePlanLimits.ts` (sin staff); `PlanLimitsManager.kt` (sin staff) |
 | H3 | **Mensaje de upgrade incorrecto**: el error genérico `plan.limit_exceeded` dice "Actualiza a **Pro**" incluso para un Pro que ya llegó a 5 y necesita Business. | `backend/internal/i18n/messages.go:128`; iOS lo muestra como footnote (`StaffDetailView.swift:420-425`) |
 | H4 | **Invitación sin email y sin explicación**: el backend no manda correo de invitación; la UI no explica que hay que copiar el link. En iOS el link es memory-only (se pierde al navegar). | `staff_handler.go:411-430` (solo log si emailSvc nil); `StaffDetailView.swift:336,393-429` |
 | H5 | **Copy stale "Phase 2"** en el toggle de notificaciones de las 3 apps, cuando el email al asignar ya está vivo para Pro+. | §1.3 arriba |
 | H6 | **`assistant` (Secretario) es deuda muerta + bug latente**: existe en backend (Business-only) y en tipos de web, pero ninguna app puede invitarlo (las 3 mandan body vacío / `{}`). Y el gating solo chequea `role == "team_member"`: un `assistant` vería la app completa de organizador en iOS. | `APIClient+StaffInvites.swift` (body vacío); `web/src/services/staffService.ts:56-58` (`{}`); `ContentView.swift:130-136` |
 | H7 | **Doble significado de "Rol"**: etiqueta libre de trabajo vs permiso real (`team_member`/`assistant`) sin explicación en UI. Placeholders distintos por plataforma ("Fotógrafa · DJ · Coordinador" vs "…· Mesero"). | `StaffFormView.swift:113-116`; `web/src/locales/es/staff.json:86` |
 | H8 | **Parity drift**: strings de invitación hardcodeadas en español en web (cero claves `invite` en `staff.json`); semántica de borrado contradictoria (web: "se elimina de los eventos" vs Android: "las asignaciones no se borran"); política de contraseña distinta (Android exige símbolo, web no); auto-expansión de equipo desde producto (Ola 3) existe en web pero no en Android/iOS. | `web/src/pages/Staff/StaffDetails.tsx` (inline defaults); `TeamInviteAccept.tsx` vs `TeamInviteAcceptScreen.kt`; `EventForm.tsx:578-652` |
-| H9 | **Pro (2 asientos) no sirve al segmento objetivo**: banquetería chica real = 3–8 meseros. El valor del portal (menos WhatsApp, RSVP, checklist) aparece con 3+. | análisis de producto |
+| H9 | ~~**Pro (2 asientos) no sirve al segmento objetivo**~~ **RESUELTO (§3, opción A)**: Pro = 5 asientos, cubre banquetería chica (3–8 meseros). | #1340 |
 
 ## 3. Decisión tomada (P0 resuelto): opción A — portal en Pro
 
