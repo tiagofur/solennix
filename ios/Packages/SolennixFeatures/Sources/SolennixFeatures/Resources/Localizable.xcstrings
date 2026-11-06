@@ -23057,6 +23057,38 @@
         }
       }
     },
+    "settings.subscription.feature.one_staff_seat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 staff catalog seat"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 colaborador en catálogo de personal"
+          }
+        }
+      }
+    },
+    "settings.subscription.feature.staff_portal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collaborator portal (login)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portal de colaboradores (login)"
+          }
+        }
+      }
+    },
     "settings.subscription.feature.event_calendar": {
       "localizations": {
         "en": {

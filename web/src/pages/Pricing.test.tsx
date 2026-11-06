@@ -86,7 +86,7 @@ describe('Pricing', () => {
 
       // Pro features
       expect(screen.getByText(/Eventos, clientes, catálogo y links de solicitud ilimitados/i)).toBeInTheDocument();
-      expect(screen.getByText(/5 seats de personal/i)).toBeInTheDocument();
+      expect(screen.getByText(/5 seats de personal \+ portal de colaboradores/i)).toBeInTheDocument();
       expect(screen.getByText(/Perfil público full/i)).toBeInTheDocument();
       expect(screen.getByText(/Inbound analytics/i)).toBeInTheDocument();
       expect(screen.getByText('Todo lo anterior, y además:')).toBeInTheDocument();
@@ -106,7 +106,7 @@ describe('Pricing', () => {
 
       // Business features
       expect(screen.getByText('Todo lo de Pro, sin excepción')).toBeInTheDocument();
-      expect(screen.getByText(/Staff seats ilimitados|portal de colaboradores/i)).toBeInTheDocument();
+      expect(screen.getByText(/Staff seats ilimitados \+ portal Secretario/i)).toBeInTheDocument();
       expect(screen.getByText(/Destacado en el directorio/i)).toBeInTheDocument();
       expect(screen.getByText(/WhatsApp Business API \(roadmap\)/i)).toBeInTheDocument();
     });

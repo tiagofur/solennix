@@ -15,19 +15,19 @@
 
 ### 1.1 Matriz de límites por plan (código real)
 
-Fuente: `backend/internal/handlers/staff_handler.go:183` (`basic→1`, `pro→2`, default ∞), `:351` (invite), `:372` (assistant), `backend/internal/handlers/plan_utils.go:89,111,134`.
+Fuente: `backend/internal/handlers/staff_handler.go` (`basic→1`, `pro→5`, Business ∞; invite `team_member` Pro+, `assistant` Business-only), `backend/internal/handlers/plan_utils.go:89,111,134`.
 
 | Capacidad | Gratis (basic) | Pro | Business |
 | --- | --- | --- | --- |
-| Filas en catálogo (`staff` seats) | **1** | **2** | **∞** |
+| Filas en catálogo (`staff` seats) | **1** | **5** | **∞** |
 | Invitar con acceso (login + portal) | ❌ 403 | ✅ | ✅ |
-| Rol "Secretario" (`assistant`) | ❌ | ❌ | ✅ (no expuesto en ninguna UI) |
+| Rol "Secretario" (`assistant`) | ❌ 403 | ❌ 403 | ✅ (picker Business-only en las 3 apps, #1347) |
 | Email al colaborador al asignar | ❌ | ✅ **ya funciona** | ✅ |
 | Equipos (`staff_teams`) | ✅ sin límite | ✅ | ✅ |
 
 - **Los seats NO se facturan**: son un tope de filas. Cero referencias a seats en Stripe/RevenueCat services.
-- El límite se aplica **solo en backend** (`withPlanLimit` con advisory lock, `planlimit/planlimit.go`). Ninguna de las 3 apps muestra "1/2 asientos" ni tiene paywall propio de staff (Clientes/Productos sí tienen gating client-side; Personal no).
-- El PRD confirma los números: "Staff Pro = 2. No documentar 3" ([[04_MONETIZATION]] §2.3, línea 105).
+- El límite se aplica **solo en backend** (`withPlanLimit` con advisory lock, `planlimit/planlimit.go`). Ninguna de las 3 apps muestra "1/5 asientos" ni tiene paywall propio de staff (Clientes/Productos sí tienen gating client-side; Personal no).
+- El PRD confirma los números: "Staff Pro = 5" ([[04_MONETIZATION]] §2.3).
 
 ### 1.2 Qué puede hacer un colaborador invitado (`team_member`)
 
@@ -59,24 +59,26 @@ Lo que **no** puede: ver clientes, cotizaciones, finanzas ni nada del organizado
 
 | # | Hallazgo | Evidencia |
 | --- | --- | --- |
-| H1 | **Contradicción pricing ↔ código**: web pricing y PRD dicen "portal de colaboradores (login)" solo Business, pero el backend lo permite desde Pro (`plan != pro && != business` → 403). Pro obtiene el portal "de regalo" sin que el marketing lo prometa. | `web/src/locales/es/pricing.json`; `04_MONETIZATION.md:142`; `staff_handler.go:351-354` |
-| H2 | **Límite de asientos invisible**: ninguna app muestra uso ("1/2") ni tiene CTA de upgrade en Personal. El free/pro llena el formulario y recibe 403 genérico después. | `PlanLimitsManager.swift` (sin staff); `web/src/hooks/usePlanLimits.ts` (sin staff); `PlanLimitsManager.kt` (sin staff) |
-| H3 | **Mensaje de upgrade incorrecto**: el error genérico `plan.limit_exceeded` dice "Actualiza a **Pro**" incluso para un Pro que ya llegó a 2 y necesita Business. | `backend/internal/i18n/messages.go:128`; iOS lo muestra como footnote (`StaffDetailView.swift:420-425`) |
+| H1 | ~~**Contradicción pricing ↔ código**~~ **RESUELTO (§3, opción A)**: el portal es Pro+. Marketing y PRD 04 alineados. | #1340 |
+| H2 | **Límite de asientos invisible**: ninguna app muestra uso ("1/5") ni tiene CTA de upgrade en Personal. El free/pro llena el formulario y recibe 403 genérico después. | `PlanLimitsManager.swift` (sin staff); `web/src/hooks/usePlanLimits.ts` (sin staff); `PlanLimitsManager.kt` (sin staff) |
+| H3 | **Mensaje de upgrade incorrecto**: el error genérico `plan.limit_exceeded` dice "Actualiza a **Pro**" incluso para un Pro que ya llegó a 5 y necesita Business. | `backend/internal/i18n/messages.go:128`; iOS lo muestra como footnote (`StaffDetailView.swift:420-425`) |
 | H4 | **Invitación sin email y sin explicación**: el backend no manda correo de invitación; la UI no explica que hay que copiar el link. En iOS el link es memory-only (se pierde al navegar). | `staff_handler.go:411-430` (solo log si emailSvc nil); `StaffDetailView.swift:336,393-429` |
 | H5 | **Copy stale "Phase 2"** en el toggle de notificaciones de las 3 apps, cuando el email al asignar ya está vivo para Pro+. | §1.3 arriba |
 | H6 | **`assistant` (Secretario) es deuda muerta + bug latente**: existe en backend (Business-only) y en tipos de web, pero ninguna app puede invitarlo (las 3 mandan body vacío / `{}`). Y el gating solo chequea `role == "team_member"`: un `assistant` vería la app completa de organizador en iOS. | `APIClient+StaffInvites.swift` (body vacío); `web/src/services/staffService.ts:56-58` (`{}`); `ContentView.swift:130-136` |
 | H7 | **Doble significado de "Rol"**: etiqueta libre de trabajo vs permiso real (`team_member`/`assistant`) sin explicación en UI. Placeholders distintos por plataforma ("Fotógrafa · DJ · Coordinador" vs "…· Mesero"). | `StaffFormView.swift:113-116`; `web/src/locales/es/staff.json:86` |
 | H8 | **Parity drift**: strings de invitación hardcodeadas en español en web (cero claves `invite` en `staff.json`); semántica de borrado contradictoria (web: "se elimina de los eventos" vs Android: "las asignaciones no se borran"); política de contraseña distinta (Android exige símbolo, web no); auto-expansión de equipo desde producto (Ola 3) existe en web pero no en Android/iOS. | `web/src/pages/Staff/StaffDetails.tsx` (inline defaults); `TeamInviteAccept.tsx` vs `TeamInviteAcceptScreen.kt`; `EventForm.tsx:578-652` |
-| H9 | **Pro (2 asientos) no sirve al segmento objetivo**: banquetería chica real = 3–8 meseros. El valor del portal (menos WhatsApp, RSVP, checklist) aparece con 3+. | análisis de producto |
+| H9 | ~~**Pro (2 asientos) no sirve al segmento objetivo**~~ **RESUELTO (§3, opción A)**: Pro = 5 asientos, cubre banquetería chica (3–8 meseros). | #1340 |
 
-## 3. Decisión pendiente (P0): ¿portal en Pro o Business-only?
+## 3. Decisión tomada (P0 resuelto): opción A — portal en Pro
 
-Opciones:
+Decisión del dueño (2026-11-05, issue #1340): **opción A**.
 
-- **A (recomendada): portal en Pro con más asientos con login** (ej. Pro = 5, Business = ∞). El portal es el mejor loop de adquisición B2B2C: cada mesero que se loguea ve la marca Solennix. El catálogo ilimitado por sí solo vale menos. Ajustar: `staff_handler.go:183`, `plan_utils.go`, `pricing.json`, PRD 04, iOS `SubscriptionView` (hoy ni menciona staff).
-- **B: respetar Business-only** (como dice el copy actual): cerrar invite a Pro en backend y usar el portal como ancla de Business. Riesgo: el feature deja de ser útil para el 80% del segmento objetivo.
+- **A (adoptada): portal en Pro con más asientos con login** (Pro = 5, Business = ∞). El portal es el mejor loop de adquisición B2B2C: cada mesero que se loguea ve la marca Solennix. El catálogo ilimitado por sí solo vale menos. Alineado en: `staff_handler.go` (Gratis=1, Pro=5, Business=∞; invite `team_member` Pro+, `assistant` Business-only), `plan_utils.go` (`unlimited_staff_seats`), `pricing.json` es/en, PRD 04 §2.3–§2.4, iOS `SubscriptionView` (beneficio staff por plan).
+- **B (descartada): respetar Business-only.** Riesgo: el feature deja de ser útil para el 80% del segmento objetivo.
 
-**Recomendación: A.** Con A, la matriz queda: Gratis = 1 seat catálogo, sin login · Pro = 5 seats + portal + email al asignar · Business = ∞ + Secretario + branding.
+Matriz final: Gratis = 1 seat catálogo, sin login · Pro = 5 seats + portal + email al asignar · Business = ∞ + Secretario + branding.
+
+Nota histórica: este doc citaba `pro→2` y líneas viejas de `staff_handler.go`; la fuente vigente es el código (seats 1/5/∞) y PRD 04 §2.4.
 
 ## 4. Plan de mejoras priorizado
 
