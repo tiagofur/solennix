@@ -474,4 +474,3 @@ func (h *AdminHandler) VerifyUserEmail(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, updated)
 }
-

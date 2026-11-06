@@ -138,13 +138,12 @@ func FormatCurrency(amount float64, currency ...string) string {
 		}
 		result += string(c)
 	}
-	
+
 	if currencyCode == "MXN" {
 		return "$" + result + "." + decPart
 	}
 	return "$" + result + "." + decPart + " " + currencyCode
 }
-
 
 // FormatDate formats a "2006-01-02" date string to "15 de junio de 2026" (es-MX).
 func FormatDate(dateStr string) string {

@@ -6,8 +6,8 @@ func TestSafeSortColumn(t *testing.T) {
 	allowed := []string{"name", "created_at", "total_spent"}
 
 	tests := []struct {
-		input    string
-		wantOut  string
+		input   string
+		wantOut string
 	}{
 		{"name", "name"},
 		{"created_at", "created_at"},

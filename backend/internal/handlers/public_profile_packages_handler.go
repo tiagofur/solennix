@@ -58,32 +58,32 @@ type packageTierRequest struct {
 }
 
 type packageCreateRequest struct {
-	Title         string                `json:"title"`
-	Description   *string               `json:"description,omitempty"`
-	FromPrice     *float64              `json:"from_price,omitempty"`
-	Inclusions    []string              `json:"inclusions,omitempty"`
-	ImageURL      *string               `json:"image_url,omitempty"`
-	IsFeatured    bool                  `json:"is_featured"`
-	SortOrder     *int                  `json:"sort_order,omitempty"`
-	MinGuests     *int                  `json:"min_guests,omitempty"`
-	Items         []packageItemRequest  `json:"items,omitempty"`
-	DiscountTiers []packageTierRequest  `json:"discount_tiers,omitempty"`
-}
-
-type packageUpdateRequest struct {
-	Title         *string              `json:"title,omitempty"`
+	Title         string               `json:"title"`
 	Description   *string              `json:"description,omitempty"`
 	FromPrice     *float64             `json:"from_price,omitempty"`
 	Inclusions    []string             `json:"inclusions,omitempty"`
 	ImageURL      *string              `json:"image_url,omitempty"`
-	IsFeatured    *bool                `json:"is_featured,omitempty"`
+	IsFeatured    bool                 `json:"is_featured"`
 	SortOrder     *int                 `json:"sort_order,omitempty"`
 	MinGuests     *int                 `json:"min_guests,omitempty"`
-	// ClearMinGuests forces min_guests to null when true.
-	ClearMinGuests bool                `json:"clear_min_guests,omitempty"`
 	Items         []packageItemRequest `json:"items,omitempty"`
+	DiscountTiers []packageTierRequest `json:"discount_tiers,omitempty"`
+}
+
+type packageUpdateRequest struct {
+	Title       *string  `json:"title,omitempty"`
+	Description *string  `json:"description,omitempty"`
+	FromPrice   *float64 `json:"from_price,omitempty"`
+	Inclusions  []string `json:"inclusions,omitempty"`
+	ImageURL    *string  `json:"image_url,omitempty"`
+	IsFeatured  *bool    `json:"is_featured,omitempty"`
+	SortOrder   *int     `json:"sort_order,omitempty"`
+	MinGuests   *int     `json:"min_guests,omitempty"`
+	// ClearMinGuests forces min_guests to null when true.
+	ClearMinGuests bool                 `json:"clear_min_guests,omitempty"`
+	Items          []packageItemRequest `json:"items,omitempty"`
 	// ReplaceDetails when true rewrites items+tiers (even if empty = clear structured pricing).
-	ReplaceDetails bool                `json:"replace_details,omitempty"`
+	ReplaceDetails bool                 `json:"replace_details,omitempty"`
 	DiscountTiers  []packageTierRequest `json:"discount_tiers,omitempty"`
 }
 

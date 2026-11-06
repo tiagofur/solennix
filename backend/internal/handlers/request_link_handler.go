@@ -454,5 +454,3 @@ func generateRequestLinkToken() (string, error) {
 	}
 	return hex.EncodeToString(b), nil
 }
-
-

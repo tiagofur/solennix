@@ -312,10 +312,10 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Put("/assignments/{id}/execution-state", staffHandler.PutExecutionState)
 			r.Post("/{id}/invite", staffHandler.InviteStaffUser)
 			r.Delete("/{id}/invite", staffHandler.RevokeStaffInvite)
-				// availability and limits must be registered before /{id} so chi does not treat
-				// them as an id param.
-				r.Get("/limits", staffHandler.GetStaffLimits)
-				r.Get("/availability", staffHandler.GetStaffAvailability)
+			// availability and limits must be registered before /{id} so chi does not treat
+			// them as an id param.
+			r.Get("/limits", staffHandler.GetStaffLimits)
+			r.Get("/availability", staffHandler.GetStaffAvailability)
 			// Teams (Ola 2) — static prefix wins over /{id} in chi's trie.
 			// Guarded so router tests / future wiring can pass nil without
 			// triggering a method-on-nil panic when a request hits /teams.
@@ -346,10 +346,10 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Route("/events", func(r chi.Router) {
 			r.Get("/", crudHandler.ListEvents)
 			r.With(portalReads).Get("/upcoming", crudHandler.GetUpcomingEvents)
-				r.Get("/search", crudHandler.SearchEvents)    // Advanced search — before /{id} to avoid conflict
-				r.Get("/ical", crudHandler.GetCalendarExport) // iCal export — before /{id} to avoid conflict
-				r.Get("/accounting/export", crudHandler.ExportAccountingCSV) // Accounting CSV export (Pro+)
-				r.Post("/", crudHandler.CreateEvent)
+			r.Get("/search", crudHandler.SearchEvents)                   // Advanced search — before /{id} to avoid conflict
+			r.Get("/ical", crudHandler.GetCalendarExport)                // iCal export — before /{id} to avoid conflict
+			r.Get("/accounting/export", crudHandler.ExportAccountingCSV) // Accounting CSV export (Pro+)
+			r.Post("/", crudHandler.CreateEvent)
 			r.Get("/{id}", crudHandler.GetEvent)
 			r.Put("/{id}", crudHandler.UpdateEvent)
 			r.Delete("/{id}", crudHandler.DeleteEvent)
@@ -358,9 +358,9 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Get("/{id}/financials", crudHandler.GetEventFinancials)
 			r.Put("/{id}/items", crudHandler.UpdateEventItems)
 			r.Get("/{id}/equipment", crudHandler.GetEventEquipment)
-				r.Get("/{id}/supplies", crudHandler.GetEventSupplies)
-				r.With(portalReads).Get("/{id}/staff", crudHandler.GetEventStaff)
-				r.With(portalReads).Get("/{id}/staff/summary", crudHandler.GetEventStaffSummary)
+			r.Get("/{id}/supplies", crudHandler.GetEventSupplies)
+			r.With(portalReads).Get("/{id}/staff", crudHandler.GetEventStaff)
+			r.With(portalReads).Get("/{id}/staff/summary", crudHandler.GetEventStaffSummary)
 			// Event photos
 			r.Get("/{id}/photos", crudHandler.GetEventPhotos)
 			r.Post("/{id}/photos", crudHandler.AddEventPhoto)
@@ -505,15 +505,15 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Get("/top-clients", dashboardHandler.GetTopClients)
 			r.Get("/product-demand", dashboardHandler.GetProductDemand)
 			r.Get("/forecast", dashboardHandler.GetForecast)
-				r.Get("/attention", dashboardHandler.GetAttention)
-				r.Get("/activity", auditHandler.GetActivity)
-			})
-
-			// Reports (accounting and business exports)
-			r.Route("/reports", func(r chi.Router) {
-				r.Get("/accounting/export", crudHandler.ExportAccountingCSV)
-			})
+			r.Get("/attention", dashboardHandler.GetAttention)
+			r.Get("/activity", auditHandler.GetActivity)
 		})
+
+		// Reports (accounting and business exports)
+		r.Route("/reports", func(r chi.Router) {
+			r.Get("/accounting/export", crudHandler.ExportAccountingCSV)
+		})
+	})
 
 	// Admin routes — Auth + AdminOnly middleware + rate limited
 	apiRouter.Route("/admin", func(r chi.Router) {

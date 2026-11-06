@@ -71,15 +71,15 @@ type User struct {
 	Plan              string `json:"plan"`
 	Role              string `json:"role"`
 	// PublicSlug is the opt-in share handle for /u/:slug (users.public_slug).
-	PublicSlug              *string    `json:"public_slug,omitempty"`
-	StripeCustomerID        *string    `json:"-"` // Never expose provider IDs in JSON
-	GoogleUserID            *string    `json:"-"`
-	AppleUserID             *string    `json:"-"`
-	PlanExpiresAt           *time.Time `json:"plan_expires_at,omitempty"`
-	LastActiveAt            *time.Time `json:"last_active_at,omitempty"`
+	PublicSlug       *string    `json:"public_slug,omitempty"`
+	StripeCustomerID *string    `json:"-"` // Never expose provider IDs in JSON
+	GoogleUserID     *string    `json:"-"`
+	AppleUserID      *string    `json:"-"`
+	PlanExpiresAt    *time.Time `json:"plan_expires_at,omitempty"`
+	LastActiveAt     *time.Time `json:"last_active_at,omitempty"`
 	// LastLoginAt is set only on successful credential/OAuth login (not API activity).
-	LastLoginAt          *time.Time `json:"last_login_at,omitempty"`
-	RegistrationPlatform string     `json:"registration_platform"`
+	LastLoginAt             *time.Time `json:"last_login_at,omitempty"`
+	RegistrationPlatform    string     `json:"registration_platform"`
 	InactivityStage         int        `json:"inactivity_stage"`
 	InactivityWarningSentAt *time.Time `json:"inactivity_warning_sent_at,omitempty"`
 	CreatedAt               time.Time  `json:"created_at"`
@@ -738,20 +738,20 @@ type OrganizerPublicPackageDiscountTier struct {
 
 // OrganizerPublicPackage is a curated package/combo for the public profile.
 type OrganizerPublicPackage struct {
-	ID             uuid.UUID                             `json:"id"`
-	UserID         uuid.UUID                             `json:"-"`
-	Title          string                                `json:"title"`
-	Description    *string                               `json:"description,omitempty"`
-	FromPrice      *float64                              `json:"from_price,omitempty"` // legacy manual floor; optional when items present
-	Inclusions     []string                              `json:"inclusions,omitempty"` // legacy free-text; optional when items present
-	ImageURL       *string                               `json:"image_url,omitempty"`
-	IsFeatured     bool                                  `json:"is_featured"`
-	SortOrder      int                                   `json:"sort_order"`
-	MinGuests      *int                                  `json:"min_guests,omitempty"`
-	Items          []OrganizerPublicPackageItem          `json:"items,omitempty"`
-	DiscountTiers  []OrganizerPublicPackageDiscountTier `json:"discount_tiers,omitempty"`
-	CreatedAt      time.Time                             `json:"created_at"`
-	UpdatedAt      time.Time                             `json:"updated_at"`
+	ID            uuid.UUID                            `json:"id"`
+	UserID        uuid.UUID                            `json:"-"`
+	Title         string                               `json:"title"`
+	Description   *string                              `json:"description,omitempty"`
+	FromPrice     *float64                             `json:"from_price,omitempty"` // legacy manual floor; optional when items present
+	Inclusions    []string                             `json:"inclusions,omitempty"` // legacy free-text; optional when items present
+	ImageURL      *string                              `json:"image_url,omitempty"`
+	IsFeatured    bool                                 `json:"is_featured"`
+	SortOrder     int                                  `json:"sort_order"`
+	MinGuests     *int                                 `json:"min_guests,omitempty"`
+	Items         []OrganizerPublicPackageItem         `json:"items,omitempty"`
+	DiscountTiers []OrganizerPublicPackageDiscountTier `json:"discount_tiers,omitempty"`
+	CreatedAt     time.Time                            `json:"created_at"`
+	UpdatedAt     time.Time                            `json:"updated_at"`
 }
 
 // PublicPackageItem is the public-safe package line with live unit price.
@@ -772,32 +772,32 @@ type PublicPackageDiscountTier struct {
 // PublicPackage is the public-safe package projection (no user_id).
 // When Items is non-empty, clients recalculate totals from catalog unit prices.
 type PublicPackage struct {
-	ID            uuid.UUID                     `json:"id"`
-	Title         string                        `json:"title"`
-	Description   *string                       `json:"description,omitempty"`
-	FromPrice     *float64                      `json:"from_price,omitempty"`
-	Inclusions    []string                      `json:"inclusions,omitempty"`
-	ImageURL      *string                       `json:"image_url,omitempty"`
-	IsFeatured    bool                          `json:"is_featured"`
-	SortOrder     int                           `json:"sort_order"`
-	MinGuests     *int                          `json:"min_guests,omitempty"`
-	Items         []PublicPackageItem           `json:"items,omitempty"`
-	DiscountTiers []PublicPackageDiscountTier   `json:"discount_tiers,omitempty"`
+	ID            uuid.UUID                   `json:"id"`
+	Title         string                      `json:"title"`
+	Description   *string                     `json:"description,omitempty"`
+	FromPrice     *float64                    `json:"from_price,omitempty"`
+	Inclusions    []string                    `json:"inclusions,omitempty"`
+	ImageURL      *string                     `json:"image_url,omitempty"`
+	IsFeatured    bool                        `json:"is_featured"`
+	SortOrder     int                         `json:"sort_order"`
+	MinGuests     *int                        `json:"min_guests,omitempty"`
+	Items         []PublicPackageItem         `json:"items,omitempty"`
+	DiscountTiers []PublicPackageDiscountTier `json:"discount_tiers,omitempty"`
 }
 
 // PackageQuoteSnapshot is frozen at public request submit (convert-to-event fidelity).
 type PackageQuoteSnapshot struct {
-	PackageID         string  `json:"package_id"`
-	PackageTitle      string  `json:"package_title"`
-	GuestCount        int     `json:"guest_count"`
-	MinGuests         *int    `json:"min_guests,omitempty"`
+	PackageID         string                     `json:"package_id"`
+	PackageTitle      string                     `json:"package_title"`
+	GuestCount        int                        `json:"guest_count"`
+	MinGuests         *int                       `json:"min_guests,omitempty"`
 	Lines             []PackageQuoteSnapshotLine `json:"lines"`
-	Subtotal          float64 `json:"subtotal"`
-	DiscountPercent   float64 `json:"discount_percent"`
-	DiscountAmount    float64 `json:"discount_amount"`
-	Total             float64 `json:"total"`
-	AppliedFromGuests *int    `json:"applied_from_guests,omitempty"`
-	Currency          string  `json:"currency"`
+	Subtotal          float64                    `json:"subtotal"`
+	DiscountPercent   float64                    `json:"discount_percent"`
+	DiscountAmount    float64                    `json:"discount_amount"`
+	Total             float64                    `json:"total"`
+	AppliedFromGuests *int                       `json:"applied_from_guests,omitempty"`
+	Currency          string                     `json:"currency"`
 }
 
 // PackageQuoteSnapshotLine is one frozen line of a package quote.
@@ -1007,33 +1007,33 @@ func (s PublicRequestServiceSnapshot) SnapshotQty() int {
 // visitor (contact_email) to an organizer's public profile or shared link.
 // The visitor acts on their own request via client_token (no account, NG1).
 type PublicRequest struct {
-	ID               uuid.UUID                      `json:"id"`
-	OrganizerUserID  uuid.UUID                      `json:"-"`
-	ClientToken      uuid.UUID                      `json:"-"`
-	ContactEmail     string                         `json:"contact_email"`
-	ContactName      *string                        `json:"contact_name,omitempty"`
-	ContactPhone     *string                        `json:"contact_phone,omitempty"`
-	EventType        *string                        `json:"event_type,omitempty"`
-	EventDate        *string                        `json:"event_date,omitempty"`
-	Location         *string                        `json:"location,omitempty"`
-	City             *string                        `json:"city,omitempty"`
-	GuestCount       *int                           `json:"guest_count,omitempty"`
-	Budget           *float64                       `json:"budget,omitempty"`
-	Currency         string                         `json:"currency"`
-	Services         []PublicRequestServiceSnapshot `json:"services"`
-	Message          *string                        `json:"message,omitempty"`
+	ID              uuid.UUID                      `json:"id"`
+	OrganizerUserID uuid.UUID                      `json:"-"`
+	ClientToken     uuid.UUID                      `json:"-"`
+	ContactEmail    string                         `json:"contact_email"`
+	ContactName     *string                        `json:"contact_name,omitempty"`
+	ContactPhone    *string                        `json:"contact_phone,omitempty"`
+	EventType       *string                        `json:"event_type,omitempty"`
+	EventDate       *string                        `json:"event_date,omitempty"`
+	Location        *string                        `json:"location,omitempty"`
+	City            *string                        `json:"city,omitempty"`
+	GuestCount      *int                           `json:"guest_count,omitempty"`
+	Budget          *float64                       `json:"budget,omitempty"`
+	Currency        string                         `json:"currency"`
+	Services        []PublicRequestServiceSnapshot `json:"services"`
+	Message         *string                        `json:"message,omitempty"`
 	// PackageQuote is set when the visitor requested a structured package quote.
-	PackageQuote     *PackageQuoteSnapshot          `json:"package_quote,omitempty"`
-	Status           RequestStatus                  `json:"status"`
-	Source           RequestSource                  `json:"source"`
-	LinkID           *uuid.UUID                     `json:"link_id,omitempty"`
-	SubmitMode       SubmitMode                     `json:"submit_mode"`
-	IsRead           bool                           `json:"is_read"`
-	EventID          *uuid.UUID                     `json:"event_id,omitempty"`
-	DeclinedReason   *string                        `json:"declined_reason,omitempty"`
-	LastStatusChange time.Time                      `json:"last_status_change"`
-	CreatedAt        time.Time                      `json:"created_at"`
-	UpdatedAt        time.Time                      `json:"updated_at"`
+	PackageQuote     *PackageQuoteSnapshot `json:"package_quote,omitempty"`
+	Status           RequestStatus         `json:"status"`
+	Source           RequestSource         `json:"source"`
+	LinkID           *uuid.UUID            `json:"link_id,omitempty"`
+	SubmitMode       SubmitMode            `json:"submit_mode"`
+	IsRead           bool                  `json:"is_read"`
+	EventID          *uuid.UUID            `json:"event_id,omitempty"`
+	DeclinedReason   *string               `json:"declined_reason,omitempty"`
+	LastStatusChange time.Time             `json:"last_status_change"`
+	CreatedAt        time.Time             `json:"created_at"`
+	UpdatedAt        time.Time             `json:"updated_at"`
 }
 
 // PublicResponse is a quote the organizer sends in reply to a PublicRequest.

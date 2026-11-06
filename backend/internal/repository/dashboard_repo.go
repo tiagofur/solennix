@@ -17,18 +17,18 @@ import (
 // ('confirmed','completed'). VAT is prorated per event by paid ratio.
 // Cash collected is scoped by payment_date in the current calendar month.
 type DashboardKPIs struct {
-	TotalRevenue              float64 `json:"total_revenue"`
-	EventsThisMonth           int     `json:"events_this_month"`
-	PendingQuotes             int     `json:"pending_quotes"`
-	LowStockItems             int     `json:"low_stock_items"`
-	UpcomingEvents            int     `json:"upcoming_events"`
-	TotalClients              int     `json:"total_clients"`
-	TotalProducts             int     `json:"total_products"`
-	AverageEventValue         float64 `json:"average_event_value"`
-	NetSalesThisMonth         float64 `json:"net_sales_this_month"`
-	CashCollectedThisMonth    float64 `json:"cash_collected_this_month"`
-	VATCollectedThisMonth     float64 `json:"vat_collected_this_month"`
-	VATOutstandingThisMonth   float64 `json:"vat_outstanding_this_month"`
+	TotalRevenue            float64 `json:"total_revenue"`
+	EventsThisMonth         int     `json:"events_this_month"`
+	PendingQuotes           int     `json:"pending_quotes"`
+	LowStockItems           int     `json:"low_stock_items"`
+	UpcomingEvents          int     `json:"upcoming_events"`
+	TotalClients            int     `json:"total_clients"`
+	TotalProducts           int     `json:"total_products"`
+	AverageEventValue       float64 `json:"average_event_value"`
+	NetSalesThisMonth       float64 `json:"net_sales_this_month"`
+	CashCollectedThisMonth  float64 `json:"cash_collected_this_month"`
+	VATCollectedThisMonth   float64 `json:"vat_collected_this_month"`
+	VATOutstandingThisMonth float64 `json:"vat_outstanding_this_month"`
 }
 
 // RevenueDataPoint represents one month of revenue data.
@@ -62,24 +62,24 @@ type ProductDemandItem struct {
 
 // ForecastDataPoint represents projected revenue for a future month.
 type ForecastDataPoint struct {
-	Month             string  `json:"month"`
-	ConfirmedRevenue  float64 `json:"confirmed_revenue"`
-	ConfirmedEvents   int     `json:"confirmed_events"`
+	Month            string  `json:"month"`
+	ConfirmedRevenue float64 `json:"confirmed_revenue"`
+	ConfirmedEvents  int     `json:"confirmed_events"`
 }
 
 // AttentionItem represents a single event needing follow-up on the dashboard.
 // The backend computes the reason classification and pending balance so the
 // three frontends (web, iOS, Android) don't triplicate the logic client-side.
 type AttentionItem struct {
-	EventID         uuid.UUID `json:"event_id"`
-	EventDate       string    `json:"event_date"`
-	ServiceType     string    `json:"service_type"`
-	Status          string    `json:"status"`
-	ClientName      string    `json:"client_name"`
-	TotalAmount     float64   `json:"total_amount"`
-	AmountPaid      float64   `json:"amount_paid"`
-	PendingBalance  float64   `json:"pending_balance"`
-	Reason          string    `json:"reason"`
+	EventID        uuid.UUID `json:"event_id"`
+	EventDate      string    `json:"event_date"`
+	ServiceType    string    `json:"service_type"`
+	Status         string    `json:"status"`
+	ClientName     string    `json:"client_name"`
+	TotalAmount    float64   `json:"total_amount"`
+	AmountPaid     float64   `json:"amount_paid"`
+	PendingBalance float64   `json:"pending_balance"`
+	Reason         string    `json:"reason"`
 }
 
 // DashboardSummary bundles every aggregated dashboard dataset into a single

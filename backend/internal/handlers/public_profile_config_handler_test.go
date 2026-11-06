@@ -75,11 +75,11 @@ func newConfigHandler(u *cfgUserRepo, p *cfgProfileRepo, s *slugRenamer, plan st
 		u.user = &models.User{ID: uuid.New(), Plan: plan}
 	}
 	return &PublicProfileConfigHandler{
-		userRepo:        u,
-		profileRepo:     p,
-		slugUpdater:     s,
-		frontendURL:     "https://app.test",
-		defaultProfile:  defaultPublicProfile,
+		userRepo:       u,
+		profileRepo:    p,
+		slugUpdater:    s,
+		frontendURL:    "https://app.test",
+		defaultProfile: defaultPublicProfile,
 	}, u.user
 }
 
@@ -103,7 +103,7 @@ func TestValidatePublicSlug(t *testing.T) {
 	valid := []string{"alice", "abc", "alice-123", "a-b-c", strings.Repeat("a", 140)}
 	invalid := []string{
 		"", "ab", strings.Repeat("a", 141), // length bounds
-		"Alice", "ALICE",         // uppercase
+		"Alice", "ALICE", // uppercase
 		"-x", "x-", "--", "a--b", // leading/trailing/double hyphen
 		"a b", "a.b", "a_b", // whitespace, punctuation
 	}

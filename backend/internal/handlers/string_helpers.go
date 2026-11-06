@@ -45,4 +45,3 @@ func normalizeEmailPtr(s *string) *string {
 	}
 	return &t
 }
-

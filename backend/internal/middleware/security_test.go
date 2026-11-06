@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"errors"
 	"crypto/tls"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"

@@ -63,7 +63,7 @@ func CSRF(next http.Handler) http.Handler {
 func ensureCSRFCookie(w http.ResponseWriter, r *http.Request) {
 	if _, err := r.Cookie("csrf_token_v2"); err != nil {
 		token := generateCSRFToken()
-		
+
 		domain := ""
 		if strings.Contains(r.Host, "solennix.com") {
 			domain = ".solennix.com"

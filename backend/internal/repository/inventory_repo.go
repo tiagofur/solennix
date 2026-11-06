@@ -217,4 +217,3 @@ func (r *InventoryRepo) Search(ctx context.Context, userID uuid.UUID, query stri
 
 	return items, nil
 }
-

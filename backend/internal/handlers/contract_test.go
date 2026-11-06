@@ -584,4 +584,3 @@ func TestOpenAPISpec_PublicProfessionalProfileContract(t *testing.T) {
 		)
 	})
 }
-

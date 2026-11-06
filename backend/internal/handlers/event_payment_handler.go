@@ -44,4 +44,3 @@ func (h *EventPaymentHandler) HandleEventPaymentSuccess(w http.ResponseWriter, r
 	slog.Warn("Blocked legacy event payment session lookup request")
 	writeError(w, http.StatusGone, legacyEventPaymentBlockedMessage)
 }
-

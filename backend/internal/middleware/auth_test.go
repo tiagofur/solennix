@@ -343,10 +343,10 @@ func TestAuthMiddleware_GivenValidToken_WhenBlacklistReturnsFalse_ThenForwards(t
 
 func TestParsePlatform(t *testing.T) {
 	tests := []struct {
-		name       string
-		headers    map[string]string
-		userAgent  string
-		expected   string
+		name      string
+		headers   map[string]string
+		userAgent string
+		expected  string
 	}{
 		{
 			name:     "GivenXPlatformHeaderWeb_ThenWeb",
@@ -780,5 +780,3 @@ func TestActivityTracker_GivenUserUnknownPlatform_WhenRequest_ThenUpdatesRegistr
 		t.Fatalf("expected platform 'ios' to be passed to updater, got %q", seenPlatform)
 	}
 }
-
-

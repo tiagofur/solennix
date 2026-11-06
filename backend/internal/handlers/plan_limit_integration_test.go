@@ -37,7 +37,7 @@ func TestWithPlanLimit_Concurrency_Clients(t *testing.T) {
 	clientRepo := repository.NewClientRepo(pool)
 	userRepo := repository.NewUserRepo(pool)
 
-	const limit = 5   // small limit for speed; matches seeded count below
+	const limit = 5 // small limit for speed; matches seeded count below
 	const goroutines = 12
 
 	// Seed limit-1 clients so only 1 more insert should be allowed.
