@@ -42,11 +42,16 @@ export const StaffForm: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [customRoleOpen, setCustomRoleOpen] = useState(false);
 
-  const roleSelectValue = !form.role_label
-    ? ""
-    : (SUGGESTED_STAFF_ROLES as readonly string[]).includes(form.role_label)
-      ? form.role_label
-      : ROLE_OTHER;
+  // While the free-text role input is open with nothing typed yet, keep the
+  // select pinned to "Otro" instead of bouncing back to the placeholder
+  // (issue #1366).
+  const roleSelectValue = customRoleOpen && !form.role_label
+    ? ROLE_OTHER
+    : !form.role_label
+      ? ""
+      : (SUGGESTED_STAFF_ROLES as readonly string[]).includes(form.role_label)
+        ? form.role_label
+        : ROLE_OTHER;
   const showCustomRoleInput = customRoleOpen || roleSelectValue === ROLE_OTHER;
 
   useEffect(() => {

@@ -172,6 +172,18 @@ describe("StaffForm", () => {
     });
   });
 
+  it("keeps the role select pinned to Other while the free-text input is empty", () => {
+    const { container } = renderAt("/staff/new");
+
+    const roleSelect = screen.getByLabelText(/^rol$/i) as HTMLSelectElement;
+    fireEvent.change(roleSelect, { target: { value: "__other" } });
+
+    // The select must not bounce back to the placeholder while the free-text
+    // input is open with nothing typed yet (issue #1366).
+    expect(roleSelect.value).toBe("__other");
+    screen.getByPlaceholderText("Escribí el rol libre");
+  });
+
   it("loads an existing custom role into the free-text input", async () => {
     mockedMember.mockReturnValue({ data: existing, isLoading: false } as any);
     renderAt("/staff/abc/edit");

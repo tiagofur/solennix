@@ -410,14 +410,14 @@
       "declined": "Rechazado",
       "cancelled": "Cancelado"
     },
-    "staff_status": {
-      "pending": "Sin confirmar",
-      "confirmed": "Confirmado",
-      "declined": "Rechazó",
-      "cancelled": "Cancelado"
-    },
     "delete_confirm_title": "¿Quitar personal?",
     "delete_confirm_desc": "¿Quitar a \"{{name}}\" de este evento?"
+  },
+  "staff_status": {
+    "pending": "Sin confirmar",
+    "confirmed": "Confirmado",
+    "declined": "Rechazó",
+    "cancelled": "Cancelado"
   },
   "supplies": {
     "title": "Insumos por Evento",
@@ -504,6 +504,10 @@
     "toolbar_btn": "Contabilidad",
     "description": "Descarga un archivo Excel (.csv) con el balance detallado de eventos, pagos, saldos pendientes y costos de personal.",
     "period": "Período",
+    "preset_year": "Año {{year}}",
+    "preset_quarter": "Trimestre",
+    "preset_all": "Historial",
+    "preset_custom": "Personalizado",
     "from_date": "Desde",
     "to_date": "Hasta",
     "plan_required_title": "Función de planes Pro y Business",

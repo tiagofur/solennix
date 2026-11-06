@@ -584,14 +584,14 @@
       "declined": "Declined",
       "cancelled": "Cancelled"
     },
-    "staff_status": {
-      "pending": "Unconfirmed",
-      "confirmed": "Confirmed",
-      "declined": "Declined",
-      "cancelled": "Cancelled"
-    },
     "delete_confirm_title": "Remove staff?",
     "delete_confirm_desc": "Remove \"{{name}}\" from this event?"
+  },
+  "staff_status": {
+    "pending": "Unconfirmed",
+    "confirmed": "Confirmed",
+    "declined": "Declined",
+    "cancelled": "Cancelled"
   },
   "supplies": {
     "title": "Event Supplies",
@@ -678,6 +678,10 @@
     "toolbar_btn": "Accounting",
     "description": "Download an Excel-friendly CSV with full balance, client info, payments, balances, and staff costs.",
     "period": "Period",
+    "preset_year": "Year {{year}}",
+    "preset_quarter": "Quarter",
+    "preset_all": "All time",
+    "preset_custom": "Custom",
     "from_date": "From",
     "to_date": "To",
     "plan_required_title": "Pro and Business Feature",
