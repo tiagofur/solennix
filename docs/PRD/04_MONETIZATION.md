@@ -98,11 +98,11 @@ Valores = runtime actual. Si cambian, actualizar **código + esta tabla + [[02_F
 | Productos | **15** | ∞ | ∞ | `crud` create product |
 | Inventario | **30** | ∞ | ∞ | `crud` create inventory |
 | Catálogo compuesto (productos + inventario) | **20** | ∞ | ∞ | advisory lock `catalog` |
-| Staff seats (`staff` rows) | **1** | **2** | ∞ | `staff` create |
+| Staff seats (`staff` rows) | **1** | **5** | ∞ | `staff` create |
 | Links de solicitud activos | **3** | ∞ | ∞ | `public_request_links` |
 
-> [!note] Staff Pro = 2
-> Código: `staff_handler` `case "pro": seatLimit = 2`. No documentar 3.
+> [!note] Staff Pro = 5
+> Código: `staff_handler` `max := 5` para Pro (Gratis=1, Business=∞).
 
 > [!note] Conteo de eventos y conversión de solicitudes
 > - El conteo de "eventos / mes calendario" es por `event_date` dentro del mes calendario actual (`internal/planlimit.EventCountSQL`), no por `created_at`: los eventos fechados en otros meses no consumen cupo.
@@ -139,7 +139,7 @@ Valores = runtime actual. Si cambian, actualizar **código + esta tabla + [[02_F
 | :--- | :---: | :---: | :---: | :--- |
 | Catálogo staff + asignar + turnos/RSVP + teams | ✓ (1 seat) | ✓ (2 seats) | ✓ ∞ | seats |
 | Email al colaborador al asignar | — | ✓ | ✓ | Pro+ |
-| Login colaborador + portal team member | — | — | ✓ | rol `team_member`; invite Business |
+| Login colaborador + portal team member | — | ✓ | ✓ | invite Pro+ (`team_member`; Secretario solo Business) |
 
 ### 2.5 Discovery & inbound (v2) — extensión SaaS
 

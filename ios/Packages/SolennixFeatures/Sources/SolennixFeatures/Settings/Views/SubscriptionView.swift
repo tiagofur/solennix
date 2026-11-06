@@ -387,13 +387,15 @@ public struct SubscriptionView: View {
                 tr("settings.subscription.feature.siri_shortcuts", "Comandos de Siri"),
                 tr("settings.subscription.feature.priority_support", "Soporte prioritario"),
                 tr("settings.subscription.feature.no_pdf_watermark", "Sin marca de agua en PDFs"),
-                tr("settings.subscription.feature.custom_branding", "Marca personalizada")
+                tr("settings.subscription.feature.custom_branding", "Marca personalizada"),
+                tr("settings.subscription.feature.staff_portal", "Portal de colaboradores (login)")
             ]
         } else {
             return [
                 tr("settings.subscription.feature.up_to_4_events", "Hasta 4 eventos por mes"),
                 tr("settings.subscription.feature.up_to_20_clients", "Hasta 20 clientes"),
                 tr("settings.subscription.feature.up_to_catalog", "Hasta 15 productos y 30 de inventario"),
+                tr("settings.subscription.feature.one_staff_seat", "1 colaborador en catálogo de personal"),
                 tr("settings.subscription.feature.contract_generation", "Generación de contratos"),
                 tr("settings.subscription.feature.event_calendar", "Calendario de eventos"),
                 tr("settings.subscription.feature.basic_reports", "Reportes básicos")
