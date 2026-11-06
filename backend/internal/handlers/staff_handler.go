@@ -66,6 +66,13 @@ func isTeamPortalRole(role string) bool {
 	return role == "team_member" || role == "assistant"
 }
 
+// isTeamMemberOnly reports whether the role may mutate team-portal state.
+// The assistant (Secretario) role is read-only (#1364): it may read portal
+// data but never respond RSVPs, write checklists, or mark timelines read.
+func isTeamMemberOnly(role string) bool {
+	return role == "team_member"
+}
+
 func NewStaffHandler(staffRepo StaffRepository, userRepo UserRepository) *StaffHandler {
 	return &StaffHandler{staffRepo: staffRepo, userRepo: userRepo}
 }
@@ -540,7 +547,7 @@ func (h *StaffHandler) RespondAssignment(w http.ResponseWriter, r *http.Request)
 		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_user_failed")
 		return
 	}
-	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
+	if !isTeamMemberOnly(strings.ToLower(strings.TrimSpace(user.Role))) {
 		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.team_member_access_required")
 		return
 	}
@@ -639,7 +646,7 @@ func (h *StaffHandler) PutExecutionState(w http.ResponseWriter, r *http.Request)
 		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_user_failed")
 		return
 	}
-	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
+	if !isTeamMemberOnly(strings.ToLower(strings.TrimSpace(user.Role))) {
 		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.team_member_access_required")
 		return
 	}
@@ -738,7 +745,7 @@ func (h *StaffHandler) MarkMyTimelineRead(w http.ResponseWriter, r *http.Request
 		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_user_failed")
 		return
 	}
-	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
+	if !isTeamMemberOnly(strings.ToLower(strings.TrimSpace(user.Role))) {
 		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.team_member_access_required")
 		return
 	}

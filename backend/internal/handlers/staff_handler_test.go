@@ -607,7 +607,7 @@ func TestRespondAssignment_OfferAlreadyFilled_Returns409(t *testing.T) {
 	eventStaffID := uuid.New()
 	staffRepo := new(MockStaffRepo)
 	userRepo := new(MockFullUserRepo)
-	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "assistant"}, nil)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
 	staffRepo.On("RespondToAssignment", mock.Anything, userID, eventStaffID, "accept").Return((*repository.AssignmentResponseOutcome)(nil), repository.ErrOfferAlreadyFilled)
 
 	h := NewStaffHandler(staffRepo, userRepo)
@@ -624,7 +624,7 @@ func TestRespondAssignment_InvalidResponse_Returns400(t *testing.T) {
 	eventStaffID := uuid.New()
 	staffRepo := new(MockStaffRepo)
 	userRepo := new(MockFullUserRepo)
-	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "assistant"}, nil)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
 
 	h := NewStaffHandler(staffRepo, userRepo)
 	req := makeReqWithIDParam(http.MethodPost, "/api/staff/assignments/"+eventStaffID.String()+"/respond", `{"response":"maybe"}`, eventStaffID.String(), userID)
@@ -633,6 +633,55 @@ func TestRespondAssignment_InvalidResponse_Returns400(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 	staffRepo.AssertNotCalled(t, "RespondToAssignment", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+// Assistant (Secretario) is a read-only portal role (#1364): mutations are
+// rejected server-side, not just hidden in the clients.
+func TestRespondAssignment_AssistantRole_Returns403(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "assistant"}, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithIDParam(http.MethodPost, "/api/staff/assignments/"+eventStaffID.String()+"/respond", `{"response":"accept"}`, eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.RespondAssignment(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	staffRepo.AssertNotCalled(t, "RespondToAssignment", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestPutExecutionState_AssistantRole_Returns403(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "assistant"}, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithIDParam(http.MethodPut, "/api/staff/assignments/"+eventStaffID.String()+"/execution-state", `{"checklist":{"arrival":true}}`, eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.PutExecutionState(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	staffRepo.AssertNotCalled(t, "UpsertExecutionState", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestMarkMyTimelineRead_AssistantRole_Returns403(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "assistant"}, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithUserID(http.MethodPost, "/api/staff/my-timeline/read", `{"ids":[]}`, userID)
+	rr := httptest.NewRecorder()
+	h.MarkMyTimelineRead(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	staffRepo.AssertNotCalled(t, "MarkTimelineRead", mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestGetMyTimeline_Success(t *testing.T) {
@@ -671,7 +720,7 @@ func TestMarkMyTimelineRead_All_Success(t *testing.T) {
 	userID := uuid.New()
 	staffRepo := new(MockStaffRepo)
 	userRepo := new(MockFullUserRepo)
-	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "assistant"}, nil)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
 	staffRepo.On("MarkTimelineRead", mock.Anything, userID, []uuid.UUID{}).Return(int64(3), nil)
 
 	h := NewStaffHandler(staffRepo, userRepo)
