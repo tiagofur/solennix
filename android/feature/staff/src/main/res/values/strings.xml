@@ -28,6 +28,12 @@
 
     <string name="staff_cd_add">Agregar</string>
     <string name="staff_no_results">Sin resultados</string>
+    <string name="staff_invite_created">Invitación creada correctamente.</string>
+    <string name="staff_invite_link_copied">Link copiado al portapapeles.</string>
+    <string name="staff_invite_already_active">Este colaborador ya tiene acceso activado.</string>
+    <string name="staff_invite_create_failed">No se pudo crear la invitación: %1$s</string>
+    <string name="staff_portal_load_failed">No pudimos cargar el portal.</string>
+    <string name="staff_portal_staff_load_failed">No pudimos cargar la dotación del evento.</string>
     <string name="staff_team_form_title_edit">Editar equipo</string>
     <string name="staff_team_form_title_create">Crear equipo</string>
     <string name="staff_team_form_role_label">Rol del equipo (ej. Banquetes, Producción)</string>

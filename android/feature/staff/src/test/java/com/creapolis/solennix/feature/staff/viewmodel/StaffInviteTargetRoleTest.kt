@@ -76,7 +76,8 @@ class StaffInviteTargetRoleTest {
         val viewModel = StaffDetailViewModel(
             repository,
             authManagerWithPlan(Plan.BUSINESS),
-            SavedStateHandle(mapOf("staffId" to "s1"))
+            SavedStateHandle(mapOf("staffId" to "s1")),
+            mockk<android.content.Context>(relaxed = true)
         )
         val collector = backgroundScope.launch { viewModel.uiState.collect { } }
         advanceUntilIdle()
@@ -94,7 +95,8 @@ class StaffInviteTargetRoleTest {
         val viewModel = StaffDetailViewModel(
             repository,
             authManagerWithPlan(Plan.BUSINESS),
-            SavedStateHandle(mapOf("staffId" to "s1"))
+            SavedStateHandle(mapOf("staffId" to "s1")),
+            mockk<android.content.Context>(relaxed = true)
         )
         val collector = backgroundScope.launch { viewModel.uiState.collect { } }
         advanceUntilIdle()
@@ -118,7 +120,8 @@ class StaffInviteTargetRoleTest {
             val viewModel = StaffDetailViewModel(
                 repository,
                 authManagerWithPlan(plan),
-                SavedStateHandle(mapOf("staffId" to "s1"))
+                SavedStateHandle(mapOf("staffId" to "s1")),
+                mockk<android.content.Context>(relaxed = true)
             )
             val collector = backgroundScope.launch { viewModel.uiState.collect { } }
             advanceUntilIdle()

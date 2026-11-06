@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.staff.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.EventRepository
@@ -8,7 +9,10 @@ import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStaff
 import com.creapolis.solennix.core.model.Staff
 import com.creapolis.solennix.core.model.StaffAttendanceSummary
+import com.creapolis.solennix.feature.staff.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -65,11 +69,15 @@ data class SecretaryPortalUiState(
 @HiltViewModel
 class SecretaryPortalViewModel @Inject constructor(
     private val staffRepository: StaffRepository,
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SecretaryPortalUiState(isLoading = true))
     val uiState: StateFlow<SecretaryPortalUiState> = _uiState.asStateFlow()
+
+    /** Load-detail job for the selected event; cancelled on rapid re-selection (#1366). */
+    private var selectEventJob: Job? = null
 
     init {
         refresh()
@@ -99,13 +107,17 @@ class SecretaryPortalViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isRefreshing = false,
-                    errorMessage = "No pudimos cargar el portal."
+                    errorMessage = context.getString(R.string.staff_portal_load_failed)
                 )
             }
         }
     }
 
     fun selectEvent(eventId: String?) {
+        // Cancel any in-flight detail load first: rapid A→B taps must never
+        // let a stale A response overwrite B's selection (#1366).
+        selectEventJob?.cancel()
+        selectEventJob = null
         if (eventId == null) {
             _uiState.value = _uiState.value.copy(
                 selectedEventId = null,
@@ -114,7 +126,7 @@ class SecretaryPortalViewModel @Inject constructor(
             )
             return
         }
-        viewModelScope.launch {
+        selectEventJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 selectedEventId = eventId,
                 isLoadingDetail = true,
@@ -123,16 +135,20 @@ class SecretaryPortalViewModel @Inject constructor(
             try {
                 val staff = staffRepository.syncEventStaff(eventId)
                 val summary = staffRepository.getEventStaffSummary(eventId)
+                if (_uiState.value.selectedEventId != eventId) return@launch
                 _uiState.value = _uiState.value.copy(
                     eventStaff = staff,
                     attendanceSummary = summary,
                     isLoadingDetail = false,
                     errorMessage = null
                 )
+            } catch (ce: kotlinx.coroutines.CancellationException) {
+                throw ce
             } catch (_: Exception) {
+                if (_uiState.value.selectedEventId != eventId) return@launch
                 _uiState.value = _uiState.value.copy(
                     isLoadingDetail = false,
-                    errorMessage = "No pudimos cargar la dotación del evento."
+                    errorMessage = context.getString(R.string.staff_portal_staff_load_failed)
                 )
             }
         }

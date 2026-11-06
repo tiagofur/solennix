@@ -10,12 +10,14 @@ import com.creapolis.solennix.core.model.StaffAttendanceSummary
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
@@ -54,7 +56,7 @@ class SecretaryPortalViewModelTest {
         staffRepository: StaffRepository,
         eventRepository: EventRepository
     ): SecretaryPortalViewModel {
-        return SecretaryPortalViewModel(staffRepository, eventRepository)
+        return SecretaryPortalViewModel(staffRepository, eventRepository, mockk<android.content.Context>(relaxed = true))
     }
 
     @Test
@@ -107,6 +109,49 @@ class SecretaryPortalViewModelTest {
         assertNotNull(state.attendanceSummary)
         assertEquals(1, state.attendanceSummary?.confirmed)
         assertEquals(1, state.attendanceSummary?.pending)
+    }
+
+    @Test
+    fun `selectEvent rapid A then B keeps B data with B selected`() = runTest {
+        // Rapid A→B taps must never let A's late response overwrite B's
+        // selection (issue #1366).
+        val staffRepository = mockk<StaffRepository>()
+        val eventRepository = mockk<EventRepository>()
+        coEvery {
+            eventRepository.getEventsByDateRangeFromApi(any(), any())
+        } returns listOf(event("e1", "2026-12-01"), event("e2", "2026-12-02"))
+        coEvery { staffRepository.syncStaff() } returns Unit
+        coEvery { staffRepository.getStaff() } returns MutableStateFlow(emptyList())
+
+        val gateA = CompletableDeferred<List<EventStaff>>()
+        coEvery { staffRepository.syncEventStaff("e1") } coAnswers { gateA.await() }
+        coEvery { staffRepository.getEventStaffSummary("e1") } returns StaffAttendanceSummary(
+            total = 1, confirmed = 1, pending = 0, declined = 0, cancelled = 0
+        )
+        coEvery { staffRepository.syncEventStaff("e2") } returns listOf(
+            EventStaff(id = "esB", eventId = "e2", staffId = "s2", status = "pending")
+        )
+        coEvery { staffRepository.getEventStaffSummary("e2") } returns StaffAttendanceSummary(
+            total = 1, confirmed = 0, pending = 1, declined = 0, cancelled = 0
+        )
+
+        val vm = viewModel(staffRepository, eventRepository)
+        advanceUntilIdle()
+
+        vm.selectEvent("e1")
+        runCurrent() // A starts and suspends on the gate
+        vm.selectEvent("e2") // B starts; A must be cancelled
+        advanceUntilIdle() // B completes
+
+        gateA.complete(
+            listOf(EventStaff(id = "esA", eventId = "e1", staffId = "s1", status = "confirmed"))
+        )
+        advanceUntilIdle() // A's late answer must not overwrite B
+
+        val state = vm.uiState.value
+        assertEquals("e2", state.selectedEventId)
+        assertEquals(listOf("esB"), state.eventStaff.map { it.id })
+        assertNull(state.errorMessage)
     }
 
     @Test

@@ -28,6 +28,12 @@
 
     <string name="staff_cd_add">Add</string>
     <string name="staff_no_results">No results</string>
+    <string name="staff_invite_created">Invite created successfully.</string>
+    <string name="staff_invite_link_copied">Link copied to the clipboard.</string>
+    <string name="staff_invite_already_active">This collaborator already has active access.</string>
+    <string name="staff_invite_create_failed">Couldn\'t create the invite: %1$s</string>
+    <string name="staff_portal_load_failed">We couldn\'t load the portal.</string>
+    <string name="staff_portal_staff_load_failed">We couldn\'t load the event staffing.</string>
     <string name="staff_team_form_title_edit">Edit team</string>
     <string name="staff_team_form_title_create">Create team</string>
     <string name="staff_team_form_role_label">Team role (e.g. Catering, Production)</string>
