@@ -257,6 +257,12 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Use(mw.UserRateLimit(planResolver, 1*time.Minute))
 		r.Use(mw.Audit(auditRepo))
 
+		// Assistant (Secretario) portal reads (#1364): resolve the caller to
+		// the linked organizer so the read-only portal serves the organizer's
+		// agenda, staffing and directory. Mutating handlers keep their own
+		// role gates and the real caller ID.
+		portalReads := mw.PortalOwnerScope(userRepo, staffHandler.PortalOwnerResolver())
+
 		// Uploads (authenticated, rate limited)
 		r.Group(func(r chi.Router) {
 			r.Use(mw.RateLimit(5, 1*time.Minute))
@@ -296,7 +302,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 
 		// Staff (Personal — collaborators catalog)
 		r.Route("/staff", func(r chi.Router) {
-			r.Get("/", staffHandler.ListStaff)
+			r.With(portalReads).Get("/", staffHandler.ListStaff)
 			r.Post("/", staffHandler.CreateStaff)
 			r.Get("/my-assignments", staffHandler.GetMyAssignments)
 			r.Get("/my-timeline", staffHandler.GetMyTimeline)
@@ -339,7 +345,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		// Events
 		r.Route("/events", func(r chi.Router) {
 			r.Get("/", crudHandler.ListEvents)
-			r.Get("/upcoming", crudHandler.GetUpcomingEvents)
+			r.With(portalReads).Get("/upcoming", crudHandler.GetUpcomingEvents)
 				r.Get("/search", crudHandler.SearchEvents)    // Advanced search — before /{id} to avoid conflict
 				r.Get("/ical", crudHandler.GetCalendarExport) // iCal export — before /{id} to avoid conflict
 				r.Get("/accounting/export", crudHandler.ExportAccountingCSV) // Accounting CSV export (Pro+)
@@ -353,8 +359,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Put("/{id}/items", crudHandler.UpdateEventItems)
 			r.Get("/{id}/equipment", crudHandler.GetEventEquipment)
 				r.Get("/{id}/supplies", crudHandler.GetEventSupplies)
-				r.Get("/{id}/staff", crudHandler.GetEventStaff)
-				r.Get("/{id}/staff/summary", crudHandler.GetEventStaffSummary)
+				r.With(portalReads).Get("/{id}/staff", crudHandler.GetEventStaff)
+				r.With(portalReads).Get("/{id}/staff/summary", crudHandler.GetEventStaffSummary)
 			// Event photos
 			r.Get("/{id}/photos", crudHandler.GetEventPhotos)
 			r.Post("/{id}/photos", crudHandler.AddEventPhoto)

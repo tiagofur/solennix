@@ -23,6 +23,7 @@ var (
 	ErrAssignmentForbidden  = errors.New("assignment does not belong to current user")
 	ErrAssignmentNotPending = errors.New("assignment is not pending")
 	ErrOfferAlreadyFilled   = errors.New("offer slots are already filled")
+	ErrStaffLinkNotFound    = errors.New("staff link not found")
 )
 
 type StaffRepo struct {
@@ -37,6 +38,26 @@ func (r *StaffRepo) CountByUserID(ctx context.Context, userID uuid.UUID) (int, e
 	var count int
 	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM staff WHERE user_id = $1`, userID).Scan(&count)
 	return count, err
+}
+
+// FindOwnerByInvitedUserID returns the organizer (owner user_id) of the most
+// recent staff record linked to the given invited user. The portal scope
+// middleware uses it to serve assistant read routes with the linked
+// organizer's data (#1364). Multiple links (same email invited by more than
+// one organizer) resolve to the newest link; single-organizer accounts are
+// the supported product shape.
+func (r *StaffRepo) FindOwnerByInvitedUserID(ctx context.Context, invitedUserID uuid.UUID) (uuid.UUID, error) {
+	var ownerID uuid.UUID
+	err := r.pool.QueryRow(ctx,
+		`SELECT user_id FROM staff WHERE invited_user_id = $1 ORDER BY created_at DESC LIMIT 1`,
+		invitedUserID).Scan(&ownerID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return uuid.Nil, ErrStaffLinkNotFound
+	}
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("find staff owner by invited user: %w", err)
+	}
+	return ownerID, nil
 }
 
 const staffColumns = `id, user_id, name, role_label, phone, email, notes,

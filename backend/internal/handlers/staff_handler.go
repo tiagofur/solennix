@@ -92,6 +92,20 @@ func (h *StaffHandler) SetPool(p *pgxpool.Pool) {
 	h.pool = p
 }
 
+// PortalOwnerResolver exposes the staff catalog's owner lookup so the router
+// can wire the assistant portal scope middleware without a direct handle on
+// the staff repo. Returns nil when the repo does not implement the lookup
+// (unit-test mocks), letting the router degrade to pass-through.
+func (h *StaffHandler) PortalOwnerResolver() middleware.PortalOwnerResolver {
+	if h == nil {
+		return nil
+	}
+	if resolver, ok := h.staffRepo.(middleware.PortalOwnerResolver); ok {
+		return resolver
+	}
+	return nil
+}
+
 var staffSortAllowlist = map[string]string{
 	"name":       "name",
 	"created_at": "created_at",
