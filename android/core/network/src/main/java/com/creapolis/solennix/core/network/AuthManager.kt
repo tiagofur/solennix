@@ -107,6 +107,35 @@ class AuthManager @Inject constructor(
 
         _authState.value = AuthState.Authenticated
         loadCachedUser()
+        if (_currentUser.value == null) {
+            // Cached user missing or unreadable (e.g. User schema change after
+            // an app upgrade): re-sync from the server or fail closed to login.
+            // Composing the organizer app with a null user would be fail-open
+            // (#1365).
+            if (!reSyncCurrentUser()) {
+                clearTokens()
+                _authState.value = AuthState.Unauthenticated
+            }
+        }
+    }
+
+    /**
+     * Fetches the fresh user profile from GET auth/me and stores it.
+     * Returns false on any failure (network, 401, parse) without changing
+     * the auth state — callers decide how to degrade.
+     */
+    private suspend fun reSyncCurrentUser(): Boolean {
+        val accessToken = encryptedPrefs.getString(KEY_ACCESS_TOKEN, null) ?: return false
+        return try {
+            val freshUser: User = refreshHttpClient.get(BuildConfig.API_BASE_URL + Endpoints.ME) {
+                bearerAuth(accessToken)
+            }.body()
+            storeUser(freshUser)
+            true
+        } catch (e: Exception) {
+            Log.w("AuthManager", "current-user re-sync failed: ${e.message}")
+            false
+        }
     }
 
     fun storeTokens(accessToken: String, refreshToken: String) {
@@ -231,6 +260,12 @@ class AuthManager @Inject constructor(
     fun unlockWithBiometric() {
         _authState.value = AuthState.Authenticated
         loadCachedUser()
+        if (_currentUser.value == null) {
+            // Fail-closed (#1365): unreadable user cache at biometric unlock
+            // must not compose the organizer app. Tokens are preserved (see
+            // failedBiometric) so the user can sign back in.
+            _authState.value = AuthState.Unauthenticated
+        }
     }
 
     /**

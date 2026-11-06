@@ -2,6 +2,7 @@ package com.creapolis.solennix.core.network
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.biometric.BiometricManager
 import app.cash.turbine.test
 import io.mockk.every
@@ -56,10 +57,33 @@ class AuthManagerTest {
         every { mockPrefs.getString("access_token", null) } returns "valid_access"
         every { mockPrefs.getString("refresh_token", null) } returns "valid_refresh"
         every { mockPrefs.getBoolean("biometric_enabled", false) } returns false
+        every { mockPrefs.getString("current_user", null) } returns
+            """{"id":"u1","email":"owner@test.dev","name":"Owner","role":"organizer"}"""
 
         authManager.restoreSession()
 
         assertEquals(AuthManager.AuthState.Authenticated, authManager.authState.value)
+        assertEquals("u1", authManager.currentUser.value?.id)
+    }
+
+    @Test
+    fun `restoreSession with corrupt user cache fails closed to Unauthenticated`() = runTest {
+        // The /auth/me re-sync logs its failure via android.util.Log, which is
+        // unimplemented in JVM unit tests.
+        mockkStatic(Log::class)
+        every { Log.w(any(), any<String>()) } returns 0
+        every { mockPrefs.getString("access_token", null) } returns "valid_access"
+        every { mockPrefs.getString("refresh_token", null) } returns "valid_refresh"
+        every { mockPrefs.getBoolean("biometric_enabled", false) } returns false
+        // Unreadable cache (e.g. User schema change after an app upgrade):
+        // the /auth/me re-sync fails in the test environment (no server), so
+        // the session must degrade to login instead of a null-user session.
+        every { mockPrefs.getString("current_user", null) } returns "{not-json"
+
+        authManager.restoreSession()
+
+        assertEquals(AuthManager.AuthState.Unauthenticated, authManager.authState.value)
+        assertEquals(null, authManager.currentUser.value)
     }
 
     @Test

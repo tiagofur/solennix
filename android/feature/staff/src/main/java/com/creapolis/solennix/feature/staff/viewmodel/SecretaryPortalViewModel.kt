@@ -22,7 +22,9 @@ import javax.inject.Inject
  *
  * - `assistant` → portal Secretario (solo lectura).
  * - `team_member` → portal Miembro existente.
- * - cualquier otro rol (u organizador) → app del organizador.
+ * - rol organizador conocido → app del organizador.
+ * - rol nulo/vacío → fail-closed al portal menos privilegiado (#1365):
+ *   nunca la app del organizador (caché corrupta, rol faltante, etc.).
  */
 enum class PortalDestination {
     SECRETARY,
@@ -34,6 +36,7 @@ fun portalDestinationForRole(role: String?): PortalDestination =
     when (role?.trim()?.lowercase()) {
         "assistant" -> PortalDestination.SECRETARY
         "team_member" -> PortalDestination.TEAM_MEMBER
+        null, "" -> PortalDestination.TEAM_MEMBER
         else -> PortalDestination.ORGANIZER
     }
 
