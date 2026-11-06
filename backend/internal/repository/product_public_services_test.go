@@ -139,12 +139,12 @@ func TestProductRepo_Create_PersistsShowOnPublicProfile(t *testing.T) {
 	ctx := context.Background()
 
 	p := &models.Product{
-		UserID:               userID,
-		Name:                 "Catering Premium",
-		Category:             "main",
-		BasePrice:            500,
-		IsActive:             true,
-		ShowOnPublicProfile:  true,
+		UserID:              userID,
+		Name:                "Catering Premium",
+		Category:            "main",
+		BasePrice:           500,
+		IsActive:            true,
+		ShowOnPublicProfile: true,
 	}
 	if err := repo.Create(ctx, p); err != nil {
 		t.Fatalf("Create() error = %v", err)
@@ -171,11 +171,11 @@ func TestProductRepo_Update_TogglesShowOnPublicProfile(t *testing.T) {
 
 	// Seed via repo Create with flag=false (default).
 	p := &models.Product{
-		UserID:   userID,
-		Name:     "Service",
-		Category: "main",
+		UserID:    userID,
+		Name:      "Service",
+		Category:  "main",
 		BasePrice: 100,
-		IsActive: true,
+		IsActive:  true,
 	}
 	if err := repo.Create(ctx, p); err != nil {
 		t.Fatalf("Create() error = %v", err)

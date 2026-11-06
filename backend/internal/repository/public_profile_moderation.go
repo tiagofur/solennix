@@ -13,19 +13,19 @@ import (
 
 // ModerationListing is a queue row for admin review (#1130).
 type ModerationListing struct {
-	UserID             uuid.UUID `json:"user_id"`
-	PublicSlug         string    `json:"public_slug"`
-	BusinessName       string    `json:"business_name"`
-	Plan               string    `json:"plan"`
-	City               *string   `json:"city,omitempty"`
-	Country            *string   `json:"country,omitempty"`
-	Headline           *string   `json:"headline,omitempty"`
-	About              *string   `json:"about,omitempty"`
-	CoverURL           *string   `json:"cover_url,omitempty"`
-	PublicationStatus  string    `json:"publication_status"`
-	SpamFlag           bool      `json:"publication_spam_flag"`
-	SubmittedAt        *time.Time `json:"publication_submitted_at,omitempty"`
-	RejectionReason    *string   `json:"publication_rejection_reason,omitempty"`
+	UserID            uuid.UUID  `json:"user_id"`
+	PublicSlug        string     `json:"public_slug"`
+	BusinessName      string     `json:"business_name"`
+	Plan              string     `json:"plan"`
+	City              *string    `json:"city,omitempty"`
+	Country           *string    `json:"country,omitempty"`
+	Headline          *string    `json:"headline,omitempty"`
+	About             *string    `json:"about,omitempty"`
+	CoverURL          *string    `json:"cover_url,omitempty"`
+	PublicationStatus string     `json:"publication_status"`
+	SpamFlag          bool       `json:"publication_spam_flag"`
+	SubmittedAt       *time.Time `json:"publication_submitted_at,omitempty"`
+	RejectionReason   *string    `json:"publication_rejection_reason,omitempty"`
 }
 
 var (

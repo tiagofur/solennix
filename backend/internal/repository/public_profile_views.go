@@ -22,20 +22,20 @@ type ProfileView struct {
 
 // InboundAnalytics is the aggregated inbound funnel for an organizer (#1131).
 type InboundAnalytics struct {
-	PeriodDays       int                `json:"period_days"`
-	Views            int                `json:"views"`
-	UniqueVisitors   int                `json:"unique_visitors"`
-	PreviousViews    int                `json:"previous_views"`
-	ViewsChangePct   *float64           `json:"views_change_pct,omitempty"`
-	Requests         int                `json:"requests"`
-	Responded        int                `json:"responded"`
-	ResponseRate     float64            `json:"response_rate"`
-	Converted        int                `json:"converted"`
-	ConversionRate   float64            `json:"conversion_rate"`
-	RequestsByStatus map[string]int     `json:"requests_by_status"`
-	Sources          map[string]int     `json:"sources"`
-	ViewsByDay       []InboundDayCount  `json:"views_by_day"`
-	Limited          bool               `json:"limited"` // true when Free teaser (views only)
+	PeriodDays       int               `json:"period_days"`
+	Views            int               `json:"views"`
+	UniqueVisitors   int               `json:"unique_visitors"`
+	PreviousViews    int               `json:"previous_views"`
+	ViewsChangePct   *float64          `json:"views_change_pct,omitempty"`
+	Requests         int               `json:"requests"`
+	Responded        int               `json:"responded"`
+	ResponseRate     float64           `json:"response_rate"`
+	Converted        int               `json:"converted"`
+	ConversionRate   float64           `json:"conversion_rate"`
+	RequestsByStatus map[string]int    `json:"requests_by_status"`
+	Sources          map[string]int    `json:"sources"`
+	ViewsByDay       []InboundDayCount `json:"views_by_day"`
+	Limited          bool              `json:"limited"` // true when Free teaser (views only)
 }
 
 // InboundDayCount is a single day bucket for charts.

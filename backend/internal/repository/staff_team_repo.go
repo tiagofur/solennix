@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"errors"
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -16,8 +16,8 @@ import (
 // cross-tenant) maps to 400. Anything else is treated as 500 by the handler
 // with a generic message (details stay in the server logs).
 var (
-	ErrStaffTeamNotFound  = errors.New("staff team not found")
-	ErrInvalidTeamMember  = errors.New("invalid team member")
+	ErrStaffTeamNotFound = errors.New("staff team not found")
+	ErrInvalidTeamMember = errors.New("invalid team member")
 )
 
 type StaffTeamRepo struct {

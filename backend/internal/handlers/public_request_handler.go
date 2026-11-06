@@ -71,14 +71,14 @@ func NewPublicRequestHandler(svc *services.PublicRequestService, requestRepo *re
 
 // CreatePublicRequestRequest is the unauthenticated visitor payload.
 type CreatePublicRequestRequest struct {
-	ContactEmail string  `json:"contact_email"`
-	ContactName  *string `json:"contact_name,omitempty"`
-	ContactPhone *string `json:"contact_phone,omitempty"`
-	EventType    *string `json:"event_type,omitempty"`
-	EventDate    *string `json:"event_date,omitempty"`
-	Location     *string `json:"location,omitempty"`
-	City         *string `json:"city,omitempty"`
-	GuestCount   *int    `json:"guest_count,omitempty"`
+	ContactEmail string   `json:"contact_email"`
+	ContactName  *string  `json:"contact_name,omitempty"`
+	ContactPhone *string  `json:"contact_phone,omitempty"`
+	EventType    *string  `json:"event_type,omitempty"`
+	EventDate    *string  `json:"event_date,omitempty"`
+	Location     *string  `json:"location,omitempty"`
+	City         *string  `json:"city,omitempty"`
+	GuestCount   *int     `json:"guest_count,omitempty"`
 	Budget       *float64 `json:"budget,omitempty"`
 	Currency     string   `json:"currency,omitempty"`
 	// ServiceIDs is the legacy flat list (qty defaults to 1).
@@ -103,29 +103,29 @@ type CreatePublicRequestRequest struct {
 // exactly once so the visitor can act later via X-Request-Token; it is never
 // serialized on organizer list/detail responses (model field is json:"-").
 type createPublicRequestResponse struct {
-	ID               string                               `json:"id"`
-	ClientToken      string                               `json:"client_token"`
-	ContactEmail     string                               `json:"contact_email"`
-	ContactName      *string                              `json:"contact_name,omitempty"`
-	ContactPhone     *string                              `json:"contact_phone,omitempty"`
-	EventType        *string                              `json:"event_type,omitempty"`
-	EventDate        *string                              `json:"event_date,omitempty"`
-	Location         *string                              `json:"location,omitempty"`
-	City             *string                              `json:"city,omitempty"`
-	GuestCount       *int                                 `json:"guest_count,omitempty"`
-	Budget           *float64                             `json:"budget,omitempty"`
-	Currency         string                               `json:"currency"`
+	ID               string                                `json:"id"`
+	ClientToken      string                                `json:"client_token"`
+	ContactEmail     string                                `json:"contact_email"`
+	ContactName      *string                               `json:"contact_name,omitempty"`
+	ContactPhone     *string                               `json:"contact_phone,omitempty"`
+	EventType        *string                               `json:"event_type,omitempty"`
+	EventDate        *string                               `json:"event_date,omitempty"`
+	Location         *string                               `json:"location,omitempty"`
+	City             *string                               `json:"city,omitempty"`
+	GuestCount       *int                                  `json:"guest_count,omitempty"`
+	Budget           *float64                              `json:"budget,omitempty"`
+	Currency         string                                `json:"currency"`
 	Services         []models.PublicRequestServiceSnapshot `json:"services"`
-	Message          *string                              `json:"message,omitempty"`
-	PackageQuote     *models.PackageQuoteSnapshot         `json:"package_quote,omitempty"`
-	Status           models.RequestStatus                 `json:"status"`
-	Source           models.RequestSource                 `json:"source"`
-	SubmitMode       models.SubmitMode                    `json:"submit_mode"`
-	EventID          *uuid.UUID                           `json:"event_id,omitempty"`
-	IsRead           bool                                 `json:"is_read"`
-	LastStatusChange time.Time                            `json:"last_status_change"`
-	CreatedAt        time.Time                            `json:"created_at"`
-	UpdatedAt        time.Time                            `json:"updated_at"`
+	Message          *string                               `json:"message,omitempty"`
+	PackageQuote     *models.PackageQuoteSnapshot          `json:"package_quote,omitempty"`
+	Status           models.RequestStatus                  `json:"status"`
+	Source           models.RequestSource                  `json:"source"`
+	SubmitMode       models.SubmitMode                     `json:"submit_mode"`
+	EventID          *uuid.UUID                            `json:"event_id,omitempty"`
+	IsRead           bool                                  `json:"is_read"`
+	LastStatusChange time.Time                             `json:"last_status_change"`
+	CreatedAt        time.Time                             `json:"created_at"`
+	UpdatedAt        time.Time                             `json:"updated_at"`
 }
 
 // CreatePublicRequest handles POST /api/public/organizers/{slug}/requests

@@ -25,15 +25,15 @@ import (
 // web (Stripe) and mobile (Apple/Google via RevenueCat).
 // Also handles event payment webhooks.
 type SubscriptionHandler struct {
-	userRepo              UserRepository
-	subRepo               SubscriptionRepository
-	eventRepo             EventRepository
-	paymentRepo           PaymentRepository
-	processedWebhookRepo  ProcessedWebhookRepository
-	stripe                StripeService
-	rcService             *services.RevenueCatService
-	emailService          *services.EmailService // optional
-	cfg                   *config.Config
+	userRepo             UserRepository
+	subRepo              SubscriptionRepository
+	eventRepo            EventRepository
+	paymentRepo          PaymentRepository
+	processedWebhookRepo ProcessedWebhookRepository
+	stripe               StripeService
+	rcService            *services.RevenueCatService
+	emailService         *services.EmailService // optional
+	cfg                  *config.Config
 }
 
 // SetEmailService configures an optional email service for subscription notifications.

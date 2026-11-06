@@ -6,7 +6,8 @@
       "kind": "object",
       "required_keys": {
         "user": "object",
-        "tokens": "object"
+        "message": "string",
+        "email_verification_required": "boolean"
       }
     },
     "auth.me": {

@@ -116,11 +116,11 @@ func mapAction(method string) string {
 
 // resourceMap maps URL path segments to audit resource types.
 var resourceMap = map[string]string{
-	"clients":          "client",
-	"events":           "event",
-	"products":         "product",
-	"inventory":        "inventory",
-	"payments":         "payment",
+	"clients":           "client",
+	"events":            "event",
+	"products":          "product",
+	"inventory":         "inventory",
+	"payments":          "payment",
 	"unavailable-dates": "unavailable_date",
 }
 

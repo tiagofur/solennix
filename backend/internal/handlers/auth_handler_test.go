@@ -2262,6 +2262,15 @@ func TestAuthHandler_RegisterAndLogin_CaseInsensitiveEmail(t *testing.T) {
 		Plan:            "basic",
 	}
 	mockRepo.On("GetByEmail", mock.Anything, "uppercase@test.dev").Return(registeredUser, nil).Once()
+	// Login fires UpdateLastLoginAt on a fire-and-forget goroutine (auth_handler.go).
+	// Signal from inside the expectation so the test waits for the goroutine to
+	// finish BEFORE registering more expectations — the mock's unstubbed-call
+	// probe reads ExpectedCalls unsynchronized and races with a later On()
+	// (issue #1369, -race).
+	lastLoginSync := make(chan struct{}, 1)
+	mockRepo.On("UpdateLastLoginAt", mock.Anything, mock.Anything).Run(func(_ mock.Arguments) {
+		lastLoginSync <- struct{}{}
+	}).Return(nil).Maybe()
 
 	loginBody := `{"email":"UPPERCASE@TEST.DEV","password":"Test1234!"}`
 	loginReq := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(loginBody))
@@ -2270,6 +2279,12 @@ func TestAuthHandler_RegisterAndLogin_CaseInsensitiveEmail(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, loginRr.Code)
 	assert.Contains(t, loginRr.Body.String(), "user")
+
+	select {
+	case <-lastLoginSync: // goroutine completed; safe to add expectations again
+	case <-time.After(2 * time.Second):
+		t.Log("UpdateLastLoginAt goroutine did not complete; continuing (Maybe expectation)")
+	}
 
 	// 3. Forgot password with mixed case email
 	mockRepo.On("GetByEmail", mock.Anything, "uppercase@test.dev").Return(registeredUser, nil).Once()
@@ -2281,7 +2296,6 @@ func TestAuthHandler_RegisterAndLogin_CaseInsensitiveEmail(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
-
 
 func TestAuthHandler_Register_WhitespaceOnlyFields(t *testing.T) {
 	// Whitespace-only email after trimming should be caught as empty

@@ -231,8 +231,8 @@ func (b *ActivityBuffer) Requeue(batch map[uuid.UUID]map[string]int) {
 }
 
 var (
-	activityBuf *ActivityBuffer
-	bufOnce     sync.Once
+	activityBuf   *ActivityBuffer
+	bufOnce       sync.Once
 	workerStarted bool
 	workerMu      sync.Mutex
 )

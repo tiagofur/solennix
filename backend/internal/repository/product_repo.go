@@ -385,4 +385,3 @@ func (r *ProductRepo) Search(ctx context.Context, userID uuid.UUID, query string
 
 	return products, nil
 }
-

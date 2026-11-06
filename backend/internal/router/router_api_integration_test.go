@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/config"
 	"github.com/tiagofur/solennix-backend/internal/database"
@@ -17,6 +18,28 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
+
+// mintAccessToken issues a session token for an existing user. Registration
+// now requires email verification and returns no tokens (issue #1369), so
+// integration tests mint sessions directly from the auth service.
+func mintAccessToken(t *testing.T, authService *services.AuthService, pool *pgxpool.Pool, email string) string {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var raw []byte
+	if err := pool.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, email).Scan(&raw); err != nil {
+		t.Fatalf("lookup user %s for token mint: %v", email, err)
+	}
+	id, err := uuid.FromBytes(raw)
+	if err != nil {
+		t.Fatalf("parse user id: %v", err)
+	}
+	pair, err := authService.GenerateTokenPair(id, email)
+	if err != nil {
+		t.Fatalf("generate token pair: %v", err)
+	}
+	return pair.AccessToken
+}
 
 func TestAPIIntegrationCoreFlows(t *testing.T) {
 	pool := openRouterTestPool(t)
@@ -40,14 +63,14 @@ func TestAPIIntegrationCoreFlows(t *testing.T) {
 
 	registerBody := map[string]interface{}{
 		"email":    "router.integration@test.dev",
-		"password": "123456",
+		"password": "Router2026!",
 		"name":     "Router Integration",
 	}
 	status, body := performJSONRequest(t, h, http.MethodPost, "/api/auth/register", "", registerBody)
 	if status != http.StatusCreated {
 		t.Fatalf("register status = %d, want %d, body=%s", status, http.StatusCreated, string(body))
 	}
-	accessToken := extractAccessToken(t, body)
+	accessToken := mintAccessToken(t, authService, pool, "router.integration@test.dev")
 
 	status, _ = performJSONRequest(t, h, http.MethodGet, "/api/auth/me", accessToken, nil)
 	if status != http.StatusOK {
@@ -188,13 +211,13 @@ func TestAPIContractMatrixAuthenticatedValidationErrors(t *testing.T) {
 
 	status, body := performJSONRequest(t, h, http.MethodPost, "/api/auth/register", "", map[string]interface{}{
 		"email":    "router.contracts@test.dev",
-		"password": "123456",
+		"password": "Router2026!",
 		"name":     "Router Contracts",
 	})
 	if status != http.StatusCreated {
 		t.Fatalf("register status = %d, want %d, body=%s", status, http.StatusCreated, string(body))
 	}
-	accessToken := extractAccessToken(t, body)
+	accessToken := mintAccessToken(t, authService, pool, "router.contracts@test.dev")
 
 	cases := []struct {
 		name      string
@@ -311,18 +334,20 @@ func TestAPIContractMatrixSuccessShapes(t *testing.T) {
 
 	status, body := performJSONRequest(t, h, http.MethodPost, "/api/auth/register", "", map[string]interface{}{
 		"email":    "router.success.contracts@test.dev",
-		"password": "123456",
+		"password": "Router2026!",
 		"name":     "Router Success Contracts",
 	})
 	if status != http.StatusCreated {
 		t.Fatalf("register status = %d, want %d, body=%s", status, http.StatusCreated, string(body))
 	}
-	assertJSONHasKeys(t, body, "user", "tokens")
+	// Registration now requires email verification: the response carries the
+	// user, a message and the verification flag instead of tokens (#1369).
+	assertJSONHasKeys(t, body, "user", "message", "email_verification_required")
 	assertJSONFieldTypes(t, body, map[string]string{
-		"user":   "object",
-		"tokens": "object",
+		"user":    "object",
+		"message": "string",
 	})
-	accessToken := extractAccessToken(t, body)
+	accessToken := mintAccessToken(t, authService, pool, "router.success.contracts@test.dev")
 
 	status, body = performJSONRequest(t, h, http.MethodGet, "/api/auth/me", accessToken, nil)
 	if status != http.StatusOK {
@@ -620,14 +645,14 @@ func TestGoldenContractsV1(t *testing.T) {
 
 	status, body := performJSONRequest(t, h, http.MethodPost, "/api/auth/register", "", map[string]interface{}{
 		"email":    "router.golden.contracts@test.dev",
-		"password": "123456",
+		"password": "Router2026!",
 		"name":     "Router Golden Contracts",
 	})
 	responses["auth.register"] = observedResponse{Status: status, Body: body}
 	if status != http.StatusCreated {
 		t.Fatalf("register status = %d, want %d, body=%s", status, http.StatusCreated, string(body))
 	}
-	accessToken := extractAccessToken(t, body)
+	accessToken := mintAccessToken(t, authService, pool, "router.golden.contracts@test.dev")
 
 	status, body = performJSONRequest(t, h, http.MethodGet, "/api/auth/me", accessToken, nil)
 	responses["auth.me"] = observedResponse{Status: status, Body: body}
@@ -788,23 +813,6 @@ func performJSONRequest(t *testing.T, h http.Handler, method, path, token string
 	rr := httptest.NewRecorder()
 	h.ServeHTTP(rr, req)
 	return rr.Code, rr.Body.Bytes()
-}
-
-func extractAccessToken(t *testing.T, body []byte) string {
-	t.Helper()
-	var parsed map[string]interface{}
-	if err := json.Unmarshal(body, &parsed); err != nil {
-		t.Fatalf("json.Unmarshal() error = %v", err)
-	}
-	tokens, ok := parsed["tokens"].(map[string]interface{})
-	if !ok {
-		t.Fatalf("tokens field missing in response")
-	}
-	access, ok := tokens["access_token"].(string)
-	if !ok || access == "" {
-		t.Fatalf("access_token missing in response")
-	}
-	return access
 }
 
 func extractID(t *testing.T, body []byte) string {

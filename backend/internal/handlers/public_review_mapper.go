@@ -37,6 +37,7 @@ type publicReviewLister interface {
 //   - the plan is Free (reviews are Pro+ only),
 //   - the reviews feature is not available for the plan,
 //   - show_reviews toggle is off.
+//
 // Otherwise fetches and sanitizes each EventReview via toPublicReview (no PII).
 // Must stay aligned with GET /api/public/organizers/{slug}: disabled profiles
 // must not leak reviews on this sub-route.

@@ -513,4 +513,3 @@ const inactivityWarningBodyEN = `
     <a href="{{.LoginLink}}" class="button">Log in to Solennix</a>
 </div>
 <p>If no action is taken, we will keep you updated before taking any action on your account.</p>`
-

@@ -1195,18 +1195,18 @@ func (h *CRUDHandler) GetEventFinancials(w http.ResponseWriter, r *http.Request)
 		writeError(w, http.StatusInternalServerError, "Failed to fetch event extras")
 		return
 	}
-		supplies, err := h.eventRepo.GetSupplies(r.Context(), eventID)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to fetch event supplies")
-			return
-		}
-		staff, err := h.eventRepo.GetStaff(r.Context(), eventID)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to fetch event staff")
-			return
-		}
+	supplies, err := h.eventRepo.GetSupplies(r.Context(), eventID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch event supplies")
+		return
+	}
+	staff, err := h.eventRepo.GetStaff(r.Context(), eventID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch event staff")
+		return
+	}
 
-		productIDs := make([]uuid.UUID, 0, len(products))
+	productIDs := make([]uuid.UUID, 0, len(products))
 	seen := make(map[uuid.UUID]bool, len(products))
 	for _, p := range products {
 		if seen[p.ProductID] {
@@ -1232,8 +1232,8 @@ func (h *CRUDHandler) GetEventFinancials(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-		result := financial.ComputeEventFinancials(*event, products, extras, supplies, staff, unitCosts)
-		writeJSON(w, http.StatusOK, result)
+	result := financial.ComputeEventFinancials(*event, products, extras, supplies, staff, unitCosts)
+	writeJSON(w, http.StatusOK, result)
 }
 
 func (h *CRUDHandler) UpdateEventItems(w http.ResponseWriter, r *http.Request) {

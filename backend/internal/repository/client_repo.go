@@ -10,7 +10,6 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
-
 type ClientRepo struct {
 	pool *pgxpool.Pool
 }
@@ -110,7 +109,6 @@ func (r *ClientRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offs
 	}
 	return clients, total, nil
 }
-
 
 func (r *ClientRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Client, error) {
 	c := &models.Client{}

@@ -756,14 +756,14 @@ func TestGetMyTimeline_Success(t *testing.T) {
 	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
 	staffRepo.On("ListMyTimeline", mock.Anything, userID, true, 25).Return([]repository.TeamMemberChangeEvent{
 		{
-			ID:          changeID,
-			EventID:     eventID,
+			ID:           changeID,
+			EventID:      eventID,
 			EventStaffID: eventStaffID,
-			EventName:   "Evento Demo",
-			EventDate:   "2026-06-30",
-			ChangeType:  "shift_changed",
-			FieldName:   "shift_start",
-			OccurredAt:  "2026-05-17T10:00:00Z",
+			EventName:    "Evento Demo",
+			EventDate:    "2026-06-30",
+			ChangeType:   "shift_changed",
+			FieldName:    "shift_start",
+			OccurredAt:   "2026-05-17T10:00:00Z",
 		},
 	}, nil)
 

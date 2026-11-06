@@ -10,9 +10,9 @@ import (
 )
 
 // Helper functions
-func float64Ptr(f float64) *float64 { return &f }
+func float64Ptr(f float64) *float64  { return &f }
 func testStringPtr(s string) *string { return &s }
-func boolPtr(b bool) *bool          { return &b }
+func boolPtr(b bool) *bool           { return &b }
 
 func TestValidateEvent(t *testing.T) {
 	tests := []struct {

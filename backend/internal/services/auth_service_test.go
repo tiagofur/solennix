@@ -811,7 +811,7 @@ func TestGenerateResetToken_HasOneHourExpiry(t *testing.T) {
 	// Verify expiry is approximately 1 hour from now
 	expiresAt := claims.ExpiresAt.Time
 	expectedExpiry := before.Add(1 * time.Hour)
-	if expiresAt.Before(expectedExpiry.Add(-2 * time.Second)) || expiresAt.After(expectedExpiry.Add(2*time.Second)) {
+	if expiresAt.Before(expectedExpiry.Add(-2*time.Second)) || expiresAt.After(expectedExpiry.Add(2*time.Second)) {
 		t.Errorf("reset token ExpiresAt = %v, expected near %v (1 hour from issuance)", expiresAt, expectedExpiry)
 	}
 

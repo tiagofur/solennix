@@ -117,5 +117,5 @@ func TestToPublicReview_JSONHasNoPII(t *testing.T) {
 	}
 }
 
-func strPtr(s string) *string { return &s }
+func strPtr(s string) *string        { return &s }
 func ptrUUID(u uuid.UUID) *uuid.UUID { return &u }

@@ -39,9 +39,9 @@ func TestNewPushService_GivenInvalidFCMCredentials_WhenCreated_ThenReturnsDisabl
 
 func TestNewPushService_GivenInvalidAPNsKeyPath_WhenCreated_ThenReturnsDisabledService(t *testing.T) {
 	cfg := &config.Config{
-		APNsKeyPath: "/nonexistent/path/key.p8",
-		APNsKeyID:   "KEY123",
-		APNsTeamID:  "TEAM456",
+		APNsKeyPath:  "/nonexistent/path/key.p8",
+		APNsKeyID:    "KEY123",
+		APNsTeamID:   "TEAM456",
 		APNsBundleID: "com.test.app",
 	}
 	ps := NewPushService(cfg)

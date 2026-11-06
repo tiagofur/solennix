@@ -277,7 +277,6 @@ func (h *EventPublicLinkHandler) GetPortalData(w http.ResponseWriter, r *http.Re
 
 	slog.Info("Public portal token verified", "event_id", link.EventID, "user_id", link.UserID, "status", link.Status)
 
-
 	// Distinguish revoked/expired from active so the client UI can render
 	// a "this link was disabled" message instead of a generic 404.
 	if link.Status != "active" {

@@ -72,18 +72,18 @@ func normalizeAdminAccountType(accountType string) string {
 // in migration 040. Both are exposed so admin dashboards can show the full
 // breakdown.
 type PlatformStats struct {
-	TotalUsers          int `json:"total_users"`
-	BasicUsers          int `json:"basic_users"`
-	ProUsers            int `json:"pro_users"`
-	BusinessUsers       int `json:"business_users"`
-	PremiumUsers        int `json:"premium_users"`
-	TotalEvents         int `json:"total_events"`
-	TotalClients        int `json:"total_clients"`
-	TotalProducts       int `json:"total_products"`
-	NewUsersToday       int `json:"new_users_today"`
-	NewUsersWeek        int `json:"new_users_week"`
-	NewUsersMonth       int `json:"new_users_month"`
-	ActiveSubscriptions int `json:"active_subscriptions"`
+	TotalUsers              int            `json:"total_users"`
+	BasicUsers              int            `json:"basic_users"`
+	ProUsers                int            `json:"pro_users"`
+	BusinessUsers           int            `json:"business_users"`
+	PremiumUsers            int            `json:"premium_users"`
+	TotalEvents             int            `json:"total_events"`
+	TotalClients            int            `json:"total_clients"`
+	TotalProducts           int            `json:"total_products"`
+	NewUsersToday           int            `json:"new_users_today"`
+	NewUsersWeek            int            `json:"new_users_week"`
+	NewUsersMonth           int            `json:"new_users_month"`
+	ActiveSubscriptions     int            `json:"active_subscriptions"`
 	RegistrationsByPlatform map[string]int `json:"registrations_by_platform"`
 	ActiveUsersByPlatform   map[string]int `json:"active_users_by_platform"`
 	InteractionsByPlatform  map[string]int `json:"interactions_by_platform"`
@@ -122,25 +122,25 @@ type AnalyticsDayCount struct {
 
 // AdminUser represents a user with usage stats for admin views.
 type AdminUser struct {
-	ID                 uuid.UUID  `json:"id"`
-	Email              string     `json:"email"`
-	Name               string     `json:"name"`
-	BusinessName       *string    `json:"business_name,omitempty"`
-	Plan               string     `json:"plan"`
-	Role               string     `json:"role"`
-	AccountStatus      string     `json:"account_status"`
-	BlockedAt          *time.Time `json:"blocked_at,omitempty"`
-	BlockedReason      *string    `json:"blocked_reason,omitempty"`
-	BlockedBy          *uuid.UUID `json:"blocked_by,omitempty"`
-	DeletionEligibleAt *time.Time `json:"deletion_eligible_at,omitempty"`
-	DeletedAt          *time.Time `json:"deleted_at,omitempty"`
-	EmailVerifiedAt    *time.Time `json:"email_verified_at,omitempty"`
-	StripeCustomerID   *string    `json:"stripe_customer_id,omitempty"`
-	HasPaidSub         bool       `json:"has_paid_subscription"`
-	PlanExpiresAt      *time.Time `json:"plan_expires_at,omitempty"`
-	EventsCount        int        `json:"events_count"`
-	ClientsCount       int        `json:"clients_count"`
-	ProductsCount      int        `json:"products_count"`
+	ID                   uuid.UUID             `json:"id"`
+	Email                string                `json:"email"`
+	Name                 string                `json:"name"`
+	BusinessName         *string               `json:"business_name,omitempty"`
+	Plan                 string                `json:"plan"`
+	Role                 string                `json:"role"`
+	AccountStatus        string                `json:"account_status"`
+	BlockedAt            *time.Time            `json:"blocked_at,omitempty"`
+	BlockedReason        *string               `json:"blocked_reason,omitempty"`
+	BlockedBy            *uuid.UUID            `json:"blocked_by,omitempty"`
+	DeletionEligibleAt   *time.Time            `json:"deletion_eligible_at,omitempty"`
+	DeletedAt            *time.Time            `json:"deleted_at,omitempty"`
+	EmailVerifiedAt      *time.Time            `json:"email_verified_at,omitempty"`
+	StripeCustomerID     *string               `json:"stripe_customer_id,omitempty"`
+	HasPaidSub           bool                  `json:"has_paid_subscription"`
+	PlanExpiresAt        *time.Time            `json:"plan_expires_at,omitempty"`
+	EventsCount          int                   `json:"events_count"`
+	ClientsCount         int                   `json:"clients_count"`
+	ProductsCount        int                   `json:"products_count"`
 	RegistrationPlatform string                `json:"registration_platform"`
 	PlatformActivity     []models.UserPlatform `json:"platform_activity"`
 	ActivePlatforms      []string              `json:"active_platforms"`

@@ -1120,9 +1120,9 @@ func (r *StaffRepo) RevokeInvite(ctx context.Context, staffID, ownerUserID uuid.
 // from "default state".
 func (r *StaffRepo) GetExecutionState(ctx context.Context, invitedUserID, eventStaffID uuid.UUID) (*AssignmentExecutionState, error) {
 	var (
-		raw        []byte
-		staffUser  *uuid.UUID
-		hasState   bool
+		raw       []byte
+		staffUser *uuid.UUID
+		hasState  bool
 	)
 	err := r.pool.QueryRow(ctx, `
 		SELECT s.invited_user_id, es.execution_state
