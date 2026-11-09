@@ -11,6 +11,7 @@ const CLIENT_LIMIT = 20;
 const PRODUCT_LIMIT = 15;
 const INVENTORY_LIMIT = 30;
 const CATALOG_LIMIT = 20;
+const UNLIMITED = 999999;
 
 export function usePlanLimits() {
   const { user } = useAuth();
@@ -53,15 +54,15 @@ export function usePlanLimits() {
   return {
     isBasicPlan,
     eventsThisMonth,
-    eventLimit: FREE_PLAN_EVENT_LIMIT,
+    eventLimit: isBasicPlan ? FREE_PLAN_EVENT_LIMIT : UNLIMITED,
     clientsCount,
-    clientLimit: CLIENT_LIMIT,
+    clientLimit: isBasicPlan ? CLIENT_LIMIT : UNLIMITED,
     productsCount,
-    productLimit: PRODUCT_LIMIT,
+    productLimit: isBasicPlan ? PRODUCT_LIMIT : UNLIMITED,
     inventoryCount,
-    inventoryLimit: INVENTORY_LIMIT,
+    inventoryLimit: isBasicPlan ? INVENTORY_LIMIT : UNLIMITED,
     catalogTotal,
-    catalogLimit: CATALOG_LIMIT,
+    catalogLimit: isBasicPlan ? CATALOG_LIMIT : UNLIMITED,
     canCreateEvent,
     canCreateClient,
     canCreateProduct,

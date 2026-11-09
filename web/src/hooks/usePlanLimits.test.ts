@@ -112,6 +112,11 @@ describe('usePlanLimits', () => {
     expect(result.current.isBasicPlan).toBe(false);
     expect(result.current.eventsThisMonth).toBe(1);
     expect(result.current.canCreateEvent).toBe(true); // pro has no limit
+    expect(result.current.eventLimit).toBe(999999);
+    expect(result.current.clientLimit).toBe(999999);
+    expect(result.current.productLimit).toBe(999999);
+    expect(result.current.inventoryLimit).toBe(999999);
+    expect(result.current.catalogLimit).toBe(999999);
     // React Query hooks are still called but limits don't apply for pro
   });
 
