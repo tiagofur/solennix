@@ -17,10 +17,10 @@
     "render:v07": "remotion render V07-Inventory-Reel out/v07-inventory-reel.mp4"
   },
   "dependencies": {
-    "remotion": "^4.0.540",
-    "@remotion/cli": "^4.0.540",
-    "@remotion/transitions": "^4.0.540",
-    "@remotion/google-fonts": "^4.0.540",
+    "remotion": "^4.0.541",
+    "@remotion/cli": "^4.0.541",
+    "@remotion/transitions": "^4.0.541",
+    "@remotion/google-fonts": "^4.0.541",
     "@remotion/zod-types": "^4.0.477",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
