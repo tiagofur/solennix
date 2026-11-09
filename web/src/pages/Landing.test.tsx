@@ -283,7 +283,7 @@ describe('Landing', () => {
     expect(screen.getByText('Básico')).toBeInTheDocument();
     expect(screen.getByText('Pro')).toBeInTheDocument();
     expect(screen.getByText('Gratis')).toBeInTheDocument();
-    expect(screen.getByText('$99')).toBeInTheDocument();
+    expect(screen.getByText('$149')).toBeInTheDocument();
   });
 
   it('renders all FAQ questions', () => {
