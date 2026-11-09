@@ -29,10 +29,10 @@ vi.mock('../hooks/useAuth', () => ({
 vi.mock('../hooks/usePlanLimits', () => ({
   usePlanLimits: () => ({
     eventsThisMonth: 3,
-    eventLimit: 5,
+    eventLimit: (mockUser as any)?.plan === 'pro' ? 999999 : 5,
     clientsCount: 8,
-    clientLimit: 10,
-    isBasicPlan: (mockUser as any).plan !== 'pro',
+    clientLimit: (mockUser as any)?.plan === 'pro' ? 999999 : 10,
+    isBasicPlan: (mockUser as any)?.plan !== 'pro',
   }),
 }));
 
@@ -426,6 +426,17 @@ describe('Settings', () => {
     const clientsRow = screen.getByText('Clientes registrados').closest('div');
     expect(eventsRow?.textContent).toContain('5');
     expect(clientsRow?.textContent).toContain('10');
+  });
+
+  it('shows unlimited limits for pro users on subscription tab', () => {
+    mockUser = { ...mockUser, plan: 'pro' };
+    mockSubscriptionStatus = { plan: 'pro', has_stripe_account: true };
+    renderSettings();
+    clickTab('Suscripción');
+    const eventsRow = screen.getByText('Eventos este mes').closest('div');
+    const clientsRow = screen.getByText('Clientes registrados').closest('div');
+    expect(eventsRow?.textContent).toContain('Ilimitado');
+    expect(clientsRow?.textContent).toContain('Ilimitado');
   });
 
   // --- Manage subscription (portal) tests ---
