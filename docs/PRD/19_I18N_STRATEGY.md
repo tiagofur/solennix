@@ -1,3 +1,7 @@
+---
+verified: 2026-08-05
+---
+
 # i18n Strategy
 
 > [!success] Estado
@@ -568,8 +572,8 @@ Los siguientes dominios deben agregarse a la matrix en la próxima iteración de
 
 ### iOS
 
-- [Package.swift](ios/Packages/SolennixFeatures/Package.swift) declara `defaultLocalization: "es"` y `resources: [.process("Resources")]` en el target.
-- [project.yml](ios/project.yml) agrega `developmentLanguage: es` + `knownRegions: [en, es, Base]` al root `options`.
+- [Package.swift](../../ios/Packages/SolennixFeatures/Package.swift) declara `defaultLocalization: "es"` y `resources: [.process("Resources")]` en el target.
+- [project.yml](../../ios/project.yml) agrega `developmentLanguage: es` + `knownRegions: [en, es, Base]` al root `options`.
 - Formato: **String Catalog** (`.xcstrings`) — Xcode 15+, con entrada `sourceLanguage` y un objeto `strings` keyed por identifier. Cada entrada tiene `localizations.<locale>.stringUnit.{state,value}`.
 - Los strings se consumen con `String(localized: "key", bundle: .module)` — el `bundle: .module` es obligatorio porque las features viven en un SPM package, no en el app target.
 - Fechas/números: `DateFormatter` con `locale = Locale.autoupdatingCurrent` + `setLocalizedDateFormatFromTemplate` para que el formato siga el idioma del device.
@@ -584,13 +588,13 @@ Los siguientes dominios deben agregarse a la matrix en la próxima iteración de
 ### Web
 
 - Deps: `i18next` + `react-i18next` + `i18next-browser-languagedetector`.
-- Config: [web/src/i18n/config.ts](web/src/i18n/config.ts) con `fallbackLng: "es"`, `load: "languageOnly"`, `supportedLngs: ["es", "en"]` — regionales colapsan al base.
-- Init side-effect en [web/src/main.tsx](web/src/main.tsx) antes del primer render.
+- Config: [web/src/i18n/config.ts](../../web/src/i18n/config.ts) con `fallbackLng: "es"`, `load: "languageOnly"`, `supportedLngs: ["es", "en"]` — regionales colapsan al base.
+- Init side-effect en [web/src/main.tsx](../../web/src/main.tsx) antes del primer render.
 - Locales: `web/src/i18n/locales/{es,en}/<namespace>.json`.
 - Consumo: `const { t, i18n } = useTranslation('calendar'); <h1>{t('title')}</h1>`.
 - Fechas via `date-fns`: helper `pickDateFnsLocale(i18n.language)` elige entre `es` / `enUS` según el idioma vigente.
 - **Persistencia**: El idioma se cambia en `Settings.tsx`, se guarda en la base de datos (`user.preferred_language`) y `AuthContext` sincroniza automáticamente la UI (`i18n.changeLanguage(user.preferred_language)`) al iniciar sesión.
-- Tests: [tests/setup.ts](web/tests/setup.ts) importa `../src/i18n/config` y pinea `i18n.changeLanguage('es')` para que las assertions sean deterministas (evita que el `navigator.language` del CI lleve los tests a EN).
+- Tests: [tests/setup.ts](../../web/tests/setup.ts) importa `../src/i18n/config` y pinea `i18n.changeLanguage('es')` para que las assertions sean deterministas (evita que el `navigator.language` del CI lleve los tests a EN).
 
 ## Qué NO localizamos
 

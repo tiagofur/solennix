@@ -12,6 +12,8 @@ aliases:
 date: 2026-07-31
 updated: 2026-07-31
 status: draft
+verified: 2026-08-04
+
 ---
 
 # Solennix v2.0 — Discovery & Inbound Layer
@@ -80,7 +82,7 @@ La implementación del Perfil Profesional Público (#787, PR chain #1097–#1102
 > - Canónico: `PublicRequest` + `public_request_links` (dos puertas: perfil público y link del proveedor).
 > - **Eliminados:** `EventFormLink` / `event_form_links`, `PublicLead` / `public_leads` (migración 079).
 > - Link `submit_mode`: `standard` \| `auto_quote` \| `auto_event` (default `auto_event`).
-> - Detalle: `openspec/changes/unify-solicitudes-forms/`.
+> - Detalle: `docs/_archive/openspec/changes/unify-solicitudes-forms/`.
 
 ### 2.2 Entidades de solicitud / presupuesto
 

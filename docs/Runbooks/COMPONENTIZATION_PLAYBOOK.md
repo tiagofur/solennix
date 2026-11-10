@@ -1,3 +1,7 @@
+---
+verified: 2026-08-05
+---
+
 # Componentization Playbook (Professional Standard)
 
 Status date: 2026-05-09

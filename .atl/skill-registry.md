@@ -24,8 +24,8 @@ Stack skills are loaded **on demand** by `explorer`, `implementer`, or `reviewer
 
 | Skill | Path | File / Path Triggers | Task Intent Triggers |
 | :--- | :--- | :--- | :--- |
-| `go-backend` | `.agents/skills/go-backend/SKILL.md` | `backend/**`, `*.go`, `go.mod`, `contracts/openapi.yaml` | Go 1.23+ clean/hexagonal architecture, PostgreSQL (`pgx/v5` + repository interfaces), RFC 9457 Problem Details, structured logging, `go test -race ./...`. |
-| `react-vite-web` | `.agents/skills/react-vite-web/SKILL.md` | `web/**`, `*.tsx`, `*.ts`, `vite.config.ts` | React 19 + Vite + TypeScript strict, TanStack Router / Zustand / Context, OpenAPI TypeScript types (`src/types/api.ts`), i18next, Vitest verification. |
+| `go-backend` | `.agents/skills/go-backend/SKILL.md` | `backend/**`, `*.go`, `go.mod`, `contracts/openapi.yaml` | Go 1.26 clean layered architecture (handlers → services → repository → models), PostgreSQL (`pgx/v5` + repository interfaces), RFC 9457 Problem Details, structured logging, `go test -race ./...`. |
+| `react-vite-web` | `.agents/skills/react-vite-web/SKILL.md` | `web/**`, `*.tsx`, `*.ts`, `vite.config.ts` | React 19 + Vite + TypeScript strict, react-router-dom v7 / TanStack Query / Context+Zustand(toast), OpenAPI TypeScript types (`web/src/types/api.ts` from `contracts/openapi.yaml`), i18next (`es`/`en`), Vitest + Playwright verification. |
 | `client-surfaces` | `.agents/skills/client-surfaces/SKILL.md` | `ios/**`, `android/**`, `*.swift`, `*.kt` | Native iOS (SwiftUI + async/await) and Native Android (Jetpack Compose + Kotlin Coroutines), cross-platform model/API symmetry, localization parity. |
 
 ---

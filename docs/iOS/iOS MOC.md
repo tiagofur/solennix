@@ -1,3 +1,7 @@
+---
+verified: 2026-11-10
+---
+
 #ios #moc #navegación
 
 # 🍎 iOS — Mapa de Contenido
@@ -7,7 +11,7 @@
 > **Min iOS**: 17.0 · **Swift**: 5.9
 > **Build**: XcodeGen (project.yml) · Xcode 15+
 > **Estado**: Producción (MVP + Google/Apple SSO ✅) · App Store ready
-> **Última actualización**: 2026-08-05 (plan i18n por pantalla archivado; i18n epic #202 cerrada)
+> **Última actualización**: 2026-11-10 (épico staff/portal asistente enviado #1364–#1374; docs revisados en #1385)
 
 ---
 
@@ -52,6 +56,7 @@
 | Configuración y perfil | [[Módulo Settings]] |
 | Generación de PDFs | [[Sistema de PDFs]] |
 | Links de Solicitud (ex formularios) | [[Módulo Formularios Compartibles]] |
+| Personal, equipos y portales (team/assistant) | [[../PRD/21_STAFF_TEAM_REVIEW]] |
 
 ## Calidad
 

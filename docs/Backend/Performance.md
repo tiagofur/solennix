@@ -10,6 +10,8 @@ related:
   - "[[Base de Datos]]"
   - "[[../PRD/09_ROADMAP|Roadmap maestro]]"
   - "[[Arquitectura General]]"
+verified: 2026-07-02
+
 ---
 
 # Backend Performance

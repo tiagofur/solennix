@@ -1,4 +1,11 @@
+---
+verified: 2026-11-10
+---
+
 # Desktop Engineering Standard: Tauri v2 (`desktop-tauri-v2.md`)
+
+> [!IMPORTANT]
+> **Estado en Solennix: NO adoptado.** `factory.manifest.json` declara `backend, web, ios-native, android-native` — no existe superficie desktop. Este documento es un estándar condicional del factory (ADR-0002 §2.2) que se activa solo si un proyecto adopta el tier `desktop-tauri`.
 
 This guide operationalizes [`ADR-0002`](../architecture/adr/ADR-0002-client-surfaces-and-mobile-matrix.md) for cross-platform desktop applications (`apps/desktop-tauri/`) built with **Tauri v2**.
 

@@ -7,6 +7,8 @@ type: status
 status: active
 date: 2026-04-29
 updated: 2026-08-05
+verified: 2026-11-10
+
 ---
 
 # 🟢 Android — Estado Plataforma

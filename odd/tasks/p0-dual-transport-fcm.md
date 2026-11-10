@@ -5,7 +5,7 @@ Fixes del review web аут: documentar y blindar el contrato auth dual (body pa
 ## Specs
 
 - S1: `POST /api/auth/team-invite/accept` (y `Login`) mantienen `{user, tokens}` en el body porque iOS (`AuthManager.swift:415` hace `storeTokens`) y Android (`AuthManager.kt:190` usa `AuthEnvelope`) los necesitan; la web los ignora y usa cookies httpOnly + `checkAuth()`. Backend: comentario de contrato en el handler. Web: `TeamInviteAcceptResponse` ya no expone `tokens` para que nadie los consuma por accidente.
-- S2: `backend/docs/openapi.yaml` incluye los ~30 endpoints que la web consume y hoy faltan (staff CRUD, payment-submissions + públicas, team-invite/accept, verify-email+resend, page-views, registration-funnel, dashboard/summary, equipment/availability, reviews, admin inactive/empty-resources/verify-email/block/listing-moderation); se documenta el esquema dual (bearer móvil + cookies/CSRF web); se regenera `web/src/types/api.ts` con `npm run openapi:types`.
+- S2: `contracts/openapi.yaml` incluye los ~30 endpoints que la web consume y hoy faltan (staff CRUD, payment-submissions + públicas, team-invite/accept, verify-email+resend, page-views, registration-funnel, dashboard/summary, equipment/availability, reviews, admin inactive/empty-resources/verify-email/block/listing-moderation); se documenta el esquema dual (bearer móvil + cookies/CSRF web); se regenera `web/src/types/api.ts` con `npm run openapi:types`.
 - S3: `signOut` web llama a `unregisterPushNotifications` (best-effort) con el token cacheado antes de limpiar estado, para que el push no siga llegando tras logout.
 - S4: `initPushNotifications` no registra `onMessage` duplicado ante re-ejecuciones (guard por usuario + unsubscribe previo).
 

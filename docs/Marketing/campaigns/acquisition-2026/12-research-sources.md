@@ -1,3 +1,7 @@
+---
+verified: 2026-10-26
+---
+
 # Research sources
 
 Checked on **2026-09-01**. Platform specifications change; re-check before paid upload.

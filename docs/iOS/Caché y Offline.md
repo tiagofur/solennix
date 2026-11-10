@@ -1,3 +1,7 @@
+---
+verified: 2026-04-27
+---
+
 #ios #cache #offline #swiftdata
 
 # Caché y Offline

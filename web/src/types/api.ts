@@ -401,6 +401,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/events/{id}/financials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get event financial breakdown including product, extra, supply, and staff costs with profit margin */
+        get: operations["getEventFinancials"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/{id}/photos": {
         parameters: {
             query?: never;
@@ -479,6 +496,40 @@ export interface paths {
         };
         /** Get supplies assigned to an event */
         get: operations["getEventSupplies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events/{id}/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get staff assigned to an event */
+        get: operations["getEventStaff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events/{id}/staff/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get attendance RSVP summary of staff assigned to an event */
+        get: operations["getEventStaffSummary"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1032,6 +1083,26 @@ export interface paths {
          * @description Returns the authenticated user's audit log entries. Returns a flat array when no page is provided or a paginated envelope when page is present.
          */
         get: operations["getActivityLog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/accounting/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export accounting and financial data as UTF-8 BOM CSV (Excel ready)
+         * @description Gated to paid plans (Pro and Business). Returns event financials, client data, payment totals, staff costs, and balances.
+         */
+        get: operations["exportAccountingCSV"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1850,6 +1921,23 @@ export interface paths {
         post: operations["inviteStaffUser"];
         /** Revoke the pending invite for a staff member */
         delete: operations["revokeStaffInvite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get organizer's staff seat limits and current usage */
+        get: operations["getStaffLimits"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4031,6 +4119,38 @@ export interface components {
             limit: number;
             total_pages: number;
         };
+        StaffLimitsResponse: {
+            used: number;
+            max?: number | null;
+            unlimited: boolean;
+            plan: string;
+        };
+        StaffAttendanceSummary: {
+            total: number;
+            confirmed: number;
+            pending: number;
+            declined: number;
+            cancelled: number;
+        };
+        EventFinancialResult: {
+            products_subtotal?: number;
+            normal_extras_subtotal?: number;
+            pass_through_extras_subtotal?: number;
+            discountable_base?: number;
+            discount_amount?: number;
+            after_discount?: number;
+            tax_amount?: number;
+            total?: number;
+            product_cost?: number;
+            extras_cost?: number;
+            supplies_cost?: number;
+            staff_cost?: number;
+            total_cost?: number;
+            revenue?: number;
+            net_profit?: number;
+            adjusted_revenue?: number;
+            profit_margin?: number;
+        };
         StaffInviteRequest: {
             /**
              * @description assistant requires Business plan
@@ -5328,6 +5448,42 @@ export interface operations {
             };
         };
     };
+    getEventFinancials: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Event financial breakdown */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventFinancialResult"];
+                };
+            };
+            /** @description Invalid event ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getEventPhotos: {
         parameters: {
             query?: never;
@@ -5577,6 +5733,78 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
+            };
+            /** @description Event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEventStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Event staff list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventStaff"][];
+                };
+            };
+            /** @description Invalid event ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEventStaffSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Attendance status counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAttendanceSummary"];
+                };
+            };
+            /** @description Invalid event ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Event not found */
             404: {
@@ -7386,6 +7614,52 @@ export interface operations {
             };
         };
     };
+    exportAccountingCSV: {
+        parameters: {
+            query?: {
+                /** @description Optional start of date range (YYYY-MM-DD) */
+                start_date?: string;
+                /** @description Optional end of date range (YYYY-MM-DD) */
+                end_date?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV file download */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Paid plan required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getAdminStats: {
         parameters: {
             query?: never;
@@ -8968,6 +9242,15 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Basic-plan scale limit reached (plan_limit_exceeded). Organizers on the free tier at their events-per-month or client cap must upgrade to convert; limit.type is "events" or "clients". */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Request not found */
             404: {
                 headers: {
@@ -10077,6 +10360,40 @@ export interface operations {
                 content?: never;
             };
             /** @description Failed to revoke invite */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getStaffLimits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Staff seat limits and usage */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffLimitsResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Server error */
             500: {
                 headers: {
                     [name: string]: unknown;

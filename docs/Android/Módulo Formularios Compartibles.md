@@ -1,3 +1,7 @@
+---
+verified: 2026-08-04
+---
+
 # Módulo Links de Solicitud (ex Formularios Compartibles)
 
 #android #solicitudes #módulo
@@ -23,5 +27,5 @@ Visitante: **solo web**. Push channel `solennix_solicitudes` / `public_request` 
 
 ## Ver también
 
-- Design: `openspec/changes/unify-solicitudes-forms/design.md`
+- Design: `docs/_archive/openspec/changes/unify-solicitudes-forms/design.md`
 - Backend: [[../Backend/Módulo Formularios Compartibles]]

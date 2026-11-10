@@ -8,8 +8,10 @@ aliases:
   - Catálogo de Features
   - Features
 date: 2026-03-20
-updated: 2026-08-05
+updated: 2026-11-10
 status: active
+verified: 2026-11-10
+
 ---
 
 # Solennix — Catálogo de Features
@@ -25,7 +27,7 @@ status: active
 > - [[11_CURRENT_STATUS|Estado Actual]] — snapshot operativo
 > - [[09_ROADMAP|Roadmap]] — Now / Next / Later
 > - [[15_MARKETPLACE_V2|v2.0 Discovery & Inbound]] — norte inbound (no marketplace)
-> - Contrato API: `backend/docs/openapi.yaml`
+> - Contrato API: `contracts/openapi.yaml`
 
 ---
 
@@ -36,7 +38,7 @@ status: active
 | ¿Existe la feature y en qué plataforma? | Secciones P0/P1 + **§12 Tabla de paridad** |
 | ¿Qué plan la desbloquea? | **§2 Límites y gates** + [[04_MONETIZATION]] §0 |
 | Detalle de implementación | MOC de plataforma (`docs/{iOS,Android,Web,Backend}/`) |
-| Spec de un cambio grande | `openspec/changes/` |
+| Spec de un cambio grande | GitHub Issue con DoR + `odd/tasks/` (factory) |
 
 **Reglas:**
 
@@ -76,7 +78,7 @@ status: active
 | Productos | **15** | + techo compuesto catálogo |
 | Inventario | **30** | + techo compuesto catálogo |
 | Catálogo compuesto (productos + inventario) | **20** | Advisory lock `catalog` |
-| Staff seats (filas en `staff`) | **1** | Pro = **2**; Business = ∞ |
+| Staff seats (filas en `staff`) | **1** | Pro = **5**; Business = ∞ |
 | Links de solicitud activos | **3** | `public_request_links` activos no expirados |
 
 Pro y Business: sin esos techos de escala (∞) salvo reglas de negocio puntuales (portfolio máx 6, etc.).
@@ -358,7 +360,7 @@ API clave: `GET /api/public/organizers/{slug}`, `GET|PUT /api/users/me/public-pr
 **Gate:** Gratis ≤ **3** links activos; Pro+ ilimitados.  
 **Legacy:** rutas UI `/event-forms` pueden existir como redirect residual — dominio canónico = Solicitudes.
 
-Spec: `openspec/changes/unify-solicitudes-forms/`.
+Spec: `docs/_archive/openspec/changes/unify-solicitudes-forms/`.
 
 ---
 
@@ -403,6 +405,16 @@ Distinto de Solicitudes: es el portal **por evento** para el cliente final (read
 | Producto con `staff_team_id` | ✅ | ✅ | ✅ | ✅ | todos |
 | Email al asignar (Resend) | ✅ | ✅ | ✅ | ✅ | **Pro+** |
 | Portal team member (Mi jornada + calendario) | ✅ | ✅ | ✅ | ✅ | **Business** (login) |
+| Portal asistente / secretaria (read-only, cross-evento) | ✅ | ✅ | ✅ | ✅ | **Business** (rol `assistant`) |
+| Resumen de asistencia (RSVP summary por evento) | ✅ | ✅ | ✅ | ✅ | todos (#1350) |
+| Badge de asientos + bloqueo de creación al llegar al cupo | ✅ | ✅ | ✅ | ✅ | seats §2.1 |
+
+### 4.12 Finanzas del evento [Web + Backend]
+
+| Capacidad | iOS | Android | Web | Backend | Gate |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| P&L por evento (ingresos, costos, margen) | — | — | ✅ | ✅ | todos (#1350) |
+| Exportación contable CSV (consolidado + por evento) | — | — | ✅ | ✅ | **Pro+** (#1350) |
 
 ---
 
@@ -504,7 +516,7 @@ Principio: **secciones (sustantivos), no acciones**. Crear → FAB / botones con
 
 Ideas de experiencia cliente (clusters A–G, features A–L de delight): ver [[14_CLIENT_EXPERIENCE_IDEAS]] y [[12_CLIENT_TRANSPARENCY_AND_DELIGHT]].  
 Norte inbound v2: [[15_MARKETPLACE_V2]].  
-Al aprobar un cluster → [[09_ROADMAP]] + OpenSpec, no append silencioso acá.
+Al aprobar un cluster → [[09_ROADMAP]] + GitHub Issue con DoR (factory), no append silencioso acá.
 
 ---
 

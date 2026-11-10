@@ -7,6 +7,8 @@ date: 2026-04-21
 status: concept
 duration: 20s
 screenshots: pending
+verified: 2026-04-27
+
 ---
 
 # V08 — Staff y Equipos de Trabajo

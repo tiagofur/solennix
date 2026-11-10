@@ -9,6 +9,8 @@ related:
   - "[[Módulo Eventos]]"
   - "[[Módulo Pagos]]"
   - "[[Seguridad]]"
+verified: 2026-04-27
+
 ---
 
 # Módulo Portal Cliente
@@ -91,5 +93,5 @@ related:
 
 > [!warning] Gaps confirmados
 >
-> - `backend/docs/openapi.yaml` no incluye todavía las rutas del portal.
+> - `contracts/openapi.yaml` no incluye todavía las rutas del portal.
 > - No existe un archivo de tests dedicado para `event_public_link_handler.go`.

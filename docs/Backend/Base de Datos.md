@@ -1,3 +1,7 @@
+---
+verified: 2026-10-26
+---
+
 # Base de Datos
 
 #backend #database #infraestructura

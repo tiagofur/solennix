@@ -1,3 +1,7 @@
+---
+verified: 2026-04-30
+---
+
 #android #dominio #eventos
 
 # Módulo Eventos

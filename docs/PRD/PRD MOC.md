@@ -1,3 +1,7 @@
+---
+verified: 2026-11-10
+---
+
 # PRD — Map of Content
 
 > [!info] Solennix
@@ -14,11 +18,11 @@
 
 - [[01_PRODUCT_VISION|Visión del Producto]] — Problema, visión, objetivos, usuarios
 - [[03_COMPETITIVE_ANALYSIS|Análisis Competitivo]] — Posicionamiento vs HoneyBook, Excel, WhatsApp y LATAM
-- [[04_MONETIZATION|Monetización]] — Tiers Gratis/Pro/Business v3.0, matriz de gating, Stripe/RC, keys
+- [[04_MONETIZATION|Monetización]] — Tiers Gratis/Pro/Business v3.1 ($149/$499 MXN), matriz de gating, Stripe/RC, keys
 
 ## Features y estado
 
-- [[02_FEATURES|Catálogo de Features]] — Paridad + gates (v2.0, 2026-08); tiers Gratis/Pro/Business
+- [[02_FEATURES|Catálogo de Features]] — Paridad + gates (staff seats 1/5/∞, asistencia, export contable); tiers Gratis/Pro/Business
 - [[11_CURRENT_STATUS|Estado Actual]] — **Snapshot vivo** (no changelog)
 - [[12_CLIENT_TRANSPARENCY_AND_DELIGHT|Transparencia & Delight]] — Features A–L experiencia cliente
 - [[14_CLIENT_EXPERIENCE_IDEAS|Ideas experiencia cliente]] — Exploración clusters A–G
@@ -35,7 +39,7 @@ Los PRD 05–08 son **punteros**. Detalle canónico en cada MOC de plataforma.
 ## Planificación
 
 - [[09_ROADMAP|Roadmap]] — **Solo forward** (Now / Next / Later)
-- Estándares agentes: [`AGENTS.md`](../../AGENTS.md) + `docs/agents/`
+- Estándares agentes: [`AGENTS.md`](../../AGENTS.md) + `docs/stack/`
 
 ---
 

@@ -23,7 +23,7 @@ platform:cross-platform:
   - changed-files:
       - any-glob-to-any-file:
           - "docs/PRD/**"
-          - "openspec/**"
+          - "docs/**"
 
 type:infra:
   - changed-files:

@@ -103,7 +103,7 @@ android/
 - [x] Toggle vista dual
 
 ### Monetizacion
-- [x] Plan limits (basic: 3 eventos/mes, 50 clientes, 20 productos)
+- [x] Plan limits (basic: 4 eventos/mes, 20 clientes, 15 productos, 30 inventario)
 - [x] Upgrade banners
 - [x] Google Play Billing (pro_monthly, pro_annual)
 
@@ -148,9 +148,9 @@ keyPassword=xxx
 
 ## Documentacion
 
-- [PRD completo](../docs/native-android/PRD-NATIVE-ANDROID.md)
-- [Changelog](../docs/native-android/CHANGELOG.md)
-- [System Overview](../docs/architecture/system-overview.md)
+- [PRD completo](../docs/PRD/PRD%20MOC.md)
+- [Changelog](../CHANGELOG.md)
+- [Arquitectura Android](../docs/Android/Arquitectura%20General.md)
 
 ## Version
 

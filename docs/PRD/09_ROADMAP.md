@@ -8,8 +8,10 @@ aliases:
   - Roadmap
   - Timeline
 date: 2026-03-20
-updated: 2026-08-05
+updated: 2026-11-10
 status: active
+verified: 2026-11-10
+
 ---
 
 # Roadmap
@@ -40,12 +42,13 @@ No copiar números de versión aquí: el manifest es la fuente de verdad.
 
 ## Now (activo)
 
-Trabajo que **ya está en vuelo** o es el siguiente slice natural. Detalle de sesión: `progress/current.md`. Specs: `openspec/changes/`.
+Trabajo que **ya está en vuelo** o es el siguiente slice natural. GitHub Issues es la única cola operativa; el estado de sesión vive en `progress/current.md`.
 
-1. **Cerrar v2 inbound / solicitudes** — geo search, directorio, inbox, anti-spam, funnel visitante, paridad móvil restante.
-2. **Perfil público móvil** — settings + superficies que faltan en iOS/Android respecto a web.
-3. **Calidad de admin / analytics** — fidelidad de métricas y funnel de registro (slices product analytics).
-4. **Monetización operativa** — completar keys/secrets en dashboards externos (Stripe, stores, RevenueCat, Resend). Ver [[04_MONETIZATION]].
+1. **Business plan — Fases 2 y 3** (#1350 cerró Fase 1: staff seats, asistencia, P&L, export contable). Desglosar en issues.
+2. **Fix #1303** — logIn/sync de identidad RevenueCat en Android (paridad móvil).
+3. **Bug cron de review-emails** — cadencia/scope de emails programados.
+4. **Monetización operativa** — SKU nuevos en RevenueCat + ASC/Play para precios $149/$499; keys/secrets en dashboards externos (Stripe, stores, Resend). Ver [[04_MONETIZATION]].
+5. **Release train iOS** — siguiente bump post-1.5.1 (estado ASC en `progress/current.md`).
 
 ---
 
@@ -53,7 +56,7 @@ Trabajo que **ya está en vuelo** o es el siguiente slice natural. Detalle de se
 
 | Tema | Documento / notas |
 | :--- | :--- |
-| Discovery layer v2 (directorio, SEO, inbound) | [[15_MARKETPLACE_V2]] — **no es marketplace**; NG1 intacto |
+| Paridad móvil perfil público + v2 inbound restante | [[15_MARKETPLACE_V2]] — **no es marketplace**; NG1 intacto |
 | Experiencia cliente (ideas A–G / A–L) | [[14_CLIENT_EXPERIENCE_IDEAS]], [[12_CLIENT_TRANSPARENCY_AND_DELIGHT]] — priorizar solo si no compiten con Now |
 | Paridad PDF / plantillas de contrato | [[20_SERVER_SIDE_PDF_GENERATION]] |
 | i18n governance (post-epic) | [[19_I18N_STRATEGY]] |
@@ -72,5 +75,5 @@ Trabajo que **ya está en vuelo** o es el siguiente slice natural. Detalle de se
 
 1. **Solo forward:** Now / Next / Later. Sin sprint diary.
 2. Al cerrar un tema de Now → una línea en [[11_CURRENT_STATUS]] (snapshot) + release notes si aplica.
-3. Specs de cambio grande → `openspec/`, no append aquí.
+3. Cambios grandes → GitHub Issue con DoR (factory), no append aquí.
 4. Si necesitás el diario de sprints abr–jul 2026 → archivo en `docs/_archive/prd-history/`.

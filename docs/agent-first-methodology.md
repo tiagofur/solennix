@@ -1,3 +1,7 @@
+---
+verified: 2026-11-10
+---
+
 # Agent-First Codebase Methodology
 
 An **Agent-First Codebase** is engineered simultaneously for human maintainability and LLM cognitive reliability.
@@ -29,7 +33,7 @@ Our repository rules are grounded in empirical research on Large Language Model 
 - **Anti-Fragmentation Guard**: Do not create twenty 15-line files that force an agent to open ten files to trace one function call. Group cohesive types and their primary methods in a single domain file.
 
 ### 2.2 Screaming / Vertical-Slice Organization
-Organize directories by **domain capability** (`internal/modules/billing/`, `src/features/invoicing/`) rather than generic horizontal layers (`controllers/`, `models/`, `utils/`).
+Organize directories by **domain capability** (`internal/financial/`, `src/pages/Events/`) rather than generic horizontal layers (`controllers/`, `models/`, `utils/`).
 - An agent assigned to an issue in `billing` should be able to read 3–5 files in one directory and hold the entire vertical slice in working memory.
 - Forbidden catch-all names: `utils.go`, `helpers.ts`, `common.py`, `misc.rs`. Name files after their concrete responsibility (`money_format.go`, `rfc9457_error.ts`, `pagination_cursor.go`).
 
@@ -69,4 +73,4 @@ Never dump the entire `docs/` tree into an agent's prompt:
 When an authorized task requires modifying an existing file that already exceeds 500 lines:
 1. **Do not rewrite the world**: Keep your diff bounded to the authorized issue scope.
 2. **Extract the touched seam**: If you are adding a new handler, query, or validator to an oversized file, place the new cohesive unit in a dedicated sibling file within the same package/module.
-3. **Respect the 400-Line Review Budget**: Keep each PR slice around **≤400 changed lines** (`.agents/skills/work-unit-commits/SKILL.md` and `.agents/skills/chained-pr/SKILL.md`). If a structural extraction would exceed the budget, split the mechanical extraction commit from the behavior change commit.
+3. **Respect the 400-Line Review Budget**: Keep each PR slice around **≤400 changed lines** (user-global skills `work-unit-commits` and `chained-pr`). If a structural extraction would exceed the budget, split the mechanical extraction commit from the behavior change commit.

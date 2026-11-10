@@ -3,7 +3,7 @@ import { resolveMediaUrl } from "@/lib/mediaUrl";
 
 /**
  * Unauthenticated public organizer profile (GET /api/public/organizers/{slug}).
- * Source of truth: backend/docs/openapi.yaml — PublicOrganizerProfile.
+ * Source of truth: contracts/openapi.yaml — PublicOrganizerProfile.
  */
 export type PublicOrganizerProfile =
   components["schemas"]["PublicOrganizerProfile"];

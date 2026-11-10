@@ -1,3 +1,7 @@
+---
+verified: 2026-05-01
+---
+
 # Routing y Guards
 
 #web #routing #navegación

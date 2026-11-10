@@ -9,6 +9,8 @@ aliases:
 date: 2026-04-27
 updated: 2026-04-27
 status: active
+verified: 2026-07-02
+
 ---
 
 # Módulo Calendario — Android

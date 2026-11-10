@@ -1,3 +1,7 @@
+---
+verified: 2026-11-04
+---
+
 # Stateless Clean-Context Review Protocol
 
 Code review is the primary quality firewall of the Software Factory. In multi-agent systems, review fails when the reviewer shares the implementer's conversational memory. This document defines our **Stateless Clean-Context Review** architecture (`Checkpoint C4`).

@@ -7,6 +7,8 @@ date: 2026-04-21
 status: concept
 duration: 20s
 screenshots: pending
+verified: 2026-05-06
+
 ---
 
 # V02 — Dashboard: Tu Centro de Comando

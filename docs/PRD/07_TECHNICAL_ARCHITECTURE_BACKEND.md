@@ -10,13 +10,15 @@ date: 2026-03-20
 updated: 2026-08-05
 status: index
 platform: Backend
+verified: 2026-08-05
+
 ---
 
 # Arquitectura Backend — índice PRD
 
 > [!important] Fuente canónica
 > El detalle técnico vive en **[[../Backend/Arquitectura General|docs/Backend/Arquitectura General]]** y el resto del MOC Backend.
-> Contrato HTTP: `backend/docs/openapi.yaml`.
+> Contrato HTTP: `contracts/openapi.yaml`.
 > Este archivo es solo un puntero del PRD.
 
 ## Dónde ir
@@ -25,8 +27,8 @@ platform: Backend
 | :--- | :--- |
 | Capas, layout, multi-tenant | [[../Backend/Arquitectura General]] |
 | Módulos de dominio | [[../Backend/Backend MOC]] |
-| Paths canónicos (handlers/models/services) | [[../agents/architecture]] |
-| OpenAPI | `backend/docs/openapi.yaml` |
+| Paths canónicos (handlers/models/services) | [[../stack/go-backend]] |
+| OpenAPI | `contracts/openapi.yaml` |
 | Versiones publicadas | `versioning/releases.json` + [[../VERSIONING_GUIDE]] |
 
 ## Histórico

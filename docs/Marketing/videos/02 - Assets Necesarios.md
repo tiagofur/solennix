@@ -5,6 +5,8 @@ tags:
   - assets
 date: 2026-04-21
 status: active
+verified: 2026-04-27
+
 ---
 
 # Assets Necesarios para los Videos

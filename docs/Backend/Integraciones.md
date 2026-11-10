@@ -6,11 +6,13 @@ tags:
   - stripe
   - revenuecat
   - resend
+verified: 2026-08-05
+
 ---
 
 # Integraciones del Backend
 
-Parent: [[Backend MOC]] | Related: [[Autenticación]] | [[Módulo Suscripciones]] | [[Módulo Uploads]]
+Parent: [[Backend MOC]] | Related: [[Autenticación]] | [[Módulo Suscripciones]] | [[Módulos Auxiliares]]
 
 Visión general de todos los servicios externos con los que interactúa el backend de Solennix.
 

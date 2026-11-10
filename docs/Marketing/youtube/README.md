@@ -1,3 +1,7 @@
+---
+verified: 2026-05-19
+---
+
 # Solennix YouTube Marketing Assets
 
 Generador de miniaturas (thumbnails) y capas (covers) para el canal de YouTube de Solennix.

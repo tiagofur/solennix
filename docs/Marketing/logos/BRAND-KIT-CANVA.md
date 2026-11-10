@@ -1,3 +1,7 @@
+---
+verified: 2026-04-27
+---
+
 # Guía de Sincronización — Brand Kit Canva (Solennix)
 
 **URL del Brand Kit:** https://www.canva.com/brand/kAHDZ5uZ9CU

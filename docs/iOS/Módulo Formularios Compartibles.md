@@ -1,3 +1,7 @@
+---
+verified: 2026-08-04
+---
+
 # Módulo Links de Solicitud (ex Formularios Compartibles)
 
 #ios #solicitudes #módulo
@@ -25,5 +29,5 @@ Push: `type=public_request` → `solennix://requests/{id}` (sin cambios).
 
 ## Ver también
 
-- Design: `openspec/changes/unify-solicitudes-forms/design.md`
+- Design: `docs/_archive/openspec/changes/unify-solicitudes-forms/design.md`
 - Backend: [[../Backend/Módulo Formularios Compartibles]]

@@ -7,6 +7,8 @@ aliases:
   - Hub
   - Inicio
 status: active
+verified: 2026-11-10
+
 ---
 
 # 🏛️ Solennix — Dashboard Ejecutivo
@@ -23,7 +25,7 @@ status: active
 - 📊 **[[PRD/11_CURRENT_STATUS|Estado Actual detallado]]** — fuente viva, actualizada continuamente
 - 📅 **[[PRD/09_ROADMAP|Roadmap Maestro]]** — timeline cross-platform
 - 💰 **[[PRD/04_MONETIZATION|Tiers + Monetización]]**
-- 🏗️ **[[AGENTS|AGENTS.md]]** — reglas normativas para agentes (router)
+- 🏗️ [`AGENTS.md`](../AGENTS.md) — reglas normativas para agentes (router)
 
 > [!important] Dónde está la verdad
 > `PRD/11_CURRENT_STATUS.md` es la fuente única y actualizada de estado del producto. Este dashboard es solo un índice de navegación — cualquier métrica concreta (versión, coverage, gaps) vive en PRD/11, no acá.
@@ -40,14 +42,14 @@ status: active
 
 ## 🔮 Próximo foco de trabajo
 
-Definido por el roadmap vivo en [[PRD/09_ROADMAP]] y la lista de tareas operativa en `feature_list.json` (raíz del repo).
+Definido por el roadmap vivo en [[PRD/09_ROADMAP]] y las GitHub Issues con DoR (fuente: `docs/factory/human-start.md`). `feature_list.json` (raíz del repo) es **solo contexto de capacidades, no cola operativa**.
 
 ### 🔴 Bloqueantes que dependen del usuario
 
 > [!warning] Acciones en dashboards externos (no de código)
-> - **Stripe Dashboard** — prices Pro/Business + webhook + secrets en VPS.
-> - **App Store Connect** / **Google Play Console** — subscriptions + review.
-> - **RevenueCat Dashboard** — entitlement `pro_access` + offerings + webhook.
+> - **Stripe Dashboard** — prices Pro $149 / Business $499 MXN + webhook + secrets en VPS.
+> - **App Store Connect** / **Google Play Console** — subscriptions + nuevos SKU para precios vigentes.
+> - **RevenueCat Dashboard** — entitlement `pro_access` + offerings + webhook + SKU nuevos.
 > - **Resend** — dominio verificado + DKIM/SPF + API key.
 >
 > Checklist keys: [[PRD/04_MONETIZATION#9. Keys y secrets — no confundir]]

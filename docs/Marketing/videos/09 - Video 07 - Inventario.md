@@ -7,6 +7,8 @@ date: 2026-04-21
 status: done
 duration: 19s
 screenshots: mixed
+verified: 2026-05-06
+
 ---
 
 # V07 — Inventario y Equipamiento

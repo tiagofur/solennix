@@ -7,6 +7,8 @@ date: 2026-04-28
 status: concept
 duration: 20s
 assets: ai-plus-ui
+verified: 2026-04-28
+
 ---
 
 # V14 — Cliente Impresionado

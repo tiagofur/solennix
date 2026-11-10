@@ -1,3 +1,7 @@
+---
+verified: 2026-10-26
+---
+
 # Community, creators, and partnerships
 
 ## Principle

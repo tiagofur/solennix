@@ -6,6 +6,8 @@ tags:
   - production
 date: 2026-04-28
 status: active
+verified: 2026-04-28
+
 ---
 
 # Brief de Producción IA

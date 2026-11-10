@@ -7,6 +7,8 @@ tags:
 aliases:
   - Backup y Recuperación
   - Disaster Recovery
+verified: 2026-10-26
+
 ---
 
 # Backend — Backup y Recuperación

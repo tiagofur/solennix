@@ -45,7 +45,7 @@ Use this skill when:
 
 ### Bug Report
 
-Template: `.github/ISSUE_TEMPLATE/bug_report.yml`
+Template: `.github/ISSUE_TEMPLATE/bug.yml`
 Auto-labels: `bug`, `status:needs-review`
 
 #### Required Fields
@@ -71,7 +71,7 @@ Auto-labels: `bug`, `status:needs-review`
 #### Example — Bug Report via CLI
 
 ```bash
-gh issue create --template "bug_report.yml" \
+gh issue create --template "bug.yml" \
   --title "fix(scripts): setup.sh fails on zsh with glob error" \
   --body "
 ### Pre-flight Checks
@@ -112,7 +112,7 @@ zsh: no matches found: skills/*
 
 ### Feature Request
 
-Template: `.github/ISSUE_TEMPLATE/feature_request.yml`
+Template: `.github/ISSUE_TEMPLATE/feature.yml`
 Auto-labels: `enhancement`, `status:needs-review`
 
 #### Required Fields
@@ -134,7 +134,7 @@ Auto-labels: `enhancement`, `status:needs-review`
 #### Example — Feature Request via CLI
 
 ```bash
-gh issue create --template "feature_request.yml" \
+gh issue create --template "feature.yml" \
   --title "feat(scripts): add Codex support to setup.sh" \
   --body "
 ### Pre-flight Checks
@@ -212,10 +212,10 @@ Is it a duplicate?              → Link to existing issue, close
 gh issue list --search "keyword"
 
 # Create bug report
-gh issue create --template "bug_report.yml" --title "fix(scope): description"
+gh issue create --template "bug.yml" --title "fix(scope): description"
 
 # Create feature request
-gh issue create --template "feature_request.yml" --title "feat(scope): description"
+gh issue create --template "feature.yml" --title "feat(scope): description"
 
 # Maintainer: approve an issue
 gh issue edit <number> --add-label "status:approved"

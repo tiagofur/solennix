@@ -1,3 +1,7 @@
+---
+verified: 2026-10-26
+---
+
 # Measurement and attribution
 
 ## North-star definition

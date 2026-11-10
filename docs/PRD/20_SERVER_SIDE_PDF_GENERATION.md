@@ -14,6 +14,8 @@ date: 2026-04-26
 updated: 2026-08-05
 status: partial
 priority: medium
+verified: 2026-08-05
+
 ---
 
 # Server-Side PDF Generation + Contract Template Parity

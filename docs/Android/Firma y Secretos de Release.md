@@ -1,3 +1,7 @@
+---
+verified: 2026-07-02
+---
+
 #android #seguridad #release #play-store
 
 # 🔐 Firma y Secretos de Release — Android

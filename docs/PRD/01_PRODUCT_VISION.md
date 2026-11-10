@@ -7,8 +7,10 @@ aliases:
   - Visión del Producto
   - Product Vision
 date: 2026-03-20
-updated: 2026-07-31
+updated: 2026-11-10
 status: active
+verified: 2026-11-10
+
 ---
 
 # Visión del Producto
@@ -117,14 +119,14 @@ Todo lo demás se mide contra esa frase.
 
 ## Modelo de Negocio (referencia rápida)
 
-> [!tip] Pricing 2026 — 3 tiers
-> A partir del 2026-04-16, el modelo es **Gratis · Pro · Business** (USD $0 / $15 / $49) con precios localizados a MXN/ARS/COP/CLP. Trial Stripe de 14 días. Detalle completo en [[04_MONETIZATION|Monetización]].
+> [!tip] Pricing 2026-11 — 3 tiers
+> Modelo **Gratis · Pro · Business** ($0 / $149 / $499 MXN/mes; anual $0 / $1,499 / $4,999). Trial de 14 días en Pro y Business. Detalle completo y vigente en [[04_MONETIZATION|Monetización]].
 
-| Plan         | Precio USD | Para quién                                        |
+| Plan         | Precio MXN | Para quién                                        |
 | ------------ | ---------- | ------------------------------------------------- |
-| **Gratis**   | $0         | Onboarding, ≤3 eventos activos, teasers de Pro    |
-| **Pro**      | $15/mes    | Organizador independiente, hasta 5 colaboradores  |
-| **Business** | $49/mes    | Equipo chico (≤8), múltiples sucursales, analítica |
+| **Gratis**   | $0         | Onboarding, 4 eventos/mes, 20 clientes, teasers de Pro |
+| **Pro**      | $149/mes   | Organizador independiente, hasta 5 colaboradores  |
+| **Business** | $499/mes   | Equipo chico, asientos ilimitados, portal secretaría, listing destacado |
 
 ---
 

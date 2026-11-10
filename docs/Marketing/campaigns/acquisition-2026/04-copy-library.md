@@ -1,3 +1,7 @@
+---
+verified: 2026-10-26
+---
+
 # Copy library
 
 All copy is production-ready in neutral LATAM Spanish. Replace the link with the tracked URL specified in [09-measurement.md](09-measurement.md).
