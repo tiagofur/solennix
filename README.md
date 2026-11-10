@@ -15,6 +15,8 @@ Plataforma integral para la gestión de eventos, cotizaciones, inventario y cont
 
 Toda la documentación técnica y funcional vive en [`docs/`](./docs/):
 
+- 🤖 [**AGENTS.md**](./AGENTS.md) — Mapa normativo para agentes (jerarquía de verdad, roles, invariantes)
+- 🏭 [**Guía operativa del factory**](./docs/factory/human-start.md) — Cómo trabajan humanos + agentes (C1–C5)
 - 🏛️ [**Dashboard Ejecutivo**](./docs/00_DASHBOARD.md) — Estado del producto en 30 segundos
 - 📋 [**PRD MOC**](./docs/PRD/PRD%20MOC.md) — Índice del Product Requirements Document
 - 🍏 [**iOS MOC**](./docs/iOS/iOS%20MOC.md) — Documentación iOS

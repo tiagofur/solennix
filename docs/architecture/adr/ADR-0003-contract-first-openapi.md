@@ -1,3 +1,7 @@
+---
+verified: 2026-11-04
+---
+
 # ADR-0003: Contract-First OpenAPI 3.1 and RFC 9457 Error Standard
 
 - **Status**: Accepted
@@ -8,7 +12,7 @@
 
 ## 1. Context
 
-In an Agentic Software Factory where parallel bounded writers (`implementer` subagents) work simultaneously on the Go backend (`backend/`) and client surfaces (`apps/web`, `apps/desktop-tauri`, `apps/ios-native`, `apps/android-native`), ad-hoc JSON payloads are the #1 source of integration bugs and wasted rework tokens.
+In an Agentic Software Factory where parallel bounded writers (`implementer` subagents) work simultaneously on the Go backend (`backend/`) and client surfaces (`web/`, `ios/`, `android/`), ad-hoc JSON payloads are the #1 source of integration bugs and wasted rework tokens.
 
 If the backend agent invents response fields in Go structs while the frontend agent guesses TypeScript interfaces, their work units fail at integration time.
 
@@ -25,6 +29,10 @@ If the backend agent invents response fields in Go structs while the frontend ag
    - **Breaking-Change Detection (`make contracts-diff`)**: Enforced via **`oasdiff`**. Removing a field, narrowing a type, or adding a required request property without a version bump or an explicit human-approved `contract-break` PR label fails `Checkpoint C2` and CI.
 4. **Deterministic Code Generation**:
    - Go server stubs/models (`oapi-codegen`), TypeScript types (`openapi-typescript`), Swift models (`swift-openapi-generator`), and Kotlin models (`openapi-generator`) derive directly from `contracts/openapi.yaml`. Hand-editing generated contract files is forbidden.
+
+### 2.1 Solennix Instance (Authoritative Today)
+- **One contract file**: `contracts/openapi.yaml` is the only tracked copy. Web typegen (`npm --prefix web run openapi:types`) and CI lint read from `contracts/`. A duplicated `backend/docs/openapi.yaml` is retired — do not recreate it.
+- **Codegen reality**: only **TypeScript** types are generated today (`openapi-typescript` → `web/src/types/api.ts`). Go handlers, iOS (`SolennixNetwork`) and Android (`core/network`) hand-write against the contract; Swift/Kotlin codegen remains aspirational until a dedicated ADR adopts it.
 
 ---
 

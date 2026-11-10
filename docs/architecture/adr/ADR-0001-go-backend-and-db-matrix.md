@@ -1,3 +1,7 @@
+---
+verified: 2026-11-04
+---
+
 # ADR-0001: Go Backend Standard and Workload-Driven Database Selection Matrix
 
 - **Status**: Accepted
@@ -34,6 +38,13 @@ Unlike the backend language, the database engine is **not** one-size-fits-all. A
 | **Local-First App, Single-Node Micro-SaaS, Embedded CLI/Desktop Sidecar, Low-Ops Edge** | **SQLite 3** (`--db sqlite`) | `modernc.org/sqlite` (CGO-free) + `sqlc` | Mandatory pragmas on connection init: `PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;`. Separate writer connection (`SetMaxOpenConns(1)`) from concurrent reader pool; pair with Litestream for continuous S3 replica backup when hosted. |
 | **High-Ingest Telemetry, Audit Streams, Time-Series Analytics** | **ClickHouse** or **TimescaleDB** (`--db custom`) | Official native client behind append-only port | Requires an explicit project ADR addendum justifying ingest volume (>10k events/sec) over standard PostgreSQL partitioning. |
 | **Ephemeral Cache, Rate Limiting, Distributed Locks, Pub/Sub** | **Redis / Valkey** or **NATS JetStream** (Auxiliary) | `redis/go-redis/v9` or `nats.go` | Auxiliary only—never the sole system of record without a durable primary database. |
+
+### 2.3 Solennix Instance (Authoritative Today)
+Solennix runs the **PostgreSQL row** of the matrix with these concrete choices (verify against `backend/` before assuming more):
+- **DB**: PostgreSQL via `pgx/v5` (`pgxpool`). **No `sqlc`**: data access is implemented through **explicit repository interfaces** (`backend/internal/repository/`) — the "or explicit repository interfaces" clause above is the one in force.
+- **Migrations**: sequential SQL files at `backend/internal/database/migrations/` (numbered `NNN_*.up.sql`), applied by the server's own migrator — not `golang-migrate`.
+- **Layering**: horizontal layers — `internal/handlers/` (HTTP, chi) → `internal/services/` (business logic) → `internal/repository/` (pgx) → `internal/models/` (shared structs), plus `internal/{router, middleware, planlimit, financial, pdf, storage, i18n, config, database}`. Entrypoint: `backend/cmd/server/` (plus `cmd/seed/`).
+- **Testing**: table-driven `testing` + `pgxmock` for repository-level units + `testcontainers-go` for integration; no backend-local Makefile (use root `make test`).
 
 ---
 

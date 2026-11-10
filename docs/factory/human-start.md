@@ -1,3 +1,7 @@
+---
+verified: 2026-11-10
+---
+
 # Human & Agent Operational Guide (`human-start.md`)
 
 This document defines how human operators and autonomous agents collaborate inside the Software Factory from **Day 0 project initialization** to **merged Pull Requests**.
@@ -12,7 +16,7 @@ When starting a new repository from this template, initialize its topology and m
 ./scripts/init-project.sh \
   --name my-product \
   --db postgres \
-  --surfaces backend,web,desktop-tauri
+  --surfaces backend,web,ios-native,android-native
 ```
 
 ### Supported Flags
@@ -77,15 +81,9 @@ When **Delegated Direct** is active, the task file contains:
 
 ---
 
-## 4. Proportional Verification Matrix (`V0` / `V1` / `V2`)
+## 4. Proportional Verification (`V0` / `V1` / `V2`)
 
-Every work unit must prove correctness in the foreground before committing:
-
-| Verification Tier | When Required | Mandatory Commands |
-| :--- | :--- | :--- |
-| **V0 — Structural** | Docs, ADRs, markdown templates, non-executable config | `python3 scripts/factory_preflight.py` + file/link checks |
-| **V1 — Focused RED/GREEN** | Standard application logic, UI components, bug fixes | Observe deterministic failing test (**RED**) → implement minimal fix (**GREEN**) → run module tests + linter |
-| **V2 — Contract & Integration** | OpenAPI changes, DB schema/queries, auth, concurrency, CI/factory scripts | V1 + `make contracts-lint contracts-diff` + container/SQLite integration suite + `make test` |
+Every work unit must prove correctness in the foreground before committing. The canonical matrix (when each tier applies and which commands are mandatory) lives in [`CHECKPOINTS.md`](../../CHECKPOINTS.md) § C3 — read it there; this file does not duplicate it. For docs/ADR/markdown-only changes, `V0` (structural: `python3 scripts/factory_preflight.py` + link checks) is sufficient.
 
 ---
 

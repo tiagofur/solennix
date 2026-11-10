@@ -34,7 +34,7 @@ Every change in Solennix passes through five deterministic checkpoints (`C1`–`
 3. **Mandatory Cross-Platform Parity**:
    - Changes altering domain entities, DB schemas, or API endpoints MUST be reflected symmetrically across:
      - Go Backend (`backend/internal/models/`, `backend/internal/handlers/`)
-     - React Web (`web/src/types/`, `web/src/services/`, `web/src/stores/`)
+     - React Web (`web/src/types/`, `web/src/services/`, `web/src/hooks/`, `web/src/contexts/`)
      - iOS Swift (`SolennixCore/.../Models/`, `SolennixNetwork/`, `ViewModels/`)
      - Android Kotlin (`android/core/model/`, `core/network/`, `viewmodel/`)
 4. **Agent-First Structural Hygiene**:

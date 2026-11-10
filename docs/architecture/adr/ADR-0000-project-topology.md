@@ -1,3 +1,7 @@
+---
+verified: 2026-11-04
+---
+
 # ADR-0000: Project Topology & Surface Selection — solennix
 
 - **Status**: Accepted

@@ -1,3 +1,7 @@
+---
+verified: 2026-11-04
+---
+
 # ADR-0002: Client Surfaces Architecture (React+Vite, Tauri v2 Desktop) and 3-Tier Mobile Decision Matrix
 
 - **Status**: Accepted
@@ -42,6 +46,13 @@ Before writing mobile code, the project selects its mobile tier based on **produ
 
 ### 2.4 Graduation Path (Tier 1 -> Tier 3)
 Because all business rules reside in the **Go Backend (`ADR-0001`)** and all network DTOs are defined in **`contracts/openapi.yaml` (`ADR-0003`)**, a product can launch its 2-week MVP on **Tier 1 (`mobile-tauri`)** and later graduate to **Tier 3 (`ios-native` + `android-native`)** with **zero backend rewrites**.
+
+### 2.5 Solennix Instance (Authoritative Today)
+Solennix is a **Tier 3 native product** on every matrix axis:
+- **Surfaces** (`factory.manifest.json`): `backend`, `web`, `ios-native`, `android-native`. **No desktop and no Tauri surface exist** — Sections 2.2 and the Tier 1 row are factory standards kept for future projects, not Solennix reality.
+- **Paths**: `web/`, `ios/`, `android/` (not `apps/*`).
+- **Routing deviation**: the web app uses **`react-router-dom` v7** (data router), not TanStack Router; server state uses TanStack Query v5 + Zustand (toast store only). Do not introduce TanStack Router into Solennix without a superseding ADR.
+- **Mobile**: iOS = SwiftUI + SPM packages (`ios/Packages/Solennix{Core,Design,Network,Features}`); Android = Compose + Hilt + Ktor + Room (`android/core/*`, `android/feature/*`). Mobile DTOs are **hand-maintained to mirror `contracts/openapi.yaml`** — Swift/Kotlin codegen is aspirational, not current (see `ADR-0003`).
 
 ---
 
