@@ -479,6 +479,61 @@
         "Full unit test coverage across Go backend handlers and Vitest frontend components",
         "Global init.sh validation suite runs and passes 100% green"
       ]
+    },
+    {
+      "id": 39,
+      "name": "staff-invite-flow",
+      "description": "Flujo completo de invitación de colaboradores: share directo, link persistente, copy explicativo e i18n en web (épico #1364-#1374)",
+      "status": "done",
+      "acceptance_criteria": [
+        "POST /staff/{id}/invite + accept_url compartible desde las 3 apps",
+        "Copy de invitación localizado (es/en) sin textos duros",
+        "Pulido de paridad Android/iOS del flujo (#1362, #1373, #1374)"
+      ]
+    },
+    {
+      "id": 40,
+      "name": "staff-seat-limits",
+      "description": "Asientos de staff visibles y enforceados: GET /staff/limits, badge de uso, mensaje de upgrade correcto y bloqueo de creación al llegar al cupo (Gratis=1, Pro=5, Business=∞)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Backend expone uso/límite de asientos por plan (staff/limits)",
+        "Badge 1/5 + bloqueo de creación en iOS (#1374), Android (#1373) y Web (#1362)",
+        "Mensaje de upgrade correcto para Pro lleno → Business"
+      ]
+    },
+    {
+      "id": 41,
+      "name": "assistant-secretary-portal",
+      "description": "Portal read-only de asistente/secretaria (rol assistant, Business-only) en web, iOS y Android (#1360, #1361, #1367, #1368)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Rol assistant gating en backend fail-closed y en las 3 apps",
+        "Portal /assistant en web + SecretaryPortal en iOS/Android con eventos y staff read-only",
+        "Picker de rol sugerido con assistant solo visible en Business (#1359)"
+      ]
+    },
+    {
+      "id": 42,
+      "name": "attendance-pnl-accounting-export",
+      "description": "Business plan Fase 1 (#1350): resumen de asistencia por evento, P&L por evento y exportación contable CSV (Pro+)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Resumen de asistencia (StaffAttendanceSummary) en las 4 superficies",
+        "P&L por evento en web + backend financial aggregation",
+        "GET /reports/accounting/export y /events/accounting/export gated Pro+ con sanitización anti formula-injection"
+      ]
+    },
+    {
+      "id": 43,
+      "name": "pricing-relaunch-149",
+      "description": "Relanzamiento de precios: Pro $149/mes ($1.499/año), Business $499/mes ($4.999/año) MXN en landing y pricing (#1382)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Landing y página pricing muestran precios nuevos con original_price tachado",
+        "Copy es/en consistente en pricing.json y landing.json",
+        "SKU/entitlements en stores alineados al nuevo ancla (pendiente dashboards externos)"
+      ]
     }
   ]
 }
