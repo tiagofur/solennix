@@ -1,10 +1,14 @@
+---
+verified: 2026-08-04
+---
+
 # Módulo Links de Solicitud (ex Formularios Compartibles)
 
 #backend #solicitudes #módulo
 
 > [!important] Unificado (2026-08)
 > **EventFormLink** y **PublicLead** se eliminaron. Canónico: **PublicRequest** + **public_request_links**.
-> Ver `openspec/changes/unify-solicitudes-forms/`.
+> Ver `docs/_archive/openspec/changes/unify-solicitudes-forms/`.
 
 ---
 

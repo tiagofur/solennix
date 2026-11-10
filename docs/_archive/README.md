@@ -9,6 +9,7 @@ Artefactos de documentación preservados por historia. **No son activos.**
 | `SUPER_PLAN/` | Programa de transformación 12 semanas (cerrado). |
 | `prd-history/` | PRDs largos reemplazados por snapshots/índices (status, roadmap diary, arq. 05–08, post-MVP, collaboration guide, plan i18n iOS). |
 | `proposals/` | Mini-specs / propuestas no integradas al PRD activo (ej. subscription origin UI). |
+| `openspec/` | Sistema SDD/OpenSpec **jubilado** en #1385 (config, specs, changes — incl. 6 changes completados sin archivar). La metodología vigente es el factory (`AGENTS.md` + `docs/factory/`). |
 | Trackers y audits en raíz de `_archive/` | Snapshots abr–may 2026 (portal, personal, calendar, dashboards, roadmaps por plataforma). |
 
 ## Dónde está la verdad actual
@@ -20,7 +21,7 @@ Artefactos de documentación preservados por historia. **No son activos.**
 | Features / paridad | `docs/PRD/02_FEATURES.md` |
 | v2 inbound | `docs/PRD/15_MARKETPLACE_V2.md` |
 | Arquitectura por plataforma | `docs/{iOS,Android,Web,Backend}/` |
-| Agentes | `AGENTS.md` → `docs/agents/` |
+| Agentes | `AGENTS.md` → `docs/stack/` |
 | Releases | `versioning/releases.json` + `CHANGELOG.md` |
 
 ---

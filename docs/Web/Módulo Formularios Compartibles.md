@@ -1,10 +1,14 @@
+---
+verified: 2026-08-04
+---
+
 # Módulo Links de Solicitud (ex Formularios Compartibles)
 
 #web #solicitudes #dominio
 
 > [!important] Unificado (2026-08)
 > **Formularios compartibles ya no es un producto aparte.** Quedó absorbido por **Solicitudes**.
-> Diseño: `openspec/changes/unify-solicitudes-forms/`.
+> Diseño: `docs/_archive/openspec/changes/unify-solicitudes-forms/`.
 
 ---
 
@@ -52,4 +56,4 @@
 
 - Inbox / estados: flujo PublicRequest (mismo hub)
 - Backend: [[../Backend/Módulo Formularios Compartibles|Links de Solicitud (backend)]]
-- Design: `openspec/changes/unify-solicitudes-forms/design.md`
+- Design: `docs/_archive/openspec/changes/unify-solicitudes-forms/design.md`

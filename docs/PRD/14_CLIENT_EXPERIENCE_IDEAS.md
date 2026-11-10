@@ -11,6 +11,8 @@ aliases:
 date: 2026-04-16
 updated: 2026-04-17
 status: exploration
+verified: 2026-08-05
+
 ---
 
 # 14 — Ideas de Experiencia del Cliente (Exploración)
@@ -49,7 +51,7 @@ status: exploration
 > [!warning] Gaps conocidos del MVP
 >
 > - iOS/Android share card nativas — **pendiente Sprint 8** (organizador comparte desde desktop por ahora).
-> - `OpenAPI docs` — los 4 endpoints aún no están en `backend/docs/openapi.yaml`.
+> - `OpenAPI docs` — los 4 endpoints aún no están en `contracts/openapi.yaml`.
 > - Enforcement del límite "1 portal Gratis vs ∞ Pro/Business" — **pendiente Sprint 7.C**.
 > - Field-level `visibleToClient` — hoy la respuesta es subset fijo; toggles pendientes (cluster B.1).
 > - Timeline de milestones, equipo asignado, progress bar "72% listo", PIN opcional, mapa integrado — todos en backlog.
@@ -616,7 +618,7 @@ Formato idéntico al de [[02_FEATURES]]. `📋` = idea, aún no planeada.
 ## 10. Siguientes pasos
 
 1. Usuario prioriza qué clusters van a [[09_ROADMAP]] / OpenSpec como extensión del trabajo cliente.
-2. Por cada cluster aprobado, abrir un change SDD (`/sdd-new cluster-X-nombre`) con specs, design, tasks.
+2. Por cada cluster aprobado, abrir una GitHub Issue con DoR (factory, docs/factory/human-start.md).
 3. Actualizar [[02_FEATURES]] reemplazando `📋` por `⬜` en las filas que pasen a roadmap firme.
 4. Marcar este documento como `status: partially-implemented` cuando el primer cluster aterrice.
 
