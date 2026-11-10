@@ -516,7 +516,7 @@ Principio: **secciones (sustantivos), no acciones**. Crear → FAB / botones con
 
 Ideas de experiencia cliente (clusters A–G, features A–L de delight): ver [[14_CLIENT_EXPERIENCE_IDEAS]] y [[12_CLIENT_TRANSPARENCY_AND_DELIGHT]].  
 Norte inbound v2: [[15_MARKETPLACE_V2]].  
-Al aprobar un cluster → [[09_ROADMAP]] + OpenSpec, no append silencioso acá.
+Al aprobar un cluster → [[09_ROADMAP]] + GitHub Issue con DoR (factory), no append silencioso acá.
 
 ---
 

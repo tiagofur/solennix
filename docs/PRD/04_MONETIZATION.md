@@ -36,8 +36,8 @@ verified: 2026-11-10
 | Tier (UI) | Valor API / DB | Precio ancla MXN | Público |
 | :--- | :--- | :--- | :--- |
 | **Gratis** | `basic` (aliases: `free`, `gratis`, `plan_basic`) | $0 | Probador / organizador nuevo |
-| **Pro** | `pro` (aliases: `premium`, `plan_pro`) | $149/mes o $1.499/año (−16%) | 5–30 eventos/mes |
-| **Business** | `business` (aliases: `enterprise`, `plan_business`) | $499/mes o $4.999/año (−16%) | Equipo, marca, visibilidad |
+| **Pro** | `pro` (aliases: `premium`, `plan_pro`) | $149/mes o $1,499/año (−16%) | 5–30 eventos/mes |
+| **Business** | `business` (aliases: `enterprise`, `plan_business`) | $499/mes o $4,999/año (−16%) | Equipo, marca, visibilidad |
 
 **Normalización canónica:** `models.NormalizePlan` — un solo mapping en backend.  
 iOS `Plan` enum: `basic` | `pro` | `business` | `premium` (legacy → tratar como paid).
@@ -46,8 +46,8 @@ iOS `Plan` enum: `basic` | `pro` | `business` | `premium` (legacy → tratar com
 
 | Tier | MXN/mes | MXN/año | Otras monedas |
 | :--- | ---: | ---: | :--- |
-| Pro | $149 | $1.499 | Pendiente de SKU en stores/Stripe |
-| Business | $499 | $4.999 | Pendiente de SKU en stores/Stripe |
+| Pro | $149 | $1,499 | Pendiente de SKU en stores/Stripe |
+| Business | $499 | $4,999 | Pendiente de SKU en stores/Stripe |
 
 Fuente de verdad de copy: `web/src/i18n/locales/{es,en}/pricing.json` + `landing.json` (actualizado por #1382). Precios en USD ($15/$49) y la tabla PPP de 2026-04 quedaron **obsoletos** con el relanzamiento de precios — no reintroducirlos.
 

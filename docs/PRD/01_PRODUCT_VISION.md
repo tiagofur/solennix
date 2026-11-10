@@ -120,7 +120,7 @@ Todo lo demás se mide contra esa frase.
 ## Modelo de Negocio (referencia rápida)
 
 > [!tip] Pricing 2026-11 — 3 tiers
-> Modelo **Gratis · Pro · Business** ($0 / $149 / $499 MXN/mes; anual $0 / $1.499 / $4.999). Trial de 14 días en Pro y Business. Detalle completo y vigente en [[04_MONETIZATION|Monetización]].
+> Modelo **Gratis · Pro · Business** ($0 / $149 / $499 MXN/mes; anual $0 / $1,499 / $4,999). Trial de 14 días en Pro y Business. Detalle completo y vigente en [[04_MONETIZATION|Monetización]].
 
 | Plan         | Precio MXN | Para quién                                        |
 | ------------ | ---------- | ------------------------------------------------- |

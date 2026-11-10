@@ -10,7 +10,7 @@ import (
 func readOpenAPISpec(t *testing.T) string {
 	t.Helper()
 
-	content, err := os.ReadFile(filepath.Join("..", "..", "docs", "openapi.yaml"))
+	content, err := os.ReadFile(filepath.Join("..", "..", "..", "contracts", "openapi.yaml"))
 	if err != nil {
 		t.Fatalf("read openapi spec: %v", err)
 	}

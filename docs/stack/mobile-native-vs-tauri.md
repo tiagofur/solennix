@@ -28,7 +28,7 @@ Both native apps mirror the same module structure and naming conventions so an `
 | Layer | iOS (`ios/` — Swift + SwiftUI) | Android (`android/` — Kotlin + Jetpack Compose) |
 | :--- | :--- | :--- |
 | **Project** | Generated with **`xcodegen`** from `ios/project.yml` | Gradle KTS (`android/app/build.gradle.kts`) |
-| **Architecture** | SPM packages: `SolennixCore` (domain models), `SolennixDesign`, `SolennixNetwork` (API managers, `AuthManager`), `SolennixFeatures` (feature modules: Auth, Calendar, Clients, Dashboard, Events, Inventory, Payments, Products, Requests, Search, Settings, **Staff**, Shared) | `core/{model,database,designsystem,network}` + `feature/{auth,calendar,clients,dashboard,events,inventory,payments,products,requests,search,settings,staff}` + `widget` |
+| **Architecture** | SPM packages: `SolennixCore` (domain models), `SolennixDesign`, `SolennixNetwork` (API managers, `AuthManager`), `SolennixFeatures` (feature modules: Auth, Calendar, Clients, Dashboard, Events, Inventory, Payments, Products, Requests, Search, Settings, **Staff**, Shared) | `core/{model,data,database,designsystem,network}` + `feature/{auth,calendar,clients,dashboard,events,inventory,payments,products,requests,search,settings,staff}` + `widget` |
 | **Contract Models & API** | Hand-maintained in `SolennixNetwork`, mirroring `contracts/openapi.yaml` (Swift/Kotlin codegen is aspirational — ADR-0003 §2.1) | Hand-maintained in `core/network` + `core/model`, mirroring `contracts/openapi.yaml` |
 | **UI Layer** | Pure `SwiftUI` Views (`<Feature>View.swift`) | Pure `@Composable` functions (`<Feature>Screen.kt`) |
 | **State & Logic** | `@Observable final class <Feature>ViewModel` (`@MainActor`) | `@HiltViewModel class <Feature>ViewModel` exposing `StateFlow<UiState>` |

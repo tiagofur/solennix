@@ -44,7 +44,7 @@ fi
 
 echo ""
 echo "── 2. Verificando archivos base del arnés ──────────────"
-for f in AGENTS.md CHECKPOINTS.md feature_list.json progress/current.md docs/agents/architecture.md docs/agents/conventions.md docs/agents/verification.md; do
+for f in AGENTS.md CHECKPOINTS.md feature_list.json progress/current.md docs/stack/go-backend.md docs/stack/web-react-vite.md docs/stack/mobile-native-vs-tauri.md; do
   if [ ! -f "$f" ]; then
     fail "Falta archivo crítico del arnés: $f"
     EXIT_CODE=1

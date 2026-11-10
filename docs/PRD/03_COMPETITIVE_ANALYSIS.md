@@ -227,7 +227,7 @@ quadrantChart
 ## Pricing benchmark (2026-04-16)
 
 > [!warning] Benchmark fechado
-> Los precios de la competencia son observaciones del 2026-04-16 (independientes de moneda). Las filas de Solennix quedaron **obsoletas** con el relanzamiento de precios #1382: Pro **$149 MXN/mes** ($1.499/año) y Business **$499 MXN/mes** ($4.999/año). Ancla vigente: [[04_MONETIZATION]] §1.1.
+> Los precios de la competencia son observaciones del 2026-04-16 (independientes de moneda). Las filas de Solennix quedaron **obsoletas** con el relanzamiento de precios #1382: Pro **$149 MXN/mes** ($1,499/año) y Business **$499 MXN/mes** ($4,999/año). Ancla vigente: [[04_MONETIZATION]] §1.1.
 
 | Producto                      | USD/mes | USD/año  | País  |
 | ----------------------------- | ------- | -------- | ----- |

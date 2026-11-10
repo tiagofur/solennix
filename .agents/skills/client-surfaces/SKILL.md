@@ -24,7 +24,7 @@ Load this skill whenever reading, implementing, or reviewing files under `ios/**
 | **Features** | `SolennixFeatures/<Feature>`: Auth, Calendar, CalendarSync, Clients, Dashboard, Events, Inventory, Onboarding, Payments, Products, PublicProfile, Requests, Search, Settings, Staff, Shared | `feature/<name>`: auth, calendar, clients, dashboard, events, inventory, payments, products, requests, search, settings, staff |
 | **UI** | `<Feature>View.swift` + `@Observable <Feature>ViewModel` (`@MainActor`) | `<Feature>Screen.kt` + `@HiltViewModel` exposing `StateFlow<UiState>` |
 | **Subscriptions** | RevenueCat entitlement `pro_access` (StoreKit config `SolennixProducts.storekit`) | RevenueCat `com.revenuecat.purchases` |
-| **Offline** | Package cache behind Repository protocols | Room behind Repository interfaces |
+| **Offline** | Package cache behind Repository protocols | `core/data` — Room behind Repository interfaces |
 
 ---
 

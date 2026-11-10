@@ -18,7 +18,7 @@ verified: 2026-08-05
 # 14 — Ideas de Experiencia del Cliente (Exploración)
 
 > [!warning] Este documento es EXPLORACIÓN, no compromiso
-> Las ideas aquí listadas NO están en el roadmap. Son propuestas abiertas para debate. Cuando una idea sea aprobada se mueve a [[09_ROADMAP|Roadmap]] (Next/Later) o a un change OpenSpec con estimación firme, tier y fecha.
+> Las ideas aquí listadas NO están en el roadmap. Son propuestas abiertas para debate. Cuando una idea sea aprobada se mueve a [[09_ROADMAP|Roadmap]] (Next/Later) a una GitHub Issue con DoR (factory) con estimación firme, tier y fecha.
 
 > [!tip] Documentos relacionados
 >
@@ -617,7 +617,7 @@ Formato idéntico al de [[02_FEATURES]]. `📋` = idea, aún no planeada.
 
 ## 10. Siguientes pasos
 
-1. Usuario prioriza qué clusters van a [[09_ROADMAP]] / OpenSpec como extensión del trabajo cliente.
+1. Usuario prioriza qué clusters van a [[09_ROADMAP]] / GitHub Issue (factory) como extensión del trabajo cliente.
 2. Por cada cluster aprobado, abrir una GitHub Issue con DoR (factory, docs/factory/human-start.md).
 3. Actualizar [[02_FEATURES]] reemplazando `📋` por `⬜` en las filas que pasen a roadmap firme.
 4. Marcar este documento como `status: partially-implemented` cuando el primer cluster aterrice.
