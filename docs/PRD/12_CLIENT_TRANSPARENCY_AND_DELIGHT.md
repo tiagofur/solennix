@@ -12,6 +12,8 @@ aliases:
 date: 2026-04-16
 updated: 2026-04-17
 status: active
+verified: 2026-08-05
+
 ---
 
 # 12 — Client Transparency & Delight Features
@@ -66,7 +68,7 @@ La propuesta: abrir una **ventana controlada** al cliente — el organizador dec
 - **El cliente NO necesita instalar app.** Portal web responsive con link único. Opción mobile si quiere notificaciones.
 - **Menos es más.** Cada notificación al cliente debe ganársela. Opt-in por canal, opt-in por milestone.
 - **Branding del organizador, no de Solennix.** White-label en tiers Pro/Business. "Powered by Solennix" mínimo y discreto.
-- **Paridad cross-platform obligatoria** (iOS · Android · Web · Backend) — ver [[../CLAUDE|CLAUDE.md]].
+- **Paridad cross-platform obligatoria** (iOS · Android · Web · Backend) — ver [`CLAUDE.md`](../../CLAUDE.md).
 - **Monetización como palanca, no muro.** Features gratis que generen deseo de upgrade, no funciones esenciales atrapadas tras paywall.
 
 ---
@@ -115,7 +117,7 @@ La propuesta: abrir una **ventana controlada** al cliente — el organizador dec
 - 📋 **Field-level `visibleToClient`:** hoy la respuesta del backend es un subset fijo; el organizador aún no puede togglear campo por campo. Backlog.
 - 📋 **Mapa integrado:** Google Maps embed en ubicación. Backlog.
 - 📋 **Dress code:** requiere nuevo campo en Event. Backlog (baja prioridad).
-- 📋 **OpenAPI docs:** los 4 endpoints aún no están en `backend/docs/openapi.yaml`. Follow-up.
+- 📋 **OpenAPI docs:** los 4 endpoints aún no están en `contracts/openapi.yaml`. Follow-up.
 
 **Implementación actual (diferente de la vision):**
 

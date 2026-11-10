@@ -7,6 +7,8 @@ date: 2026-04-21
 status: concept
 duration: 25s
 screenshots: pending
+verified: 2026-04-27
+
 ---
 
 # V09 — Resumen de Evento: Todo en Uno

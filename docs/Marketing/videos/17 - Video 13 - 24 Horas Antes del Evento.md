@@ -7,6 +7,8 @@ date: 2026-04-28
 status: concept
 duration: 35s
 assets: ai-plus-ui
+verified: 2026-04-28
+
 ---
 
 # V13 — 24 Horas Antes del Evento

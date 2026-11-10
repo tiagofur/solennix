@@ -7,6 +7,8 @@ date: 2026-04-21
 status: done
 duration: 16s
 screenshots: done
+verified: 2026-05-06
+
 ---
 
 # V06 — Control de Pagos

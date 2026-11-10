@@ -1,3 +1,7 @@
+---
+verified: 2026-05-02
+---
+
 # Arquitectura General
 
 #web #arquitectura

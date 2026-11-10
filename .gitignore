@@ -73,3 +73,6 @@ backend/tests_out.txt
 
 # Codegraph tooling artifact
 .codegraph/
+
+# ZCode session-local state
+.zcode/

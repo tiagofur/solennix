@@ -10,6 +10,8 @@ date: 2026-03-20
 updated: 2026-08-05
 status: index
 platform: Web
+verified: 2026-08-05
+
 ---
 
 # Arquitectura Web — índice PRD
@@ -25,7 +27,7 @@ platform: Web
 | :--- | :--- |
 | Capas, routing, stores | [[../Web/Arquitectura General]] |
 | Módulos de dominio | [[../Web/Web MOC]] |
-| Estándar multi-plataforma (agentes) | [[../agents/architecture]] |
+| Estándar multi-plataforma (agentes) | [[../stack/web-react-vite]] |
 | Versiones publicadas | `versioning/releases.json` + [[../VERSIONING_GUIDE]] |
 
 ## Histórico

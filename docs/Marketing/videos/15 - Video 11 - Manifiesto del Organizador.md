@@ -7,6 +7,8 @@ date: 2026-04-28
 status: ready-for-production
 duration: 30s
 assets: ai-plus-ui
+verified: 2026-04-28
+
 ---
 
 # V11 - Manifiesto del Organizador
@@ -447,6 +449,6 @@ Esta pieza ya puede producirse hoy con:
 
 ## Ver tambien
 
-- [[13 - Brief de Produccion IA]]
+- [[13 - Brief de Producción IA]]
 - [[14 - Inputs Necesarios del Equipo]]
 - [[MOC|Marketing Hub]]

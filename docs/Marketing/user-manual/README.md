@@ -1,3 +1,7 @@
+---
+verified: 2026-08-14
+---
+
 # User manual assets
 
 Public manual lives on the web app: `/help/manual`.

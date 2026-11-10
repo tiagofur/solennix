@@ -1,3 +1,7 @@
+---
+verified: 2026-04-27
+---
+
 # Componentes Compartidos
 
 #web #componentes #infraestructura

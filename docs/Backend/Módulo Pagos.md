@@ -5,6 +5,8 @@ tags:
   - módulo
 created: 2025-04-05
 updated: 2025-04-05
+verified: 2026-05-23
+
 ---
 
 # Módulo Pagos

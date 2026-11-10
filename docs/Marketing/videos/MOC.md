@@ -8,6 +8,8 @@ aliases:
   - Videos Hub
 date: 2026-04-21
 status: active
+verified: 2026-04-28
+
 ---
 
 # Marketing — Mapa de Contenido

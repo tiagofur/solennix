@@ -1,3 +1,7 @@
+---
+verified: 2026-11-10
+---
+
 #android #moc #navegación
 
 # 🤖 Android — Mapa de Contenido
@@ -8,7 +12,7 @@
 > **Build**: Gradle 8.13 · Kotlin 2.0 · Java 17
 > **Estado**: Producción (MVP + Google/Apple SSO ✅ + SSL Pinning) · Play Store ready
 > **Calidad**: ver [[Testing]] y `versioning/releases.json` (no fijar conteos de tests acá)
-> **Última actualización**: 2026-08-05
+> **Última actualización**: 2026-11-10 (épico staff/portal asistente enviado #1364–#1374)
 
 ---
 
@@ -54,6 +58,7 @@
 | Configuración y perfil | [[Módulo Settings]] |
 | Generación de PDFs | [[Sistema de PDFs]] |
 | Links de Solicitud (ex formularios) | [[Módulo Formularios Compartibles]] |
+| Personal, equipos y portales (team/assistant) | [[../PRD/21_STAFF_TEAM_REVIEW]] |
 
 ## Calidad
 

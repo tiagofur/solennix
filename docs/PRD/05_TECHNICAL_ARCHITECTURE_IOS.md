@@ -10,6 +10,8 @@ date: 2026-03-20
 updated: 2026-08-05
 status: index
 platform: iOS
+verified: 2026-08-05
+
 ---
 
 # Arquitectura iOS — índice PRD
@@ -24,7 +26,7 @@ platform: iOS
 | :--- | :--- |
 | Stack, paquetes SPM, capas | [[../iOS/Arquitectura General]] |
 | Módulos de dominio | [[../iOS/iOS MOC]] |
-| Estándar multi-plataforma (agentes) | [[../agents/architecture]] |
+| Estándar multi-plataforma (agentes) | [[../stack/mobile-native-vs-tauri]] |
 | Versiones publicadas | `versioning/releases.json` + [[../VERSIONING_GUIDE]] |
 
 ## Histórico

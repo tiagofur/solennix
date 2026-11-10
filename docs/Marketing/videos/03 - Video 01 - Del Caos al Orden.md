@@ -7,6 +7,8 @@ date: 2026-04-21
 status: concept
 duration: 30s
 screenshots: none
+verified: 2026-05-06
+
 ---
 
 # V01 — Del Caos al Orden

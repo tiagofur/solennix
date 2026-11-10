@@ -9,6 +9,8 @@ related:
   - "[[Módulo Eventos]]"
   - "[[Sistema de Tipos]]"
   - "[[Testing]]"
+verified: 2026-05-11
+
 ---
 
 # Módulo Personal
@@ -126,5 +128,5 @@ related:
 
 > [!warning] Gaps confirmados
 >
-> - `backend/docs/openapi.yaml` todavía no documenta `/api/staff/teams`.
+> - `contracts/openapi.yaml` todavía no documenta `/api/staff/teams`.
 > - No existe un archivo de tests dedicado para `staff_team_handler.go`.

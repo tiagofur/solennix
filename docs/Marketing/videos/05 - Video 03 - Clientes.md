@@ -7,6 +7,8 @@ date: 2026-04-21
 status: draft
 duration: 15s
 screenshots: pending
+verified: 2026-04-27
+
 ---
 
 # V03 — Gestión de Clientes

@@ -7,6 +7,8 @@ date: 2026-04-28
 status: concept
 duration: 45s
 assets: ai-plus-ui
+verified: 2026-04-28
+
 ---
 
 # V15 — Spot Hero Cinemático

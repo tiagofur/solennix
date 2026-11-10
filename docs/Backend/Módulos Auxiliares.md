@@ -12,6 +12,8 @@ related:
   - "[[Integraciones]]"
   - "[[Performance]]"
   - "[[../PRD/09_ROADMAP|Roadmap maestro]]"
+verified: 2026-07-02
+
 ---
 
 # Módulos Auxiliares del Backend

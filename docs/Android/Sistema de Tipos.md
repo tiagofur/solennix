@@ -1,3 +1,7 @@
+---
+verified: 2026-04-27
+---
+
 #android #tipos #modelo
 
 # Sistema de Tipos

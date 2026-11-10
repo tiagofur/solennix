@@ -1,3 +1,7 @@
+---
+verified: 2026-10-26
+---
+
 # Adquisición 2026 — Tu talento crea. Solennix organiza.
 
 Este es el sistema de adquisición de Solennix listo para lanzamiento. Reemplaza las campañas anteriores y coordina posicionamiento, contenido, producción creativa, distribución en comunidades, pruebas pagadas, atribución, activación y decisiones semanales.

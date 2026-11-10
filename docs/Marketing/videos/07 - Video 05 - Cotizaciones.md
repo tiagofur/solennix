@@ -7,6 +7,8 @@ date: 2026-04-21
 status: done
 duration: 18s
 screenshots: mixed
+verified: 2026-05-06
+
 ---
 
 # V05 — Cotizaciones en Segundos

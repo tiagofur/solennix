@@ -12,6 +12,8 @@ related:
   - "[[Middleware Stack]]"
   - "[[Módulo Suscripciones]]"
   - "[[Seguridad]]"
+verified: 2026-04-27
+
 ---
 
 # Módulo Admin

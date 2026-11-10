@@ -1,3 +1,7 @@
+---
+verified: 2026-07-02
+---
+
 # Performance
 
 #web #performance #calidad

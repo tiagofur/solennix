@@ -1,3 +1,7 @@
+---
+verified: 2026-10-26
+---
+
 # Campañas de adquisición de Solennix
 
 El sistema de marketing activo es **Adquisición 2026 — “Tu talento crea. Solennix organiza.”** Su única prioridad comercial es adquirir nuevos organizadores y ayudarlos a llegar al primer valor. La conversión a suscripciones queda fuera del alcance.

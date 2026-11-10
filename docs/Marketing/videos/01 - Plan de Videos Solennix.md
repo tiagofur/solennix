@@ -5,6 +5,8 @@ tags:
   - plan
 date: 2026-04-21
 status: active
+verified: 2026-05-06
+
 ---
 
 # Plan de Videos de Producto — Solennix

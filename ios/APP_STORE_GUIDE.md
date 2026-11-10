@@ -57,7 +57,7 @@ HECHO PARA LATINOAMÉRICA
 Interfaz completa en español. Soporte para pesos mexicanos y monedas locales. IVA configurable. Flujo de trabajo diseñado para cómo realmente trabajan los organizadores de eventos en la región.
 
 PLANES
-• Básico (Gratis): Hasta 3 eventos/mes, 50 clientes, 20 productos. Perfecto para empezar.
+• Básico (Gratis): Hasta 4 eventos/mes, 20 clientes, 15 productos, 30 inventario. Perfecto para empezar.
 • Premium: Eventos ilimitados, sin marca de agua en PDFs, widgets, Live Activities, reportes avanzados y soporte prioritario.
 
 Descarga Solennix y transforma la manera en que gestionas tu negocio de eventos.

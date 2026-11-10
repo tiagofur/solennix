@@ -1,3 +1,7 @@
+---
+verified: 2026-05-01
+---
+
 #ios #pdfs #documentos
 
 # Sistema de PDFs

@@ -10,6 +10,8 @@ date: 2026-03-20
 updated: 2026-08-05
 status: index
 platform: Android
+verified: 2026-08-05
+
 ---
 
 # Arquitectura Android — índice PRD
@@ -24,7 +26,7 @@ platform: Android
 | :--- | :--- |
 | Stack, módulos, Hilt | [[../Android/Arquitectura General]] |
 | Módulos de dominio | [[../Android/Android MOC]] |
-| Estándar multi-plataforma (agentes) | [[../agents/architecture]] |
+| Estándar multi-plataforma (agentes) | [[../stack/mobile-native-vs-tauri]] |
 | Versiones publicadas | `versioning/releases.json` + [[../VERSIONING_GUIDE]] |
 
 ## Histórico

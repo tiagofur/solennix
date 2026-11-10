@@ -1,3 +1,7 @@
+---
+verified: 2026-10-26
+---
+
 # Kit creativo reproducible
 
 Genera las piezas maestras de adquisición con el logo aprobado y capturas reales del producto.

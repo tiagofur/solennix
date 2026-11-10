@@ -8,6 +8,8 @@ aliases:
   - Brand Index
 status: active
 updated: 2026-09-01
+verified: 2026-10-26
+
 ---
 
 # Marketing — Map of Content
@@ -20,29 +22,29 @@ updated: 2026-09-01
 
 | Recurso | Path |
 | :--- | :--- |
-| Brand manual | [[brand-manual/BRAND-MANUAL]] (+ PDF en la misma carpeta) |
-| Kit Canva / logos | [[logos/BRAND-KIT-CANVA]] · `logos/svg/` · `logos/png/` |
+| Brand manual | [BRAND-MANUAL](./brand-manual/BRAND-MANUAL.md) (+ PDF en la misma carpeta) |
+| Kit Canva / logos | [BRAND-KIT-CANVA](./logos/BRAND-KIT-CANVA.md) · `logos/svg/` · `logos/png/` |
 
 ## Campañas
 
 | Campaña | Entry |
 | :--- | :--- |
-| Adquisición 2026 — Tu talento crea. Solennix organiza. | [[campaigns/acquisition-2026/README]] |
-| Índice y archivo de campañas | [[campaigns/README]] |
+| Adquisición 2026 — Tu talento crea. Solennix organiza. | [acquisition-2026](./campaigns/acquisition-2026/README.md) |
+| Índice y archivo de campañas | [Índice de campañas](./campaigns/README.md) |
 
 ## Video & YouTube
 
 | Recurso | Path |
 | :--- | :--- |
-| Plan y briefs de video | [[videos/MOC]] |
-| Assets YouTube | [[youtube/README]] |
+| Plan y briefs de video | [Videos MOC](./videos/MOC.md) |
+| Assets YouTube | [YouTube assets](./youtube/README.md) |
 
 ## Screenshots / mockups
 
 - iOS store shots: `ios_screens/final/`
 - Smartphone finals: `smartphone/final/`
 - Aux icons: `aux-img/`
-- **User manual (in-app help):** [[user-manual/README]] · published under `web/public/help/manual/{web,ios,android}/` · routes `/help/manual`
+- **User manual (in-app help):** [User manual](./user-manual/README.md) · published under `web/public/help/manual/{web,ios,android}/` · routes `/help/manual`
 
 Screenshots crudos fuera de `final/` son material de trabajo; no linkearlos desde producto.
 

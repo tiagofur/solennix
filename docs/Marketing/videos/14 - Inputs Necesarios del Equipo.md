@@ -5,6 +5,8 @@ tags:
   - inputs
 date: 2026-04-28
 status: active
+verified: 2026-04-28
+
 ---
 
 # Inputs Necesarios del Equipo

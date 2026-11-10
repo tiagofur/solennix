@@ -1,3 +1,7 @@
+---
+verified: 2026-11-10
+---
+
 #ios #dominio #settings
 
 # Módulo Settings
@@ -53,7 +57,7 @@
 
 | Plan | Features |
 |------|----------|
-| Basic | Limitado (3 eventos/mes, 50 clientes, 20 productos) |
+| Basic | Limitado (4 eventos/mes, 20 clientes, 15 productos, 30 inventario) |
 | Pro | Extendido |
 | Premium | Ilimitado |
 | Business | Todo + features enterprise |

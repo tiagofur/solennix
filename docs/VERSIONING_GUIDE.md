@@ -1,3 +1,7 @@
+---
+verified: 2026-05-06
+---
+
 # Control de Versiones y Changelog
 
 Guía completa del sistema de versionado unificado para Web, iOS, Android y Backend.

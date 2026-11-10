@@ -1,9 +1,13 @@
+---
+verified: 2026-11-10
+---
+
 # Web App — Map of Content
 
 > [!info] Plataforma
 > **Stack**: React 19 + TypeScript + Tailwind CSS 4 + Vite
 > **Estado**: Producción (MVP completo) — Google & Apple SSO ✅
-> **Última actualización**: 2026-08-05
+> **Última actualización**: 2026-11-10 (staff, portal asistente, export contable; docs revisados en #1385)
 
 ---
 
@@ -32,6 +36,7 @@
 - [[Módulo Calendario]] — Vista mensual, fechas bloqueadas
 - [[Módulo Admin]] — Dashboard admin, gestión de usuarios, suscripciones
 - [[Módulo Formularios Compartibles]] — Links de Solicitud (unificado; ex formularios compartibles)
+- Personal / equipos y portales (staff `/team/*` y asistente `/assistant`) — ver [[../PRD/21_STAFF_TEAM_REVIEW]]
 
 ## Infraestructura
 

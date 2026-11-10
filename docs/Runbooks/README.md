@@ -10,6 +10,8 @@ aliases:
 type: moc
 status: active
 updated: 2026-08-05
+verified: 2026-08-05
+
 ---
 
 # Runbooks
