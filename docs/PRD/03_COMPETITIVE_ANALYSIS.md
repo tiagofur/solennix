@@ -10,6 +10,8 @@ aliases:
 date: 2026-03-20
 updated: 2026-04-17
 status: active
+verified: 2026-11-10
+
 ---
 
 # Análisis Competitivo
@@ -224,16 +226,19 @@ quadrantChart
 
 ## Pricing benchmark (2026-04-16)
 
+> [!warning] Benchmark fechado
+> Los precios de la competencia son observaciones del 2026-04-16 (independientes de moneda). Las filas de Solennix quedaron **obsoletas** con el relanzamiento de precios #1382: Pro **$149 MXN/mes** ($1.499/año) y Business **$499 MXN/mes** ($4.999/año). Ancla vigente: [[04_MONETIZATION]] §1.1.
+
 | Producto                      | USD/mes | USD/año  | País  |
 | ----------------------------- | ------- | -------- | ----- |
 | Honeybook                     | 39      | 390      | USA   |
 | Dubsado                       | 40      | 400      | USA   |
 | 17hats                        | 15–50   | variable | USA   |
 | Aisle Planner                 | 50      | 480      | USA   |
-| **Solennix Pro**              | **15**  | **144**  | LATAM |
-| **Solennix Business**         | **49**  | **470**  | LATAM |
+| **Solennix Pro**              | ~$8ⁿ    | ~$82ⁿ    | LATAM |
+| **Solennix Business**         | ~$27ⁿ   | ~$273ⁿ   | LATAM |
 
-Ver [[04_MONETIZATION]] para justificación de los precios Solennix.
+ⁿ Conversión referencial MXN→USD del precio vigente, solo para comparación de orden de magnitud.
 
 ---
 

@@ -9,14 +9,16 @@ aliases:
   - Monetización
   - Monetization
 date: 2026-03-20
-updated: 2026-08-05
+updated: 2026-11-10
 status: active
+verified: 2026-11-10
+
 ---
 
 # Monetización — Solennix
 
-**Version:** 3.0  
-**Actualizado:** 2026-08-05  
+**Version:** 3.1  
+**Actualizado:** 2026-11-10  
 **Alcance:** Tiers, precios, gating y billing (iOS · Android · Web · Backend)  
 **Mercado:** Organizadores de eventos en LATAM
 
@@ -31,23 +33,23 @@ status: active
 
 ## 1. Modelo vigente — 3 tiers
 
-| Tier (UI) | Valor API / DB | Precio ancla USD | Público |
+| Tier (UI) | Valor API / DB | Precio ancla MXN | Público |
 | :--- | :--- | :--- | :--- |
 | **Gratis** | `basic` (aliases: `free`, `gratis`, `plan_basic`) | $0 | Probador / organizador nuevo |
-| **Pro** | `pro` (aliases: `premium`, `plan_pro`) | $15/mes o $144/año (−20%) | 5–30 eventos/mes |
-| **Business** | `business` (aliases: `enterprise`, `plan_business`) | $49/mes o $470/año (−20%) | Equipo, marca, visibilidad |
+| **Pro** | `pro` (aliases: `premium`, `plan_pro`) | $149/mes o $1.499/año (−16%) | 5–30 eventos/mes |
+| **Business** | `business` (aliases: `enterprise`, `plan_business`) | $499/mes o $4.999/año (−16%) | Equipo, marca, visibilidad |
 
 **Normalización canónica:** `models.NormalizePlan` — un solo mapping en backend.  
 iOS `Plan` enum: `basic` | `pro` | `business` | `premium` (legacy → tratar como paid).
 
-### 1.1 Precios referenciales LATAM (PPP)
+### 1.1 Precios vigentes por moneda
 
-| Tier | MXN/mes | ARS/mes | COP/mes | CLP/mes |
-| :--- | ---: | ---: | ---: | ---: |
-| Pro | $299 | $15.000 | $60.000 | $14.000 |
-| Business | $899 | $49.000 | $199.000 | $45.000 |
+| Tier | MXN/mes | MXN/año | Otras monedas |
+| :--- | ---: | ---: | :--- |
+| Pro | $149 | $1.499 | Pendiente de SKU en stores/Stripe |
+| Business | $499 | $4.999 | Pendiente de SKU en stores/Stripe |
 
-Precios reales en store/Stripe pueden diferir; alinear dashboards externos con esta ancla.
+Fuente de verdad de copy: `web/src/i18n/locales/{es,en}/pricing.json` + `landing.json` (actualizado por #1382). Precios en USD ($15/$49) y la tabla PPP de 2026-04 quedaron **obsoletos** con el relanzamiento de precios — no reintroducirlos.
 
 ### 1.2 Filosofía de gating
 
@@ -120,6 +122,7 @@ Valores = runtime actual. Si cambian, actualizar **código + esta tabla + [[02_F
 | Branding PDF (logo/color/plantilla editable) | limitado | ✓ (`custom_branding`) | ✓ | Contract template custom = paid (`auth` handler) |
 | Widgets / Live Activity | ✓¹ | ✓ | ✓ | ¹ sin gate fuerte en código hoy |
 | Búsqueda, quick quote, multi-moneda, i18n ES/EN | ✓ | ✓ | ✓ | |
+| Exportación contable CSV (P&L consolidado + por evento) | — | ✓ | ✓ | `GET /reports/accounting/export` + `/events/accounting/export` (Pro+, `crud_handler.ExportAccountingCSV`) |
 
 ### 2.3 Cara-al-cliente y comunicación
 
@@ -372,12 +375,14 @@ Detalle de producto no-billing → [[09_ROADMAP]] / [[11_CURRENT_STATUS]].
 
 | Antes (v2.x) | Ahora (v3.0) |
 | :--- | :--- |
-| Staff Pro = 3 | **2** (código) |
+| Staff Pro = 3 | **5** (código, confirmado #1350) |
 | Sin techo catálogo compuesto | **20** productos+inventario |
 | Sin matriz inbound | §2.5 directorio / perfil / solicitudes |
 | §§2–4 BASIC/PREMIUM históricos en cuerpo | **Eliminados** del activo (confunden) |
 | “Backend no enforcea” | Corregido — **sí enforcea** |
 | Mezcla Premium en UI | **Pro / Business** como nombres de producto |
+
+v3.1 (2026-11): precios **$149 / $499 MXN** (#1382); exportación contable CSV Pro+ (#1350) agregada a §2.2.
 
 Histórico pre–3-tier y drafts largos: no se reintroducen en este archivo. Si hace falta arqueología, git history de este path.
 
