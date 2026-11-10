@@ -2,7 +2,7 @@ import { api } from "@/lib/api";
 import type { components } from "@/types/api";
 
 /**
- * Source of truth: backend/docs/openapi.yaml.
+ * Source of truth: contracts/openapi.yaml.
  * Organizer public-profile config (auth Settings) and its upsert payload.
  */
 export type PublicationStatus =

@@ -84,7 +84,7 @@ jobs:
           node-version: "22"
       - name: Validate OpenAPI spec
         working-directory: .
-        run: npx --yes @redocly/cli@latest lint backend/docs/openapi.yaml
+        run: npx --yes @redocly/cli@latest lint contracts/openapi.yaml
       - run: go mod download
       - run: go test -v ./...
 

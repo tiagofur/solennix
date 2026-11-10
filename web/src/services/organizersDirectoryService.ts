@@ -3,7 +3,7 @@ import type { components } from "@/types/api";
 /**
  * Public organizers directory service (#1117). Consumes
  * GET /api/public/organizers (#1116) — unauthenticated, NG1 ratified.
- * Source of truth: backend/docs/openapi.yaml — PaginatedOrganizersResponse.
+ * Source of truth: contracts/openapi.yaml — PaginatedOrganizersResponse.
  */
 export type PublicOrganizerCard =
   components["schemas"]["PublicOrganizerCard"];

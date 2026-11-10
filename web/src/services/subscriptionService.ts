@@ -1,7 +1,7 @@
 import { api } from "../lib/api";
 import type { components } from "../types/api";
 
-// Source of truth is backend/docs/openapi.yaml. Aliased here so callers keep
+// Source of truth is contracts/openapi.yaml. Aliased here so callers keep
 // using `SubscriptionInfo` / `SubscriptionStatus` and don't have to learn the
 // `components['schemas'][...]` lookup syntax.
 export type SubscriptionInfo = components["schemas"]["SubscriptionInfo"];

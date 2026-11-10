@@ -3,7 +3,7 @@ import type { components } from "@/types/api";
 /**
  * Public structured quote-request service (#1118). Consumes
  * POST /api/public/organizers/{slug}/requests (#1115) — unauthenticated, NG1
- * ratified. Source of truth: backend/docs/openapi.yaml — CreatePublicRequestRequest.
+ * ratified. Source of truth: contracts/openapi.yaml — CreatePublicRequestRequest.
  *
  * Create response may include `client_token` once (never re-issued). Visitor
  * uses it as X-Request-Token for accept/decline actions.

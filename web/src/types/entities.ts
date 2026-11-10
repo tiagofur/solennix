@@ -1,6 +1,6 @@
 // Application-level entity types.
 //
-// FUENTE DE VERDAD: backend/docs/openapi.yaml (v1.0, freezeado en SUPER_PLAN
+// FUENTE DE VERDAD: contracts/openapi.yaml (v1.0, freezeado en SUPER_PLAN
 // Wave 1 T-02). Los tipos se regeneran automáticamente desde el spec en
 // src/types/api.ts vía `npm run openapi:types` (corre en prebuild/check).
 //
