@@ -213,6 +213,7 @@ func main() {
 
 	// Create router
 	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, publicProfileHandler, publicProfileConfigHandler, publicProfilePortfolioHandler, publicProfilePackagesHandler, publicProfileServicesHandler, staffHandler, staffTeamHandler, publicRequestHandler, requestLinkHandler, seoHandler, pdfHandler, sitePageViewHandler, registrationFunnelHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir, cfg.Environment, cfg.TrustProxy)
+	r = handlers.WithInternalStats(r, handlers.NewInternalStatsHandler(cfg.MetricsSolennixToken, handlers.NewPoolInternalStatsLoader(pool)))
 
 	// Background job: expire gifted plans that have passed their expiry date.
 	// Runs once at startup then every hour.

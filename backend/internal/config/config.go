@@ -34,6 +34,8 @@ type Config struct {
 	RevenueCatWebhookSecret string // RevenueCat v2 webhook authorization header secret
 	RevenueCatAPIKey        string // RevenueCat secret API key for server-to-server calls
 
+	MetricsSolennixToken string // Bearer token for GET /internal/stats (CRM collector); empty = endpoint disabled
+
 	// Google OAuth Client IDs for audience verification
 	GoogleClientIDs []string // Allowed Google OAuth client IDs (iOS, Android, Web)
 
@@ -98,6 +100,7 @@ func Load() (*Config, error) {
 		StripePortalConfigID:       os.Getenv("STRIPE_PORTAL_CONFIG_ID"),
 		RevenueCatWebhookSecret:    os.Getenv("REVENUECAT_WEBHOOK_SECRET"),
 		RevenueCatAPIKey:           os.Getenv("REVENUECAT_API_KEY"),
+		MetricsSolennixToken:       os.Getenv("METRICS_SOLENNIX_TOKEN"),
 		UploadDir:                  getEnv("UPLOAD_DIR", "./uploads"),
 		StorageProvider:            getEnv("STORAGE_PROVIDER", "local"),
 		AppleTeamID:                os.Getenv("APPLE_TEAM_ID"),
