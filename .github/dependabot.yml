@@ -49,6 +49,14 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # pgx v5.12+ added Tx() to the pgx.BatchResults interface, which
+    # pgxmock v5.2.0 (latest) does not implement yet -> backend does not
+    # compile. Lift this guard once pgxmock ships a pgx 5.12+ compatible
+    # release (watch https://github.com/pashagolub/pgxmock/releases).
+    ignore:
+      - dependency-name: "github.com/jackc/pgx/v5"
+        versions:
+          - ">= 5.12.0"
 
   - package-ecosystem: "gradle"
     directory: "/android"
