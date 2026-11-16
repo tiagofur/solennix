@@ -23,7 +23,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.45.0
 	golang.org/x/crypto v0.59.0
 	golang.org/x/image v0.48.0
-	google.golang.org/api v0.311.0
+	google.golang.org/api v0.315.0
 )
 
 require (
