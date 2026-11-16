@@ -46,7 +46,8 @@ const localStorageMock = {
 };
 
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'error' });
+  // msw v3 renamed onUnhandledRequest -> onUnhandledFrame.
+  server.listen({ onUnhandledFrame: 'error' });
 });
 
 beforeEach(async () => {
