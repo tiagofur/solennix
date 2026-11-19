@@ -17,21 +17,21 @@
   },
   "hero": {
     "badge": "Control operativo completo",
-    "title_line1": "Cotizá, Cobrá,",
-    "title_line2": "Coordiná y Cumplí",
-    "subtitle": "Una plataforma para gestionar todo el ciclo de tus eventos: cotizaciones profesionales, cobros online, inventario, staff y Portal del cliente. Todo desde un solo lugar.",
+    "title_line1": "Cotiza, Registra,",
+    "title_line2": "Coordina y Cumple",
+    "subtitle": "Software para organizadores de eventos: cotizaciones PDF, registro de pagos y abonos, clientes, inventario, staff, calendario y portal para tus clientes. Todo en un solo lugar.",
     "cta_primary": "Empezar Gratis Ahora",
     "cta_secondary": "Ya tengo cuenta",
-    "seeker_question": "¿Buscás un proveedor para tu evento?",
-    "seeker_link": "Busco un proveedor",
+    "seeker_question": "¿Buscas un proveedor para tu evento?",
+    "seeker_link": "Encuentra un proveedor",
     "trust_free": "Sin tarjeta de crédito",
-    "trust_install": "Instala en 2 minutos",
+    "trust_install": "Listo en 2 minutos",
     "trust_cancel": "Cancela cuando quieras",
     "stores_available": "También disponible en"
   },
   "stores": {
     "app_store_aria": "Descargar Solennix en App Store",
-    "app_store_pre": "Descargá en",
+    "app_store_pre": "Descarga en",
     "app_store_name": "App Store",
     "google_play_aria": "Descargar Solennix en Google Play",
     "google_play_pre": "Disponible en",
@@ -39,69 +39,69 @@
   },
   "proof": {
     "title": "Todo el ciclo operativo",
-    "subtitle": "De la cotizacion al cumplimiento",
+    "subtitle": "De la cotización a la entrega",
     "items": [
       "Cotizaciones PDF",
-      "Cobros Online",
-      "Portal Cliente",
-      "Gestion Staff"
+      "Control de abonos",
+      "Portal del cliente",
+      "Gestión de staff"
     ]
   },
   "features": {
     "badge": "✨ Características",
     "title": "Todo lo que necesitas en un solo lugar",
-    "subtitle": "Deja de usar hojas de cálculo, WhatsApp y notas dispersas. Centraliza toda tu operación en una plataforma diseñada para organizadores de eventos.",
+    "subtitle": "Deja de usar hojas de cálculo, WhatsApp y notas dispersas. Centraliza toda tu operación de eventos en una sola plataforma.",
     "items": [
       {
         "title": "Cotizaciones profesionales",
-        "description": "Genera cotizaciones PDF en minutos. Tu cliente las recibe por link, puede aceptar y pagar desde su celular."
+        "description": "Genera cotizaciones PDF en minutos y envíalas a tus clientes por link, listas para aceptar desde su celular."
       },
       {
-        "title": "Cobros y Pagos",
-        "description": "Stripe integrado. Cobrá en parcialidades, tus clientes pagan online y el sistema conciliar automatico."
+        "title": "Control de pagos y abonos",
+        "description": "Registra pagos en parcialidades, consulta saldos pendientes y exporta tu contabilidad en CSV cuando quieras."
       },
       {
         "title": "Portal del Cliente",
-        "description": "Tus clientes acceden a un portal con su contrato, fotos, timeline y pagan sin salir de la app."
+        "description": "Tus clientes consultan su evento, contrato, fotos y cronograma en un portal exclusivo, sin llamadas ni correos."
       },
       {
         "title": "Inventario y Recursos",
-        "description": "Registrá equipos y personal. El sistema evita conflictos de disponibilidad automaticamente."
+        "description": "Registra equipos y productos. El sistema te ayuda a evitar conflictos de disponibilidad automáticamente."
       },
       {
         "title": "Staff y Equipos",
-        "description": "Asigna personal, envia asignaciones y recibe confirmaciones. Todo centralizado."
+        "description": "Asigna personal, envía asignaciones y recibe confirmaciones. Todo centralizado."
       },
       {
         "title": "Calendario Integral",
-        "description": "Todas tus eventos, disponibilidad y conflictos en una vista. Arrastrá y reorganizá."
+        "description": "Todos tus eventos y tu disponibilidad en una sola vista. Reorganiza sin choques de agenda."
       },
       {
         "title": "Reportes en Tiempo Real",
-        "description": "Ingresos, eventos, ocupacion. Métricas reales para optimizar precios y crecer."
+        "description": "Ingresos, eventos y clientes. Métricas reales para optimizar tus precios y hacer crecer tu negocio."
       },
       {
-        "title": "Forms Públicos",
-        "description": "Crea formularios de solicitud o cotizacion. Tus clientes cotizan ellos mismos."
+        "title": "Formularios Públicos",
+        "description": "Crea formularios de solicitud y recibe pedidos de cotización sin que tu cliente tenga que crear una cuenta."
       }
     ]
   },
   "inbound": {
-    "badge": "📈 Conseguí clientes",
-    "title": "Operá… y también crecé",
+    "badge": "📈 Consigue clientes",
+    "title": "Opera… y también atrae clientes",
     "subtitle": "Además de gestionar eventos, Solennix te da herramientas de inbound: perfil público, solicitudes de cotización y visibilidad en el directorio. Facilitamos el contacto; el servicio y el pago del evento siguen siendo tuyos.",
     "pillars": [
       {
         "title": "Perfil público",
-        "description": "Tu página profesional en /u/tu-negocio: portfolio, servicios y branding para compartir por WhatsApp o Instagram."
+        "description": "Tu página profesional en /u/tu-negocio: portafolio, servicios y branding para compartir por WhatsApp o Instagram."
       },
       {
         "title": "Solicitudes de cotización",
-        "description": "Visitantes te piden presupuesto sin crear cuenta. Vos respondés desde Solennix; el acuerdo sigue siendo tuyo."
+        "description": "Los visitantes te piden presupuesto sin crear cuenta. Tú respondes desde Solennix; el acuerdo es tuyo."
       },
       {
         "title": "Directorio de proveedores",
-        "description": "Aparecé en el directorio público para que te encuentren por ciudad, tipo de evento y servicio."
+        "description": "Aparece en el directorio público para que te encuentren por ciudad, tipo de evento y servicio."
       }
     ],
     "chips_title": "¿Qué buscan los clientes?",
@@ -123,58 +123,52 @@
     "steps": [
       {
         "title": "Crea tu cuenta",
-        "description": "Registrate gratis. Sin tarjeta requerida."
+        "description": "Regístrate gratis. Sin tarjeta de crédito."
       },
       {
         "title": "Cotiza en minutos",
-        "description": "Crea una cotizacion profesional. Tu cliente la recibe por link."
+        "description": "Crea una cotización profesional y envíala a tu cliente por link."
       },
       {
-        "title": "Cobra online",
-        "description": "Tu cliente acepta y paga desde su celular. Stripe hace la conciliacion."
+        "title": "Registra tus pagos",
+        "description": "Tu cliente acepta y tú registras los abonos: saldos siempre al día."
       },
       {
-        "title": "Ejecuta y cumplí",
-        "description": "Inventario, staff y portal del cliente. Todo controlado."
+        "title": "Ejecuta y entrega",
+        "description": "Inventario, staff y portal del cliente. Todo bajo control."
       }
     ]
   },
   "mobile_app": {
     "badge": "App Móvil",
     "title": "Tu negocio en el bolsillo",
-    "subtitle": "Gestiona eventos, revisá pagos y confirmá inventario desde tu iPhone. La misma potencia de la plataforma web, ahora disponible donde estés.",
+    "subtitle": "Gestiona eventos, revisa pagos y confirma inventario desde tu iPhone o Android. La misma potencia de la plataforma web, donde estés.",
     "features": [
-      "Face ID y Touch ID para entrar al instante",
+      "Face ID y Touch ID para entrar al instante (iOS)",
       "Widgets en la pantalla de inicio",
       "Notificaciones en tiempo real",
-      "Sincronización automática con web"
+      "Sincronización automática con la web"
     ]
   },
-  "testimonials": {
-    "badge": "💬 Testimonios",
-    "title": "Lo que dicen nuestros usuarios",
-    "subtitle": "Más de 500 organizadores ya confían en Solennix para gestionar su negocio.",
-    "rating_aria": "{{rating}} estrellas de 5",
+  "early_adopter": {
+    "badge": "🌱 Comunidad",
+    "title": "Construido con nuestros primeros organizadores",
+    "subtitle": "Solennix está en construcción activa junto a sus primeros usuarios. Sé de los primeros 100 organizadores en profesionalizar tu operación.",
     "items": [
       {
-        "name": "María González",
-        "role": "Organizadora de Bodas",
-        "location": "Ciudad de México",
-        "text": "El portal del cliente fue un cambio total. Mis novios ven su contrato, suben fotos y pagan online. Yo ya no persigo pagos."
+        "title": "Mejoras cada semana",
+        "text": "Lanzamos novedades de forma continua: staff y equipos, asistencia, reportes y más. El changelog público muestra todo lo que entregamos."
       },
       {
-        "name": "Carlos Mendoza",
-        "role": "Productor de Eventos",
-        "location": "Monterrey",
-        "text": "El control de inventario salvo mi negocio. Ya no tenemos dobles reservas y el staff recibe sus asignaciones en el celular."
+        "title": "Tu feedback define el rumbo",
+        "text": "Como usuario temprano, tus sugerencias moldean la plataforma. Las funciones más pedidas por la comunidad se construyen primero."
       },
       {
-        "name": "Ana Rodríguez",
-        "role": "DJ y Animadora",
-        "location": "Guadalajara",
-        "text": "Las cotizaciones automaticas y el link de pago online me ahorraron 10 horas semanales. Mis clientes pagan antes del evento."
+        "title": "Soporte directo del equipo",
+        "text": "Hablas directo con las personas que construyen Solennix. Sin tickets anónimos: respuestas reales, de verdad."
       }
-    ]
+    ],
+    "cta": "Ver novedades"
   },
   "pricing": {
     "badge": "💰 Precios",
@@ -209,7 +203,7 @@
         "features": [
           "Eventos, clientes y catálogo ilimitados",
           "Generación de cotizaciones PDF",
-          "Control de pagos en múltiples plazos",
+          "Registro de pagos en múltiples plazos",
           "Reportes y analíticas avanzadas",
           "Perfil público + directorio + solicitudes",
           "Soporte prioritario"
@@ -229,44 +223,48 @@
         "answer": "No. El plan Básico es completamente gratuito y no requiere tarjeta de crédito. Solo necesitas un correo electrónico."
       },
       {
-        "question": "¿Cómo me encuentran clientes nuevos?",
-        "answer": "Activá tu perfil público, compartí el link /u/tu-negocio y, si cumplís los criterios de publicabilidad, podés aparecer en el directorio /providers. Los visitantes envían solicitudes de cotización; Solennix facilita el contacto — no intermedia el servicio ni los pagos del evento."
+        "question": "¿Puedo cobrar a mis clientes desde Solennix?",
+        "answer": "Solennix registra y controla tus cobros: pagos en parcialidades, saldos pendientes y estado de cada evento. El cobro en sí lo realizas directamente con tu cliente (transferencia, efectivo o tu medio de pago); la suscripción Pro se paga en línea."
       },
       {
-        "question": "¿Puedo importar mis datos existentes?",
-        "answer": "Sí. Puedes importar clientes desde CSV o Excel. También ofrecemos migración asistida para cuentas Pro."
+        "question": "¿Cómo me encuentran clientes nuevos?",
+        "answer": "Activa tu perfil público, comparte el link /u/tu-negocio y, si cumples los criterios de publicabilidad, puedes aparecer en el directorio /providers. Los visitantes envían solicitudes de cotización; Solennix facilita el contacto — no intermedia el servicio ni los pagos del evento."
+      },
+      {
+        "question": "¿Puedo exportar mis datos?",
+        "answer": "Sí. Puedes exportar tus datos contables y de operación en CSV compatible con Excel, cuando quieras y sin costo extra."
       },
       {
         "question": "¿Mis datos están seguros?",
-        "answer": "Absolutamente. Usamos encriptación de extremo a extremo, backups automáticos diarios y servidores con certificación SOC 2."
+        "answer": "Sí. Tu información viaja cifrada (HTTPS/TLS), contamos con respaldos automáticos y nunca vendemos ni compartimos tus datos con terceros."
       },
       {
         "question": "¿Puedo cancelar en cualquier momento?",
-        "answer": "Sí, sin penalizaciones ni contratos de permanencia. Puedes cancelar cuando quieras y conservar acceso hasta el final del período pagado."
+        "answer": "Sí, sin penalizaciones ni contratos de permanencia. Puedes cancelar cuando quieras y conservas el acceso hasta el final del período pagado."
       }
     ]
   },
   "cta": {
     "title_line1": "¿Listo para escalar",
     "title_line2": "tu negocio?",
-    "subtitle": "Únete a la nueva generación de organizadores que ya profesionalizaron su operación.",
+    "subtitle": "Sé de los primeros 100 organizadores en profesionalizar su operación con Solennix.",
     "primary": "Comenzar Gratis",
     "secondary": "Ya tengo cuenta",
     "trust_free": "Sin tarjeta de crédito",
     "trust_cancel": "Cancela cuando quieras",
     "trust_support": "Soporte en español",
-    "seeker_question": "¿Buscás un proveedor?",
-    "seeker_link": "Explorá el directorio"
+    "seeker_question": "¿Buscas un proveedor?",
+    "seeker_link": "Explora el directorio"
   },
   "footer": {
-    "description": "La plataforma todo-en-uno para organizadores de eventos profesionales en México y Latinoamérica.",
+    "description": "La plataforma todo-en-uno para organizadores y proveedores de eventos en México y Latinoamérica: cotizaciones, clientes, inventario, staff y calendario.",
     "product_title": "Producto",
     "product_features": "Características",
     "product_pricing": "Precios",
     "product_how": "Cómo funciona",
     "product_faq": "FAQ",
     "product_providers": "Buscar proveedores",
-    "product_inbound": "Conseguí clientes",
+    "product_inbound": "Conseguir clientes",
     "download_title": "Descargar",
     "download_ios": "iOS — App Store",
     "download_android": "Android — Google Play",
@@ -280,7 +278,7 @@
     "legal_terms": "Términos y Condiciones",
     "legal_privacy": "Política de Privacidad",
     "copyright": "© 2026 Solennix. Todos los derechos reservados.",
-    "security": "Datos protegidos con encriptación de extremo a extremo"
+    "security": "Tu información protegida: conexión cifrada y respaldos automáticos"
   },
   "scroll_to_top": "Volver al inicio",
   "mock": {

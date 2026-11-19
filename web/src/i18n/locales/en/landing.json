@@ -17,9 +17,9 @@
   },
   "hero": {
     "badge": "Complete operational control",
-    "title_line1": "Quote, Charge,",
+    "title_line1": "Quote, Track,",
     "title_line2": "Coordinate and Deliver",
-    "subtitle": "One platform to manage your event's entire lifecycle: professional quotes, online payments, inventory, staff, and the client portal. All in one place.",
+    "subtitle": "Software for event organizers: PDF quotes, payment and deposit tracking, clients, inventory, staff, calendar, and a portal for your clients. All in one place.",
     "cta_primary": "Start Free Now",
     "cta_secondary": "I already have an account",
     "seeker_question": "Looking for a vendor for your event?",
@@ -39,10 +39,10 @@
   },
   "proof": {
     "title": "The entire operational cycle",
-    "subtitle": "From quote to fulfillment",
+    "subtitle": "From quote to delivery",
     "items": [
       "PDF Quotes",
-      "Online Payments",
+      "Payment Tracking",
       "Client Portal",
       "Staff Management"
     ]
@@ -50,23 +50,23 @@
   "features": {
     "badge": "✨ Features",
     "title": "Everything you need in one place",
-    "subtitle": "Stop juggling spreadsheets, WhatsApp, and scattered notes. Centralize your whole operation in a platform built for event organizers.",
+    "subtitle": "Stop juggling spreadsheets, WhatsApp, and scattered notes. Centralize your whole event operation in a single platform.",
     "items": [
       {
         "title": "Professional Quotes",
-        "description": "Generate PDF quotes in minutes. Your client gets them by link, can accept, and pay from their phone."
+        "description": "Generate PDF quotes in minutes and send them to your clients by link, ready to accept from their phone."
       },
       {
-        "title": "Payments & Collections",
-        "description": "Stripe built in. Charge in installments, your clients pay online, and the system reconciles automatically."
+        "title": "Payment & Deposit Tracking",
+        "description": "Record payments in installments, check pending balances, and export your accounting as CSV anytime."
       },
       {
         "title": "Client Portal",
-        "description": "Your clients access a portal with their contract, photos, and timeline, and pay without leaving the app."
+        "description": "Your clients view their event, contract, photos, and timeline in an exclusive portal — no calls or emails needed."
       },
       {
         "title": "Inventory & Resources",
-        "description": "Register equipment and crew. The system prevents availability conflicts automatically."
+        "description": "Register equipment and products. The system helps you prevent availability conflicts automatically."
       },
       {
         "title": "Staff & Teams",
@@ -74,21 +74,21 @@
       },
       {
         "title": "Complete Calendar",
-        "description": "All your events, availability, and conflicts in one view. Drag and rearrange."
+        "description": "All your events and availability in one view. Rearrange without double bookings."
       },
       {
         "title": "Real-Time Reports",
-        "description": "Revenue, events, occupancy. Real metrics to optimize pricing and grow."
+        "description": "Revenue, events, and clients. Real metrics to optimize your pricing and grow your business."
       },
       {
         "title": "Public Forms",
-        "description": "Create request or quote forms. Your clients price their own events."
+        "description": "Create request forms and receive quote requests without your client needing an account."
       }
     ]
   },
   "inbound": {
     "badge": "📈 Get clients",
-    "title": "Run operations… and grow too",
+    "title": "Run operations… and attract clients too",
     "subtitle": "Beyond managing events, Solennix gives you inbound tools: a public profile, quote requests, and visibility in the directory. We make contact easy; the service and the event payment stay yours.",
     "pillars": [
       {
@@ -123,15 +123,15 @@
     "steps": [
       {
         "title": "Create your account",
-        "description": "Sign up free. No card required."
+        "description": "Sign up free. No credit card required."
       },
       {
         "title": "Quote in minutes",
-        "description": "Create a professional quote. Your client gets it by link."
+        "description": "Create a professional quote and send it to your client by link."
       },
       {
-        "title": "Charge online",
-        "description": "Your client accepts and pays from their phone. Stripe handles reconciliation."
+        "title": "Track your payments",
+        "description": "Your client accepts and you record the deposits: balances always up to date."
       },
       {
         "title": "Execute and deliver",
@@ -142,39 +142,33 @@
   "mobile_app": {
     "badge": "Mobile App",
     "title": "Your business in your pocket",
-    "subtitle": "Manage events, review payments, and confirm inventory from your iPhone. The same power as the web platform, now available wherever you are.",
+    "subtitle": "Manage events, review payments, and confirm inventory from your iPhone or Android. The same power as the web platform, wherever you are.",
     "features": [
-      "Face ID and Touch ID to sign in instantly",
+      "Face ID and Touch ID for instant sign-in (iOS)",
       "Home screen widgets",
       "Real-time notifications",
       "Automatic sync with the web app"
     ]
   },
-  "testimonials": {
-    "badge": "💬 Testimonials",
-    "title": "What our users say",
-    "subtitle": "Over 500 organizers already trust Solennix to run their business.",
-    "rating_aria": "{{rating}} out of 5 stars",
+  "early_adopter": {
+    "badge": "🌱 Community",
+    "title": "Built with our first organizers",
+    "subtitle": "Solennix is being built hand in hand with its earliest users. Be among the first 100 organizers to professionalize your operation.",
     "items": [
       {
-        "name": "María González",
-        "role": "Wedding Planner",
-        "location": "Mexico City",
-        "text": "The client portal was a total game changer. My couples see their contract, upload photos, and pay online. I no longer chase payments."
+        "title": "Improvements every week",
+        "text": "We ship continuously: staff and teams, attendance, reports, and more. The public changelog shows everything we deliver."
       },
       {
-        "name": "Carlos Mendoza",
-        "role": "Event Producer",
-        "location": "Monterrey",
-        "text": "Inventory control saved my business. No more double bookings, and staff get their assignments on their phones."
+        "title": "Your feedback sets the course",
+        "text": "As an early user, your suggestions shape the platform. The most requested community features get built first."
       },
       {
-        "name": "Ana Rodríguez",
-        "role": "DJ & Entertainer",
-        "location": "Guadalajara",
-        "text": "Automatic quotes and the online payment link save me 10 hours a week. My clients pay before the event."
+        "title": "Direct support from the team",
+        "text": "You talk directly with the people building Solennix. No anonymous tickets: real answers, for real."
       }
-    ]
+    ],
+    "cta": "See what's new"
   },
   "pricing": {
     "badge": "💰 Pricing",
@@ -209,7 +203,7 @@
         "features": [
           "Unlimited events, clients, and catalog",
           "PDF quote generation",
-          "Multi-installment payment control",
+          "Multi-installment payment tracking",
           "Advanced reports and analytics",
           "Public profile + directory + requests",
           "Priority support"
@@ -229,16 +223,20 @@
         "answer": "No. The Basic plan is completely free and requires no credit card. You only need an email address."
       },
       {
+        "question": "Can I charge my clients through Solennix?",
+        "answer": "Solennix records and tracks your collections: installments, pending balances, and the status of each event. The charge itself happens directly with your client (transfer, cash, or your own payment method); the Pro subscription is paid online."
+      },
+      {
         "question": "How do new clients find me?",
         "answer": "Activate your public profile, share your /u/your-business link, and if you meet the publishability criteria you can appear in the /providers directory. Visitors send quote requests; Solennix facilitates contact — it does not intermediate the service or the event payments."
       },
       {
-        "question": "Can I import my existing data?",
-        "answer": "Yes. You can import clients from CSV or Excel. We also offer assisted migration for Pro accounts."
+        "question": "Can I export my data?",
+        "answer": "Yes. You can export your accounting and operational data as Excel-friendly CSV, anytime, at no extra cost."
       },
       {
         "question": "Is my data safe?",
-        "answer": "Absolutely. We use end-to-end encryption, automatic daily backups, and SOC 2 certified servers."
+        "answer": "Yes. Your information is transmitted encrypted (HTTPS/TLS), we keep automatic backups, and we never sell or share your data with third parties."
       },
       {
         "question": "Can I cancel at any time?",
@@ -249,7 +247,7 @@
   "cta": {
     "title_line1": "Ready to scale",
     "title_line2": "your business?",
-    "subtitle": "Join the new generation of organizers who have already professionalized their operations.",
+    "subtitle": "Be among the first 100 organizers to professionalize their operation with Solennix.",
     "primary": "Get Started Free",
     "secondary": "I already have an account",
     "trust_free": "No credit card required",
@@ -259,7 +257,7 @@
     "seeker_link": "Explore the directory"
   },
   "footer": {
-    "description": "The all-in-one platform for professional event organizers in Mexico and Latin America.",
+    "description": "The all-in-one platform for event organizers and vendors in Mexico and Latin America: quotes, clients, inventory, staff, and calendar.",
     "product_title": "Product",
     "product_features": "Features",
     "product_pricing": "Pricing",
@@ -280,7 +278,7 @@
     "legal_terms": "Terms and Conditions",
     "legal_privacy": "Privacy Policy",
     "copyright": "© 2026 Solennix. All rights reserved.",
-    "security": "Data protected with end-to-end encryption"
+    "security": "Your information protected: encrypted connection and automatic backups"
   },
   "scroll_to_top": "Back to top",
   "mock": {

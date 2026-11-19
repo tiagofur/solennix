@@ -8,7 +8,6 @@ import {
   Moon,
   Sun,
   CheckCircle,
-  Star,
   ArrowRight,
   BarChart3,
   Shield,
@@ -16,7 +15,6 @@ import {
   ChevronDown,
   Menu,
   X,
-  MapPin,
   Bell,
   ArrowUp,
   Clock,
@@ -32,6 +30,9 @@ import {
   UsersRound,
   Search,
   Link2,
+  Rocket,
+  MessageSquare,
+  HeartHandshake,
 } from "lucide-react";
 
 const APP_STORE_URL =
@@ -60,12 +61,8 @@ const FEATURE_STYLES = [
 /** Step numbers for `landing:how_it_works.steps` (by index). */
 const STEP_NUMBERS = ["01", "02", "03", "04"] as const;
 
-/** Avatar + rating for `landing:testimonials.items` (by index). */
-const TESTIMONIAL_META = [
-  { avatar: "MG", avatarColor: "bg-error", rating: 5 },
-  { avatar: "CM", avatarColor: "bg-info", rating: 5 },
-  { avatar: "AR", avatarColor: "bg-primary", rating: 5 },
-] as const;
+/** Icons for `landing:early_adopter.items` (by index). */
+const EARLY_ADOPTER_ICONS = [Rocket, MessageSquare, HeartHandshake] as const;
 
 /** Icons for `landing:proof.items` (by index). */
 const PROOF_ICONS = [FileText, CreditCard, Send, UsersRound] as const;
@@ -439,12 +436,12 @@ export const Landing: React.FC = () => {
     number: STEP_NUMBERS[i],
     ...step,
   }));
-  const testimonialItems = t("landing:testimonials.items", {
+  const earlyAdopterItems = t("landing:early_adopter.items", {
     returnObjects: true,
-  }) as { name: string; role: string; location: string; text: string }[];
-  const testimonials = TESTIMONIAL_META.map((meta, i) => ({
-    ...meta,
-    ...testimonialItems[i],
+  }) as { title: string; text: string }[];
+  const earlyAdopterCards = earlyAdopterItems.map((item, i) => ({
+    ...item,
+    icon: EARLY_ADOPTER_ICONS[i],
   }));
   const planItems = t("landing:pricing.plans", {
     returnObjects: true,
@@ -980,63 +977,48 @@ export const Landing: React.FC = () => {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
+      {/* ── EARLY ADOPTERS ── */}
       <section className="py-24 bg-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="inline-flex items-center space-x-2 bg-surface-alt text-text-secondary text-sm font-medium px-4 py-1.5 rounded-full mb-4">
-              <span>{t("landing:testimonials.badge")}</span>
+              <span>{t("landing:early_adopter.badge")}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text mb-4">
-              {t("landing:testimonials.title")}
+              {t("landing:early_adopter.title")}
             </h2>
-            <p className="text-base sm:text-lg text-text-secondary">
-              {t("landing:testimonials.subtitle")}
+            <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto">
+              {t("landing:early_adopter.subtitle")}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
+          <div className="grid md:grid-cols-3 gap-8 mb-10">
+            {earlyAdopterCards.map((card) => (
               <div
-                key={testimonial.name}
+                key={card.title}
                 className="bg-surface-alt rounded-2xl p-6 border border-border"
               >
-                <div
-                  className="flex items-center gap-1 mb-4"
-                  role="img"
-                  aria-label={t("landing:testimonials.rating_aria", {
-                    rating: testimonial.rating,
-                  })}
-                >
-                  {Array.from({ length: testimonial.rating }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className="h-4 w-4 text-yellow-400 fill-yellow-400"
-                      aria-hidden="true"
-                    />
-                  ))}
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
+                  <card.icon className="h-6 w-6 text-primary" aria-hidden="true" />
                 </div>
-                <p className="text-text-secondary text-sm leading-relaxed mb-6">
-                  "{testimonial.text}"
+                <h3 className="text-lg font-bold text-text mb-2">
+                  {card.title}
+                </h3>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  {card.text}
                 </p>
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`${testimonial.avatarColor} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0`}
-                  >
-                    {testimonial.avatar}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-text text-sm">
-                      {testimonial.name}
-                    </div>
-                    <div className="text-text-secondary text-xs flex items-center gap-1">
-                      <MapPin className="h-3 w-3" aria-hidden="true" />
-                      {testimonial.role} · {testimonial.location}
-                    </div>
-                  </div>
-                </div>
               </div>
             ))}
+          </div>
+
+          <div className="text-center">
+            <Link
+              to="/changelog"
+              className="inline-flex items-center gap-2 bg-card border border-border text-text px-8 py-4 rounded-2xl font-bold hover:bg-surface-alt transition-colors"
+            >
+              {t("landing:early_adopter.cta")}
+              <ArrowRight className="h-5 w-5" aria-hidden="true" />
+            </Link>
           </div>
         </div>
       </section>
