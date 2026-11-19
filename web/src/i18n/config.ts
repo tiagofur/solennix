@@ -66,6 +66,10 @@ import enInbound from "./locales/en/inbound.json";
 import esLanding from "./locales/es/landing.json";
 import enLanding from "./locales/en/landing.json";
 
+// Portuguese bundle (Brazilian Portuguese). `load: "languageOnly"` below
+// resolves any pt-* browser locale to `pt`, so the resource key is `pt`.
+import ptLanding from "./locales/pt-BR/landing.json";
+
 /**
  * i18next setup — namespaces are added incrementally as each screen is
  * internationalised. `common` holds shared strings (buttons, nav, errors).
@@ -121,10 +125,13 @@ void i18n
         inbound: enInbound,
         landing: enLanding,
       },
+      pt: {
+        landing: ptLanding,
+      },
     },
     fallbackLng: "es",
     load: "languageOnly",
-    supportedLngs: ["es", "en"],
+    supportedLngs: ["es", "en", "pt"],
     ns: [
       "common",
       "auth",

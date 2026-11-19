@@ -211,7 +211,7 @@ describe('Landing', () => {
 
     // Open the second FAQ
     const secondFaqButton = screen.getByRole('button', {
-      name: /puedo importar mis datos.*abrir/i,
+      name: /puedo cobrar a mis clientes.*abrir/i,
     });
     fireEvent.click(secondFaqButton);
 
@@ -222,7 +222,7 @@ describe('Landing', () => {
 
     // Second FAQ answer should be visible
     expect(
-      screen.getByText(/Puedes importar clientes desde CSV/i)
+      screen.getByText(/Solennix registra y controla tus cobros/i)
     ).toBeInTheDocument();
   });
 
@@ -248,7 +248,7 @@ describe('Landing', () => {
   it('renders all feature cards', () => {
     renderLanding();
     expect(screen.getByText('Cotizaciones profesionales')).toBeInTheDocument();
-    expect(screen.getByText('Cobros y Pagos')).toBeInTheDocument();
+    expect(screen.getByText('Control de pagos y abonos')).toBeInTheDocument();
     expect(screen.getByText('Portal del Cliente')).toBeInTheDocument();
     expect(screen.getByText('Inventario y Recursos')).toBeInTheDocument();
     expect(screen.getByText('Staff y Equipos')).toBeInTheDocument();
@@ -258,24 +258,33 @@ describe('Landing', () => {
     renderLanding();
     expect(screen.getByText('Crea tu cuenta')).toBeInTheDocument();
     expect(screen.getByText('Cotiza en minutos')).toBeInTheDocument();
-    expect(screen.getByText('Cobra online')).toBeInTheDocument();
-    expect(screen.getByText('Ejecuta y cumplí')).toBeInTheDocument();
+    expect(screen.getByText('Registra tus pagos')).toBeInTheDocument();
+    expect(screen.getByText('Ejecuta y entrega')).toBeInTheDocument();
   });
 
   it('renders product proof section', () => {
     renderLanding();
     expect(screen.getByText('Todo el ciclo operativo')).toBeInTheDocument();
     expect(screen.getByText('Cotizaciones PDF')).toBeInTheDocument();
-    expect(screen.getByText('Cobros Online')).toBeInTheDocument();
-    expect(screen.getByText('Portal Cliente')).toBeInTheDocument();
-    expect(screen.getByText('Gestion Staff')).toBeInTheDocument();
+    expect(screen.getByText('Control de abonos')).toBeInTheDocument();
+    expect(screen.getByText('Portal del cliente')).toBeInTheDocument();
+    expect(screen.getByText('Gestión de staff')).toBeInTheDocument();
   });
 
-  it('renders testimonials', () => {
+  it('renders the early adopter section without fabricated testimonials', () => {
     renderLanding();
-    expect(screen.getByText('María González')).toBeInTheDocument();
-    expect(screen.getByText('Carlos Mendoza')).toBeInTheDocument();
-    expect(screen.getByText('Ana Rodríguez')).toBeInTheDocument();
+    expect(screen.getByText('Mejoras cada semana')).toBeInTheDocument();
+    expect(screen.getByText('Tu feedback define el rumbo')).toBeInTheDocument();
+    expect(screen.getByText('Soporte directo del equipo')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /ver novedades/i })).toHaveAttribute(
+      'href',
+      '/changelog'
+    );
+    // No fabricated user claims
+    expect(screen.queryByText(/500 organizadores/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('María González')).not.toBeInTheDocument();
+    expect(screen.queryByText('Carlos Mendoza')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ana Rodríguez')).not.toBeInTheDocument();
   });
 
   it('renders pricing plans', () => {
@@ -292,7 +301,7 @@ describe('Landing', () => {
       screen.getByText('¿Necesito tarjeta de crédito para registrarme?')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('¿Puedo importar mis datos existentes?')
+      screen.getByText('¿Puedo exportar mis datos?')
     ).toBeInTheDocument();
     expect(screen.getByText('¿Mis datos están seguros?')).toBeInTheDocument();
     expect(
@@ -306,13 +315,13 @@ describe('Landing', () => {
     expect(directoryLinks.length).toBeGreaterThanOrEqual(1);
     expect(directoryLinks[0]).toHaveAttribute('href', '/providers?from=landing');
     expect(
-      screen.getByRole('link', { name: /busco un proveedor/i })
+      screen.getByRole('link', { name: /encuentra un proveedor/i })
     ).toHaveAttribute('href', '/providers?from=landing');
   });
 
   it('renders inbound growth section with directory chips', () => {
     renderLanding();
-    expect(screen.getByRole('heading', { name: /operá… y también crecé/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /opera… y también atrae clientes/i })).toBeInTheDocument();
     expect(screen.getByText('Perfil público')).toBeInTheDocument();
     expect(screen.getByText('Solicitudes de cotización')).toBeInTheDocument();
     expect(screen.getByText('Directorio de proveedores')).toBeInTheDocument();
@@ -342,7 +351,7 @@ describe('Landing', () => {
       screen.getByText(/2026 Solennix\. Todos los derechos reservados/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Datos protegidos con encriptación de extremo a extremo')
+      screen.getByText('Tu información protegida: conexión cifrada y respaldos automáticos')
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /recuperar contraseña/i })).toBeInTheDocument();
   });
@@ -363,8 +372,19 @@ describe('Landing', () => {
     renderLanding();
 
     await i18n.changeLanguage('en');
-    expect(await screen.findByText('Quote, Charge,')).toBeInTheDocument();
+    expect(await screen.findByText('Quote, Track,')).toBeInTheDocument();
     expect(screen.getByText('Professional Quotes')).toBeInTheDocument();
+
+    // Restore Spanish so later tests assert the default locale.
+    await i18n.changeLanguage('es');
+  });
+
+  it('renders Portuguese content when language switches to pt', async () => {
+    renderLanding();
+
+    await i18n.changeLanguage('pt');
+    expect(await screen.findByText('Orce, Registre,')).toBeInTheDocument();
+    expect(screen.getByText('Orçamentos profissionais')).toBeInTheDocument();
 
     // Restore Spanish so later tests assert the default locale.
     await i18n.changeLanguage('es');
