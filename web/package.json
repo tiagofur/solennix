@@ -85,6 +85,7 @@
   "overrides": {
     "serialize-javascript": ">=7.1.4",
     "js-yaml": "4.2.0",
-    "@babel/core": "^7.29.6"
+    "@babel/core": "^7.29.6",
+    "@grpc/grpc-js": "^1.13.6"
   }
 }
