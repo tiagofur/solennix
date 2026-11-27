@@ -79,6 +79,7 @@ val sslPinsList: List<String> = sslPinsProperty
 android {
     namespace = "com.creapolis.solennix"
     compileSdk = 37
+    compileSdkMinor = 2
     ndkVersion = "26.1.10909125"
 
     defaultConfig {

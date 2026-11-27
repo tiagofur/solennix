@@ -1,7 +1,7 @@
 [versions]
-agp = "9.5.1"
+agp = "9.5.2"
 kotlin = "2.4.21"
-compose-bom = "2026.09.00"
+compose-bom = "2026.11.01"
 ktor = "3.6.1"
 # Hilt 2.59+ requires AGP 9; project is on AGP 9.x.
 hilt = "2.60.1"
@@ -21,7 +21,7 @@ firebase-bom = "35.2.0"
 google-services = "4.6.0"
 window = "1.5.1"
 vico = "2.5.2"
-revenuecat = "11.3.0"
+revenuecat = "11.4.1"
 workmanager = "2.12.0"
 paging = "3.5.3"
 junit5 = "6.1.3"

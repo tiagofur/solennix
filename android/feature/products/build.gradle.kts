@@ -14,6 +14,7 @@ plugins {
 android {
     namespace = "com.creapolis.solennix.feature.products"
     compileSdk = 37
+    compileSdkMinor = 2
     defaultConfig {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

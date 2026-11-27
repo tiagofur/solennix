@@ -14,6 +14,7 @@ plugins {
 android {
     namespace = "com.creapolis.solennix.feature.calendar"
     compileSdk = 37
+    compileSdkMinor = 2
 
     defaultConfig {
         minSdk = 26

@@ -10,6 +10,7 @@ plugins {
 android {
     namespace = "com.creapolis.solennix.feature.dashboard"
     compileSdk = 37
+    compileSdkMinor = 2
 
     defaultConfig {
         minSdk = 26
