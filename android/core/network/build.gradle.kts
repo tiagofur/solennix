@@ -21,6 +21,7 @@ val sslPins: String = System.getenv("SOLENNIX_SSL_PINS")
 android {
     namespace = "com.creapolis.solennix.core.network"
     compileSdk = 37
+    compileSdkMinor = 2
 
     defaultConfig {
         minSdk = 26
