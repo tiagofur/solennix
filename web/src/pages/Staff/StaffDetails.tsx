@@ -8,6 +8,7 @@ import {
   useStaffLimits,
 } from "@/hooks/queries/useStaffQueries";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import type { AssignmentStatus } from "@/types/entities";
 import { staffService, type StaffInviteTargetRole } from "@/services/staffService";
@@ -69,7 +70,7 @@ export interface InviteShareArgs {
   url: string;
 }
 
-type InviteShareT = (key: string, options?: Record<string, unknown>) => string;
+type InviteShareT = TFunction;
 
 // Pre-built share copy: "Te invito a [negocio] como [rol]…" + accept URL.
 // Exported for unit tests; falls back to a business-less template when the
