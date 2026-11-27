@@ -12,6 +12,7 @@ import {
   CalendarPlus,
   Link2,
 } from "lucide-react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -624,7 +625,7 @@ function RequestDetail({
   formatDate: (d?: string | null) => string;
   formatMoney: (a?: number | null, c?: string) => string;
   statusLabel: (s?: string | null) => string;
-  t: (key: string, opts?: Record<string, unknown>) => string;
+  t: TFunction;
   canRespond: boolean;
   canConvert: boolean;
   busy: boolean;

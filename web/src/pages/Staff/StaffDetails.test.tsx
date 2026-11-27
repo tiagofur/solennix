@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { TFunction } from 'i18next';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fireEvent, render, screen, waitFor } from '@tests/customRender';
@@ -499,7 +500,9 @@ describe('staff invite catalog (es/en)', () => {
 });
 
 function catalogT(catalog: unknown) {
-  return (key: string, vars?: Record<string, unknown>): string => {
+  // react-i18next 18 brands TFunction ($TFunctionBrand); the catalog stub only
+  // mimics its call shape, so cast through unknown to satisfy the API type.
+  return ((key: string, vars?: Record<string, unknown>): string => {
     const [, ...rest] = key.split(':');
     let value: unknown = catalog;
     for (const part of rest.join(':').split('.')) {
@@ -507,5 +510,5 @@ function catalogT(catalog: unknown) {
     }
     if (typeof value !== 'string') throw new Error(`Missing catalog string for ${key}`);
     return value.replace(/\{\{(\w+)\}\}/g, (_, name: string) => String(vars?.[name] ?? ''));
-  };
+  }) as unknown as TFunction;
 }

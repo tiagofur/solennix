@@ -132,6 +132,9 @@ void i18n
     fallbackLng: "es",
     load: "languageOnly",
     supportedLngs: ["es", "en", "pt"],
+    // i18next 27 defaults returnEmptyString to false; keep v26 behavior for
+    // intentionally empty keys (nav.auth, pricing.period).
+    returnEmptyString: true,
     ns: [
       "common",
       "auth",
